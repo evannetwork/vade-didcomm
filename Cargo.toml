@@ -1,0 +1,33 @@
+[package]
+name = "vade-didcomm"
+version = "0.0.1"
+authors = ["BlockchainsInc"]
+edition = "2018"
+description = "DIDComm communication helper for vade"
+homepage = "tbd"
+documentation = "tbd"
+repository = "tbd"
+readme = "README.md"
+keywords = ["didcomm"]
+
+[lib]
+name = "vade_didcomm"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+async-trait = "0.1.50"
+env_logger = "0.7.1"
+futures = "0.3.13"
+log = "0.4.8"
+rand = "0.8.3"
+redis = "0.20.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0.53", features = ["preserve_order", "raw_value"] }
+tokio = { version = "1.5.0", features = ["macros", "rt-multi-thread", "time"] }
+uuid = { version = "0.8.2", features = ["v4"] }
+vade = { path = "../vade", version = "0.0.8" }
+# vade-evan-bbs = { path = "../vade-evan-bbs", version = "0.0.1" }
+# vade-evan-cl = { path = "../vade-evan-cl", version = "0.0.1" }
+# vade-evan-substrate = { path = "../vade-evan-substrate", version = "0.0.1" }
+

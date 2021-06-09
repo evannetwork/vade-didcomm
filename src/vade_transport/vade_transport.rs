@@ -2,7 +2,6 @@ use crate::utils::AsyncResult;
 use async_trait::async_trait;
 use futures::channel::mpsc;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -20,10 +19,7 @@ pub struct Message {
 
 impl Message {
     #[allow(dead_code)]
-    pub fn new<T1, T2>(
-        payload: T1,
-        metadata: Option<T2>,
-    ) -> Result<Message, Box<dyn Error + Send + Sync>>
+    pub fn new<T1, T2>(payload: T1, metadata: Option<T2>) -> AsyncResult<Message>
     where
         T1: Serialize,
         T2: Serialize,

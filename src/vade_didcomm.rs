@@ -10,7 +10,7 @@ use didcomm_rs::{
 };
 use futures::lock::Mutex;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, error::Error, sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::time::sleep;
 use vade::{VadePlugin, VadePluginResultValue};
 
@@ -139,7 +139,7 @@ impl ProtocolHandler {
         transport: Arc<Mutex<Box<dyn VadeTransport + Send + Sync>>>,
         _options: String,
         _payload: String,
-    ) -> Result<Option<String>, Box<dyn Error + Send + Sync>> {
+    ) -> AsyncResult<Option<String>> {
         log::debug!("ping_send");
         // prepare message
         let message_payload = ProtocolPayload {
@@ -170,7 +170,7 @@ impl VadeDidComm {
         signer: String,
         target: String,
         transport: Box<dyn VadeTransport + Send + Sync>,
-    ) -> Result<VadeDidComm, Box<dyn Error + Send + Sync>> {
+    ) -> AsyncResult<VadeDidComm> {
         match env_logger::try_init() {
             Ok(_) | Err(_) => (),
         };
@@ -189,7 +189,7 @@ impl VadeDidComm {
         protocol: String,
         options: String,
         payload: String,
-    ) -> Result<Option<String>, Box<dyn Error + Send + Sync>> {
+    ) -> AsyncResult<Option<String>> {
         match protocol.as_str() {
             "pingpong" => {
                 ProtocolHandler::ping_send(self.transport.clone(), options, payload).await
@@ -287,8 +287,7 @@ impl VadePlugin for VadeDidComm {
         &mut self,
         options: &str,
         payload: &str,
-    ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error + Send + Sync>>
-    {
+    ) -> AsyncResult<VadePluginResultValue<Option<String>>> {
         log::debug!("preparing DIDComm message for being sent");
 
         let options = serde_json::from_str::<DidcommSendOptions>(&options)?;
@@ -332,8 +331,7 @@ impl VadePlugin for VadeDidComm {
         &mut self,
         options: &str,
         payload: &str,
-    ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error + Send + Sync>>
-    {
+    ) -> AsyncResult<VadePluginResultValue<Option<String>>> {
         log::debug!("handling receival of DIDComm message");
 
         let options = serde_json::from_str::<DidcommReceiveOptions>(&options)?;
@@ -355,7 +353,7 @@ impl VadePlugin for VadeDidComm {
         function: &str,
         options: &str,
         payload: &str,
-    ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn Error + Send + Sync>> {
+    ) -> AsyncResult<VadePluginResultValue<Option<String>>> {
         ignore_unrelated!(method, options);
         // TODO swo: check if we're actually handling a protocol here
         Ok(VadePluginResultValue::Success(

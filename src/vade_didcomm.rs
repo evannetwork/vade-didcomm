@@ -358,7 +358,6 @@ impl VadePlugin for VadeDidComm {
         payload: &str,
     ) -> AsyncResult<VadePluginResultValue<Option<String>>> {
         ignore_unrelated!(method, options);
-        // TODO swo: check if we're actually handling a protocol here
         Ok(VadePluginResultValue::Success(
             self.handle_protocol_start(
                 String::from(method),

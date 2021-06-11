@@ -211,35 +211,10 @@ impl VadeDidComm {
         log::debug!("starting didcomm listener");
 
         let local_transport = self.transport.clone();
-        let mut receiver = local_transport.lock().await.listen().await?;
+        let receiver = local_transport.lock().await.listen().await?;
 
-        let get_message_in_loop = async move {
-            let error_trap = async move {
-                loop {
-                    match receiver.try_next() {
-                        Ok(Some(value)) => {
-                            log::debug!("got message from receiver: {:?}", &value);
-                            let payload: ProtocolPayload = serde_json::from_str(&value.payload)?;
-                            ProtocolHandler::handle_step_receive(
-                                local_transport.clone(),
-                                payload.protocol,
-                                payload.step,
-                            )
-                            .await?;
-                        }
-                        Ok(None) => {
-                            log::debug!("channel disconnected, stop listening");
-                            break;
-                        }
-                        Err(_) => {
-                            // no message received, try again
-                            sleep(Duration::from_millis(10u64)).await;
-                        }
-                    };
-                }
-                Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
-            };
-            match error_trap.await {
+        let get_messages_detached = async move {
+            match get_messages_in_loop(receiver, local_transport).await {
                 Ok(_) => {
                     log::info!("listener gracefully shut down")
                 }
@@ -249,7 +224,7 @@ impl VadeDidComm {
             };
         };
 
-        tokio::task::spawn(get_message_in_loop);
+        tokio::task::spawn(get_messages_detached);
 
         Ok(())
     }
@@ -279,6 +254,34 @@ impl VadeDidComm {
             body,
         })
     }
+}
+
+async fn get_messages_in_loop(
+    mut receiver: futures::channel::mpsc::UnboundedReceiver<Message>,
+    local_transport: Arc<Mutex<Box<dyn VadeTransport + Send + Sync>>>,
+) -> AsyncResult<()> {
+    Ok(loop {
+        match receiver.try_next() {
+            Ok(Some(value)) => {
+                log::debug!("got message from receiver: {:?}", &value);
+                let payload: ProtocolPayload = serde_json::from_str(&value.payload)?;
+                ProtocolHandler::handle_step_receive(
+                    local_transport.clone(),
+                    payload.protocol,
+                    payload.step,
+                )
+                .await?;
+            }
+            Ok(None) => {
+                log::debug!("channel disconnected, stop listening");
+                break;
+            }
+            Err(_) => {
+                // no message received, try again
+                sleep(Duration::from_millis(10u64)).await;
+            }
+        };
+    })
 }
 
 #[async_trait]

@@ -58,58 +58,20 @@ impl VadeTransport for VadeTransportRedisPubsub {
     async fn listen(&mut self) -> AsyncResult<mpsc::UnboundedReceiver<Message>> {
         log::debug!("starting pubsub listener");
 
-        let (mut msg_sender, msg_receiver) = mpsc::unbounded();
+        let (msg_sender, msg_receiver) = mpsc::unbounded();
         let (subscription_sender, mut subscription_receiver) = oneshot::channel::<()>();
         let redis_connection = self.redis_connection.to_owned();
         let channel_id = self.channel.to_owned();
         let local_id = self.id.to_owned();
 
-        let get_message_in_loop = move || {
-            let error_trap = move || -> AsyncResult<()> {
-                let client = redis::Client::open(redis_connection)?;
-                let mut con = client.get_connection()?;
-                let mut pubsub = con.as_pubsub();
-                pubsub.subscribe(channel_id.to_owned())?;
-                subscription_sender
-                    .send(())
-                    .map_err(|_| "failed to send connection confirmation")?;
-
-                loop {
-                    let msg = pubsub
-                        .get_message()
-                        .map_err(|e| format!("could not get pubsub message; {}", &e))?;
-                    let received: String = msg.get_payload()?;
-                    log::debug!("received message: {:?}", &received);
-                    let message_obj = serde_json::from_str::<Message>(&received)?;
-
-                    log::trace!("pubsub got: {:?}", &message_obj);
-
-                    // forward message if not send from self
-                    let metadata = &message_obj.metadata.as_ref().ok_or("missing metadata")?;
-                    let metadata = serde_json::from_str::<RedisPubSubMetadata>(&metadata)?;
-                    log::trace!(
-                        "payload.sender != local_id, {}, {}",
-                        &metadata.sender,
-                        &local_id
-                    );
-                    if metadata.sender != local_id {
-                        log::trace!("forwarding message");
-                        msg_sender.start_send(message_obj.clone())?;
-                    }
-
-                    // allow to stop listener for tests
-                    #[cfg(test)]
-                    let protocol_payload =
-                        serde_json::from_str::<ProtocolPayload>(&message_obj.payload)?;
-                    #[cfg(test)]
-                    if protocol_payload.protocol == "stop_listening" {
-                        log::info!("stopping redis pubsub listener");
-                        pubsub.unsubscribe(channel_id.to_owned())?;
-                        ()
-                    }
-                }
-            };
-            match error_trap() {
+        let get_messages_detached = move || {
+            match get_message_in_loop(
+                redis_connection,
+                channel_id,
+                subscription_sender,
+                local_id,
+                msg_sender,
+            ) {
                 Ok(_) => {
                     log::info!("listener gracefully shut down")
                 }
@@ -119,9 +81,8 @@ impl VadeTransport for VadeTransportRedisPubsub {
             };
         };
 
-        thread::spawn(get_message_in_loop);
+        thread::spawn(get_messages_detached);
 
-        // add count
         loop {
             sleep(Duration::from_millis(1u64)).await;
             let is_subscribed = subscription_receiver.try_recv()?;
@@ -157,6 +118,55 @@ impl VadeTransport for VadeTransportRedisPubsub {
         con.publish(String::from(&self.channel), json)?;
 
         Ok(())
+    }
+}
+
+fn get_message_in_loop(
+    redis_connection: String,
+    channel_id: String,
+    subscription_sender: oneshot::Sender<()>,
+    local_id: String,
+    mut msg_sender: mpsc::UnboundedSender<Message>,
+) -> AsyncResult<()> {
+    let client = redis::Client::open(redis_connection)?;
+    let mut con = client.get_connection()?;
+    let mut pubsub = con.as_pubsub();
+    pubsub.subscribe(channel_id.to_owned())?;
+    subscription_sender
+        .send(())
+        .map_err(|_| "failed to send connection confirmation")?;
+    loop {
+        let msg = pubsub
+            .get_message()
+            .map_err(|e| format!("could not get pubsub message; {}", &e))?;
+        let received: String = msg.get_payload()?;
+        log::debug!("received message: {:?}", &received);
+        let message_obj = serde_json::from_str::<Message>(&received)?;
+
+        log::trace!("pubsub got: {:?}", &message_obj);
+
+        // forward message if not send from self
+        let metadata = &message_obj.metadata.as_ref().ok_or("missing metadata")?;
+        let metadata = serde_json::from_str::<RedisPubSubMetadata>(&metadata)?;
+        log::trace!(
+            "payload.sender != local_id, {}, {}",
+            &metadata.sender,
+            &local_id
+        );
+        if metadata.sender != local_id {
+            log::trace!("forwarding message");
+            msg_sender.start_send(message_obj.clone())?;
+        }
+
+        // allow to stop listener for tests
+        #[cfg(test)]
+        let protocol_payload = serde_json::from_str::<ProtocolPayload>(&message_obj.payload)?;
+        #[cfg(test)]
+        if protocol_payload.protocol == "stop_listening" {
+            log::info!("stopping redis pubsub listener");
+            pubsub.unsubscribe(channel_id.to_owned())?;
+            ()
+        }
     }
 }
 

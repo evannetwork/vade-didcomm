@@ -34,6 +34,45 @@ const EXAMPLE_DID_DOCUMENT: &str = r#"{
 }"#;
 const REDIS_CONNECTION: &str = "redis://localhost";
 
+fn get_transport(
+    id: Option<String>,
+    channel: Option<String>,
+) -> AsyncResult<(VadeTransportRedisPubsub, String, String)> {
+    let used_id = id.unwrap_or_else(|| Uuid::new_v4().to_simple().to_string());
+    let used_channel = channel.unwrap_or_else(|| Uuid::new_v4().to_simple().to_string());
+    let transport = VadeTransportRedisPubsub::new(
+        used_id.to_owned(),
+        String::from(REDIS_CONNECTION),
+        used_channel.to_owned(),
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok((transport, used_id, used_channel))
+}
+
+async fn get_vade(
+    id: Option<String>,
+    channel: Option<String>,
+) -> AsyncResult<(Vade, String, String)> {
+    let mut vade = Vade::new();
+    let (vade_didcomm, used_id, used_channel) = get_vade_didcomm(id, channel).await?;
+    vade.register_plugin(Box::from(vade_didcomm));
+
+    Ok((vade, used_id, used_channel))
+}
+
+async fn get_vade_didcomm(
+    id: Option<String>,
+    channel: Option<String>,
+) -> AsyncResult<(VadeDidComm, String, String)> {
+    let (mut transport, used_id, used_channel) = get_transport(id, channel)?;
+    transport.listen().await?;
+    let vade_didcomm =
+        VadeDidComm::new(String::from(""), String::from(""), Box::new(transport)).await?;
+
+    Ok((vade_didcomm, used_id, used_channel))
+}
+
 #[tokio::test]
 async fn can_be_registered_as_plugin() -> AsyncResult<()> {
     get_vade(None, None).await?;
@@ -225,43 +264,4 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
     };
 
     Ok(())
-}
-
-async fn get_vade(
-    id: Option<String>,
-    channel: Option<String>,
-) -> AsyncResult<(Vade, String, String)> {
-    let mut vade = Vade::new();
-    let (vade_didcomm, used_id, used_channel) = get_vade_didcomm(id, channel).await?;
-    vade.register_plugin(Box::from(vade_didcomm));
-
-    Ok((vade, used_id, used_channel))
-}
-
-async fn get_vade_didcomm(
-    id: Option<String>,
-    channel: Option<String>,
-) -> AsyncResult<(VadeDidComm, String, String)> {
-    let (mut transport, used_id, used_channel) = get_transport(id, channel)?;
-    transport.listen().await?;
-    let vade_didcomm =
-        VadeDidComm::new(String::from(""), String::from(""), Box::new(transport)).await?;
-
-    Ok((vade_didcomm, used_id, used_channel))
-}
-
-fn get_transport(
-    id: Option<String>,
-    channel: Option<String>,
-) -> AsyncResult<(VadeTransportRedisPubsub, String, String)> {
-    let used_id = id.unwrap_or_else(|| Uuid::new_v4().to_simple().to_string());
-    let used_channel = channel.unwrap_or_else(|| Uuid::new_v4().to_simple().to_string());
-    let transport = VadeTransportRedisPubsub::new(
-        used_id.to_owned(),
-        String::from(REDIS_CONNECTION),
-        used_channel.to_owned(),
-    )
-    .map_err(|e| e.to_string())?;
-
-    Ok((transport, used_id, used_channel))
 }

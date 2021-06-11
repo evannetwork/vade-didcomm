@@ -149,7 +149,7 @@ fn get_message_in_loop(
         let metadata = &message_obj.metadata.as_ref().ok_or("missing metadata")?;
         let metadata = serde_json::from_str::<RedisPubSubMetadata>(&metadata)?;
         log::trace!(
-            "payload.sender != local_id, {}, {}",
+            "payload.sender: {}, local_id: {}",
             &metadata.sender,
             &local_id
         );

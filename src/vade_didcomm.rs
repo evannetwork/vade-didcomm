@@ -63,7 +63,6 @@ macro_rules! apply_optional {
         }
     }};
 }
-
 #[allow(dead_code)]
 pub struct VadeDidComm {
     signer: String,
@@ -87,27 +86,7 @@ impl VadeDidComm {
         Ok(vade_didcomm)
     }
 
-    async fn handle_protocol_start(
-        &mut self,
-        _method: String,
-        protocol: String,
-        options: String,
-        payload: String,
-    ) -> AsyncResult<Message> {
-        match protocol.as_str() {
-            "pingpong" => {
-                protocol_handler::ProtocolHandler::ping_send(options, payload).await
-            }
-            _ => {
-                return Err(Box::from(format!(
-                    r#"DIDComm protocol "{}" not supported"#,
-                    &protocol,
-                )));
-            }
-        }
-    }
-
-    fn receive_message(
+    fn decrypt_message(
         &mut self,
         message: &str,
         decryption_key: Option<&[u8]>,
@@ -124,8 +103,6 @@ impl VadeDidComm {
             })?;
 
         let body = String::from_utf8(received.body.clone())?;
-
-        // will later on handle received messages internally as well
 
         Ok(DidcommReceiveResult {
             message: received,
@@ -189,7 +166,7 @@ impl VadePlugin for VadeDidComm {
 
         let options = serde_json::from_str::<DidcommReceiveOptions>(&options)?;
 
-        let decrypted = self.receive_message(
+        let decrypted = self.decrypt_message(
             &payload,
             Some(&options.decryption_key),
             Some(&options.sign_public),

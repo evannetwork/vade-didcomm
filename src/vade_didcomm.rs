@@ -1,20 +1,16 @@
 use crate::{
-    vade_transport::{Message, ProtocolPayload, VadeTransport},
+    message::{Message},
     AsyncResult,
-    ResultAsyncifier,
+    protocol_handler,
 };
 use async_trait::async_trait;
 use didcomm_rs::{
     crypto::{CryptoAlgorithm, SignatureAlgorithm},
     Message as DIDCommMessage,
 };
-use futures::lock::Mutex;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, sync::Arc, time::Duration};
-use tokio::time::sleep;
+use std::{collections::HashMap};
 use vade::{VadePlugin, VadePluginResultValue};
-
-const TRANSFER_DIDCOMM: &str = "didcomm";
 
 big_array! { BigArray; }
 
@@ -57,13 +53,6 @@ pub struct DidcommReceiveResult {
     pub body: String,
 }
 
-macro_rules! parse {
-    ($data:expr, $type_name:expr) => {{
-        serde_json::from_str($data)
-            .map_err(|e| format!("{} when parsing {} {}", &e, $type_name, $data))?
-    }};
-}
-
 macro_rules! apply_optional {
     ($message:ident, $payload:ident, $payload_arg:ident) => {{
         match $payload.$payload_arg {
@@ -75,93 +64,10 @@ macro_rules! apply_optional {
     }};
 }
 
-macro_rules! ignore_unrelated {
-    ($method:expr, $options:expr) => {{
-        let type_options: TransferOptions = parse!($options, "options");
-        match type_options.transfer.as_deref() {
-            Some(TRANSFER_DIDCOMM) => (),
-            _ => return Ok(VadePluginResultValue::Ignored),
-        };
-    }};
-}
-
-struct ProtocolHandler {}
-
-impl ProtocolHandler {
-    async fn handle_step_receive(
-        transport: Arc<Mutex<Box<dyn VadeTransport + Send + Sync>>>,
-        protocol: String,
-        step: String,
-    ) -> AsyncResult<Option<String>> {
-        log::info!("handling step receive {}:{}", &protocol, &step);
-        match protocol.as_str() {
-            "pingpong" => match step.as_str() {
-                "ping" => Self::ping_receive(transport, String::from(""), String::from("")).await,
-                "pong" => Self::ping_send(transport, String::from(""), String::from("")).await,
-                _ => {
-                    return Err(Box::from(format!(
-                        r#"step {} for DIDComm protocol "{}" not supported"#,
-                        &step, &protocol,
-                    )));
-                }
-            },
-            _ => {
-                return Err(Box::from(format!(
-                    r#"DIDComm protocol "{}" not supported"#,
-                    &protocol,
-                )));
-            }
-        }
-    }
-
-    async fn ping_receive(
-        transport: Arc<Mutex<Box<dyn VadeTransport + Send + Sync>>>,
-        _options: String,
-        _payload: String,
-    ) -> AsyncResult<Option<String>> {
-        log::debug!("ping_receive");
-        // prepare message
-        let message_payload = ProtocolPayload {
-            protocol: String::from("pingpong"),
-            step: String::from("pong"),
-        };
-        let message = Message::new(message_payload, None as Option<()>).asyncify()?;
-
-        // send it
-        transport.lock().await.send_message(&message).await?;
-
-        // protocol ends here as we responded
-
-        Ok(None)
-    }
-
-    async fn ping_send(
-        transport: Arc<Mutex<Box<dyn VadeTransport + Send + Sync>>>,
-        _options: String,
-        _payload: String,
-    ) -> AsyncResult<Option<String>> {
-        log::debug!("ping_send");
-        // prepare message
-        let message_payload = ProtocolPayload {
-            protocol: String::from("pingpong"),
-            step: String::from("ping"),
-        };
-        let message = Message::new(message_payload, None as Option<()>).asyncify()?;
-
-        // send it
-        transport.lock().await.send_message(&message).await?;
-
-        // no need to wait here, as generic handler will manage received message
-
-        Ok(None)
-    }
-}
-
 #[allow(dead_code)]
 pub struct VadeDidComm {
     signer: String,
     target: String,
-    transport: Arc<Mutex<Box<dyn VadeTransport + Send + Sync>>>,
 }
 
 impl VadeDidComm {
@@ -169,7 +75,6 @@ impl VadeDidComm {
     pub async fn new(
         signer: String,
         target: String,
-        transport: Box<dyn VadeTransport + Send + Sync>,
     ) -> AsyncResult<VadeDidComm> {
         match env_logger::try_init() {
             Ok(_) | Err(_) => (),
@@ -177,7 +82,6 @@ impl VadeDidComm {
         let vade_didcomm = VadeDidComm {
             signer,
             target,
-            transport: Arc::new(Mutex::new(transport)),
         };
 
         Ok(vade_didcomm)
@@ -189,14 +93,10 @@ impl VadeDidComm {
         protocol: String,
         options: String,
         payload: String,
-    ) -> AsyncResult<Option<String>> {
+    ) -> AsyncResult<Message> {
         match protocol.as_str() {
             "pingpong" => {
-                ProtocolHandler::ping_send(self.transport.clone(), options, payload).await
-            }
-            "listen" => {
-                self.listen().await?;
-                Ok(None)
+                protocol_handler::ProtocolHandler::ping_send(options, payload).await
             }
             _ => {
                 return Err(Box::from(format!(
@@ -205,28 +105,6 @@ impl VadeDidComm {
                 )));
             }
         }
-    }
-
-    async fn listen(&self) -> AsyncResult<()> {
-        log::debug!("starting didcomm listener");
-
-        let local_transport = self.transport.clone();
-        let receiver = local_transport.lock().await.listen().await?;
-
-        let get_messages_detached = async move {
-            match get_messages_in_loop(receiver, local_transport).await {
-                Ok(_) => {
-                    log::info!("listener gracefully shut down")
-                }
-                Err(err) => {
-                    log::warn!("listener ran into an error: {}", &err)
-                }
-            };
-        };
-
-        tokio::task::spawn(get_messages_detached);
-
-        Ok(())
     }
 
     fn receive_message(
@@ -254,34 +132,6 @@ impl VadeDidComm {
             body,
         })
     }
-}
-
-async fn get_messages_in_loop(
-    mut receiver: futures::channel::mpsc::UnboundedReceiver<Message>,
-    local_transport: Arc<Mutex<Box<dyn VadeTransport + Send + Sync>>>,
-) -> AsyncResult<()> {
-    Ok(loop {
-        match receiver.try_next() {
-            Ok(Some(value)) => {
-                log::debug!("got message from receiver: {:?}", &value);
-                let payload: ProtocolPayload = serde_json::from_str(&value.payload)?;
-                ProtocolHandler::handle_step_receive(
-                    local_transport.clone(),
-                    payload.protocol,
-                    payload.step,
-                )
-                .await?;
-            }
-            Ok(None) => {
-                log::debug!("channel disconnected, stop listening");
-                break;
-            }
-            Err(_) => {
-                // no message received, try again
-                sleep(Duration::from_millis(10u64)).await;
-            }
-        };
-    })
 }
 
 #[async_trait]
@@ -348,25 +198,5 @@ impl VadePlugin for VadeDidComm {
         Ok(VadePluginResultValue::Success(Some(serde_json::to_string(
             &decrypted,
         )?)))
-    }
-
-    async fn run_custom_function(
-        &mut self,
-        method: &str,
-        function: &str,
-        options: &str,
-        payload: &str,
-    ) -> AsyncResult<VadePluginResultValue<Option<String>>> {
-        ignore_unrelated!(method, options);
-        Ok(VadePluginResultValue::Success(
-            self.handle_protocol_start(
-                String::from(method),
-                String::from(function),
-                String::from(options),
-                String::from(payload),
-            )
-            .await
-            .map_err(|err| err.to_string())?,
-        ))
     }
 }

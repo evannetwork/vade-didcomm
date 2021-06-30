@@ -9,10 +9,12 @@ extern crate serde_big_array;
 
 mod utils;
 mod vade_didcomm;
-mod vade_transport;
+mod message;
+mod protocol_handler;
 
 pub use crate::{
     utils::{AsyncResult, ResultAsyncifier},
     vade_didcomm::*,
-    vade_transport::*,
+    message::*,
+    protocol_handler::*,
 };

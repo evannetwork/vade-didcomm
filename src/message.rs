@@ -1,6 +1,4 @@
 use crate::utils::AsyncResult;
-use async_trait::async_trait;
-use futures::channel::mpsc;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -50,11 +48,4 @@ impl Message {
     fn generate_id() -> String {
         Uuid::new_v4().to_simple().to_string()
     }
-}
-
-#[async_trait]
-pub trait VadeTransport {
-    async fn handle_message(&mut self, message_obj: Message) -> AsyncResult<()>;
-    async fn listen(&mut self) -> AsyncResult<mpsc::UnboundedReceiver<Message>>;
-    async fn send_message(&self, message: &Message) -> AsyncResult<()>;
 }

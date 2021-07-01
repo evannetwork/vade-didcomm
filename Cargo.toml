@@ -37,4 +37,5 @@ vade = { path = "../vade", version = "0.0.8" }
 # vade-evan-substrate = { path = "../vade-evan-substrate", version = "0.0.1" }
 
 [dev-dependencies]
+utilities = { path = "utilities" }
 x25519-dalek = "1.1.1"

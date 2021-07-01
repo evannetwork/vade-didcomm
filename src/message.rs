@@ -87,6 +87,14 @@ impl Message {
         // apply optional headers to known sections, use remaining as custom headers
         apply_optional!(d_message, message, from);
 
+        match message.to {
+            Some(values) => {
+                let to: Vec<&str> = values.iter().map(AsRef::as_ref).collect();
+                d_message = d_message.to(&to);
+            }
+            _ => (),
+        };
+
         // insert custom headers
         for (key, val) in message.other.iter() {
             d_message = d_message.add_header_field(
@@ -96,7 +104,7 @@ impl Message {
         }
 
         // finally sign and encrypt
-        let ready_to_send = d_message
+        let encrypted = d_message
             .seal_signed(
                 encryption_key,
                 key_pair,
@@ -104,7 +112,7 @@ impl Message {
             )
             .unwrap();
 
-        Ok(Some(ready_to_send))
+        Ok(Some(encrypted))
     }
 
     pub fn to_string(self) -> String {

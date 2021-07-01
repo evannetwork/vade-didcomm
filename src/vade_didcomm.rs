@@ -63,6 +63,7 @@ macro_rules! apply_optional {
         }
     }};
 }
+
 #[allow(dead_code)]
 pub struct VadeDidComm {
     signer: String,

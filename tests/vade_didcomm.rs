@@ -84,6 +84,7 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
     let options = get_send_options(&sign_keypair.user1_shared, &sign_keypair.sign_keypair);
     let payload = format!(
         r#"{{
+            "type": "https://didcomm.org/trust_ping/1.0/ping_response",
             "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
             "body": {},
             "custom1": "ichi",
@@ -114,11 +115,10 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
 
     let payload = format!(
         r#"{{
+            "type": "https://didcomm.org/trust_ping/1.0/ping",
             "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
-            "body": {},
             "custom1": "nyuu"
         }}"#,
-        serde_json::to_string(EXAMPLE_DID_DOCUMENT)?
     );
     let results = vade.didcomm_send(&options, &payload).await?;
 
@@ -132,12 +132,45 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
                 .as_ref()
                 .ok_or("no value in result")?;
             let parsed: Message = serde_json::from_str(result)?;
-            assert_eq!(EXAMPLE_DID_DOCUMENT, parsed.body);
+            assert_eq!(
+                "https://didcomm.org/trust_ping/1.0/ping",
+                parsed.r#type.ok_or("could not parse vade decrypted result")?,
+            );
         }
         _ => {
             return Err(Box::from("invalid result from didcomm_send"));
         }
     };
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn can_receive_unencrypted() -> AsyncResult<()> {
+    let mut vade = get_vade().await?;
+
+    let sign_keypair = get_signed_keypair();
+
+    let payload = format!(
+        r#"{{
+            "type": "https://didcomm.org/trust_ping/1.0/ping",
+            "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+            "custom1": "nyuu"
+        }}"#,
+    );
+
+    let options = get_receive_options(&sign_keypair.user2_shared, &sign_keypair.sign_keypair);
+    let results = vade.didcomm_receive(&options, &payload).await?;
+    let result = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+    let parsed: Message = serde_json::from_str(result)?;
+    assert_eq!(
+        "https://didcomm.org/trust_ping/1.0/ping",
+        parsed.r#type.ok_or("could not parse vade decrypted result")?,
+    );
 
     Ok(())
 }

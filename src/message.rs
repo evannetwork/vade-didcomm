@@ -12,6 +12,7 @@ pub struct Decrypted {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Message {
+    #[serde(default)]
     pub body: String,
     pub from: Option<String>,
     pub kid: Option<String>,

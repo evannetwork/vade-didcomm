@@ -49,7 +49,6 @@ async fn can_encrypt_message() -> AsyncResult<()> {
     Ok(())
 }
 
-
 #[tokio::test]
 async fn can_decrypt_message() -> AsyncResult<()> {
     let sign_keypair = keypair::get_signed_keypair();

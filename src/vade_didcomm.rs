@@ -74,10 +74,10 @@ impl VadePlugin for VadeDidComm {
         let message: Message;
 
         // try to parse the message directly without decrypting it
-        let plainMessage = Message::from_string(payload);
+        let plain_message = Message::from_string(payload);
 
-        if plainMessage.is_ok() {
-            message = plainMessage?;
+        if plain_message.is_ok() {
+            message = plain_message?;
         } else {
             let decrypted = Message::decrypt(
                 &payload,

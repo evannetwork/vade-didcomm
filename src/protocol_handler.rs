@@ -9,7 +9,11 @@ pub struct ProtocolHandler {}
 
 impl ProtocolHandler {
     pub fn before_send(message: &mut Message) -> Result<SendResult, Box<dyn std::error::Error>> {
-        let m_type = message.r#type.as_ref().ok_or("nope".to_string())?;
+        let m_type = message
+            .r#type
+            .as_ref()
+            .ok_or("message type is missing".to_string())?
+            .to_owned();
         let mut protocol: String = String::from("unknown");
 
         if m_type.contains("/trust_ping") {

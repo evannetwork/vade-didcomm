@@ -1,10 +1,7 @@
-use crate::{
-    message::{Message},
-    AsyncResult,
-};
+use crate::{AsyncResult, ProtocolHandler, message::{Message}};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use vade::{VadePlugin, VadePluginResultValue};
+use vade::{ResultAsyncifier, VadePlugin, VadePluginResultValue};
 
 big_array! { BigArray; }
 
@@ -48,13 +45,22 @@ impl VadePlugin for VadeDidComm {
         log::debug!("preparing DIDComm message for being sent");
 
         let options = serde_json::from_str::<DidcommSendOptions>(&options)?;
-        let encrypted = Message::encrypt(
-            &payload,
-            &options.encryption_key,
-            &options.sign_keypair,
-        )?;
+        let mut message = Message::from_string(payload)?;
+        let protocol_result = ProtocolHandler::before_send(&mut message).asyncify()?;
+        let result: String;
 
-        Ok(VadePluginResultValue::Success(encrypted))
+        if protocol_result.encrypt {
+            let encrypted = Message::encrypt(
+                &message.to_string()?,
+                &options.encryption_key,
+                &options.sign_keypair,
+            )?;
+            result = encrypted.ok_or("Could not encrypt message")?;
+        } else {
+            result = message.to_string()?;
+        }
+
+        Ok(VadePluginResultValue::Success(Some(result)))
     }
 
     async fn didcomm_receive(
@@ -65,15 +71,22 @@ impl VadePlugin for VadeDidComm {
         log::debug!("handling receival of DIDComm message");
 
         let options = serde_json::from_str::<DidcommReceiveOptions>(&options)?;
+        let message: Message;
 
-        let decrypted = Message::decrypt(
-            &payload,
-            &options.decryption_key,
-            &options.sign_public,
-        )?;
+        // try to parse the message directly without decrypting it
+        let plainMessage = Message::from_string(payload);
 
-        Ok(VadePluginResultValue::Success(Some(serde_json::to_string(
-            &decrypted.body,
-        )?)))
+        if plainMessage.is_ok() {
+            message = plainMessage?;
+        } else {
+            let decrypted = Message::decrypt(
+                &payload,
+                &options.decryption_key,
+                &options.sign_public,
+            )?;
+            message = decrypted.body;
+        }
+
+        return Ok(VadePluginResultValue::Success(Some(serde_json::to_string(&message)?)));
     }
 }

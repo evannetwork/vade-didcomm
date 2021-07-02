@@ -44,6 +44,17 @@ impl Message {
         return Ok(message);
     }
 
+    pub fn to_string(self) -> Result<String, String> {
+        let message = serde_json::to_string(&self)
+            .map_err(|err| {
+                format!(
+                    "Could not format message to string: {}",
+                    &err.to_string()
+                )
+            })?;
+        return Ok(message);
+    }
+
     pub fn decrypt(
         message: &str,
         decryption_key: &[u8],
@@ -56,14 +67,14 @@ impl Message {
                 Some(sign_public),
             ).map_err(|err| {
                 format!(
-                    "could not get valid message from received data: {}",
+                    "could not decrypt message: {}",
                     &err.to_string()
                 )
             })?;
 
         let body = String::from_utf8(received.body.clone()).map_err(|err| {
             format!(
-                "could not get valid message from received data: {}",
+                "could not get body from message while decrypting message: {}",
                 &err.to_string()
             )
         })?;
@@ -109,13 +120,13 @@ impl Message {
                 encryption_key,
                 key_pair,
                 SignatureAlgorithm::EdDsa,
-            )
-            .unwrap();
+            ).map_err(|err| {
+                format!(
+                    "could not run searl_signed while encrypting message: {}",
+                    &err.to_string()
+                )
+            })?;
 
         Ok(Some(encrypted))
-    }
-
-    pub fn to_string(self) -> String {
-        serde_json::to_string(&self).unwrap()
     }
 }

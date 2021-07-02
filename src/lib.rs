@@ -10,11 +10,14 @@ extern crate serde_big_array;
 mod utils;
 mod vade_didcomm;
 mod message;
-// mod protocol_handler;
+mod protocol_handler;
+mod protocols;
 
 pub use crate::{
     utils::{AsyncResult, ResultAsyncifier},
     vade_didcomm::*,
     message::*,
-    // protocol_handler::*,
+    protocol_handler::*,
+    protocols::protocol::*,
+    protocols::pingpong::*,
 };

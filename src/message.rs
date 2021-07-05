@@ -19,7 +19,21 @@ pub struct Message {
     pub to: Option<Vec<String>>,
     pub r#type: Option<String>,
     #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
-    pub(crate) other: HashMap<String, String>,
+    pub other: HashMap<String, String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EncryptedMessage {
+    #[serde(default)]
+    pub from: Option<String>,
+    pub kid: Option<String>,
+    pub to: Option<Vec<String>>,
+    pub r#type: Option<String>,
+    pub ciphertext: Option<Vec<u8>>,
+    pub iv: Option<Vec<u8>>,
+    pub id: Option<u64>,
+    #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
+    pub other: HashMap<String, String>,
 }
 
 macro_rules! apply_optional {

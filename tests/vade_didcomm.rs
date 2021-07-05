@@ -1,6 +1,6 @@
 use utilities::keypair::get_signed_keypair;
 use vade::Vade;
-use vade_didcomm::{AsyncResult, Message, VadeDidComm};
+use vade_didcomm::{AsyncResult, EncryptedMessage, Message, VadeDidComm};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -10,16 +10,10 @@ struct PingBody {
 
 async fn get_vade() -> AsyncResult<Vade> {
     let mut vade = Vade::new();
-    let vade_didcomm = get_vade_didcomm().await?;
+    let vade_didcomm = VadeDidComm::new().await?;
     vade.register_plugin(Box::from(vade_didcomm));
 
     Ok(vade)
-}
-
-async fn get_vade_didcomm() -> AsyncResult<VadeDidComm> {
-    let vade_didcomm = VadeDidComm::new().await?;
-
-    Ok(vade_didcomm)
 }
 
 fn get_send_options(
@@ -77,11 +71,14 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
         }}"#,
     );
     let results = vade.didcomm_send(&options, &payload).await?;
-    results
+    let result = results
         .get(0)
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
+    let parsed: EncryptedMessage = serde_json::from_str(result)?;
+
+    assert_eq!(parsed.other.get("custom1").ok_or("could not field custom1")?, "ichi");
 
     Ok(())
 }

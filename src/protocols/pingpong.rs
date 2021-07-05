@@ -1,4 +1,4 @@
-use crate::{ Message, Protocol, ProtocolStep, receive_step, send_step};
+use crate::{ Message, Protocol, receive_step, send_step};
 
 macro_rules! sf {
     ( $var:expr ) => ( String::from($var) );

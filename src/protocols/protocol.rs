@@ -1,11 +1,11 @@
 use crate::Message;
 
-pub trait Protocol {
-    fn beforeSend(message: Message) {
-        panic!("afterSend not implemented")
-    }
+pub struct ProtocolConfig{
+    pub name: String,
+    pub handler: fn(message: &mut Message, encrypt: &mut bool),
+}
 
-    fn afterSend() {
-        panic!("afterSend not implemented")
-    }
+pub struct Protocol {
+    pub name: String,
+    pub steps: Vec<ProtocolConfig>,
 }

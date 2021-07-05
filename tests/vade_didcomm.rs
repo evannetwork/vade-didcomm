@@ -1,27 +1,12 @@
 use utilities::keypair::get_signed_keypair;
 use vade::Vade;
 use vade_didcomm::{AsyncResult, Message, VadeDidComm};
+use serde::{Deserialize, Serialize};
 
-const EXAMPLE_DID_DOCUMENT: &str = r#"{
-    "@context": "https://w3id.org/did/v1",
-    "id": "did:uknow:d34db33f",
-    "publicKey": [
-        {
-            "id": "did:uknow:d34db33f#cooked",
-            "type": "Secp256k1VerificationKey2018",
-            "owner": "did:uknow:d34db33f",
-            "publicKeyHex": "b9c5714089478a327f09197987f16f9e5d936e8a"
-        }
-    ],
-    "authentication": [
-        {
-            "type": "Secp256k1SignatureAuthentication2018",
-            "publicKey": "did:uknow:d34db33f#cooked"
-        }
-    ],
-    "service": [],
-    "created": ""
-}"#;
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct PingBody {
+    response_requested: bool,
+}
 
 async fn get_vade() -> AsyncResult<Vade> {
     let mut vade = Vade::new();
@@ -84,24 +69,19 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
     let options = get_send_options(&sign_keypair.user1_shared, &sign_keypair.sign_keypair);
     let payload = format!(
         r#"{{
-            "type": "https://didcomm.org/trust_ping/1.0/ping_response",
+            "type": "https://didcomm.org/trust_ping/1.0/ping",
             "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
-            "body": {},
             "custom1": "ichi",
             "custom2": "ni",
             "custom3": "san"
         }}"#,
-        serde_json::to_string(EXAMPLE_DID_DOCUMENT)?
     );
     let results = vade.didcomm_send(&options, &payload).await?;
-    match results.get(0) {
-        Some(Some(value)) => {
-            println!("got didcomm msg: {}", &value);
-        }
-        _ => {
-            return Err(Box::from("invalid result from didcomm_send"));
-        }
-    };
+    results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
 
     Ok(())
 }
@@ -136,6 +116,11 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
                 "https://didcomm.org/trust_ping/1.0/ping",
                 parsed.r#type.ok_or("could not parse vade decrypted result")?,
             );
+            // ensure that send processor was executed
+            println!("----------------------------------");
+            println!("BODY: {}", parsed.body);
+            let body: PingBody = serde_json::from_str(&parsed.body)?;
+            assert_eq!(body.response_requested, true);
         }
         _ => {
             return Err(Box::from("invalid result from didcomm_send"));
@@ -167,6 +152,7 @@ async fn can_receive_unencrypted() -> AsyncResult<()> {
         .as_ref()
         .ok_or("no value in result")?;
     let parsed: Message = serde_json::from_str(result)?;
+
     assert_eq!(
         "https://didcomm.org/trust_ping/1.0/ping",
         parsed.r#type.ok_or("could not parse vade decrypted result")?,
@@ -174,18 +160,3 @@ async fn can_receive_unencrypted() -> AsyncResult<()> {
 
     Ok(())
 }
-
-
-// #[tokio::test]
-// async fn can_reply_to_a_ping_with_a_pong() -> AsyncResult<()> {
-//     let mut vade = get_vade().await?;
-
-//     let sign_keypair = get_signed_keypair();
-//     let options1 = get_send_options(sign_keypair.user1_shared, &sign_keypair.sign_keypair);
-//     let options2 = get_didcomm_options(sign_keypair.user2_shared, &sign_keypair.sign_keypair);
-
-//     vade.didcomm_send(options, payload);
-
-
-//     Ok(())
-// }

@@ -1,50 +1,50 @@
-use crate::{Protocol, message::{Message}, PING_PONG_PROTOCOL};
+use crate::{Direction, Protocol, get_ping_pong_protocol, message::{Message}};
 
 pub struct ProtocolHandleResult {
     pub protocol: String,
     pub step: String,
     pub encrypt: bool,
-    pub direction: String,
+    pub direction: Direction,
 }
 
 pub struct ReceiveResult {
     pub protocol: String,
 }
 
-static PROTOCOLS: [&Protocol; 1] = [
-    &PING_PONG_PROTOCOL,
-];
-
 fn handle_protocol(
     message: &mut Message,
-    direction: String,
+    direction: Direction,
 ) -> Result<ProtocolHandleResult, Box<dyn std::error::Error>> {
     let m_type = message
         .r#type
         .as_ref()
         .ok_or("message type is missing".to_string())?
         .to_owned();
-    let mut protocolName: String = String::from("unknown");
-    let mut step: String = String::from("unknown");
+    let mut protocol_name: String = String::from("unknown");
+    let mut stepName: String = String::from("unknown");
     let encrypt = &mut true;
+    let protocols: [&Protocol; 1] = [
+        &get_ping_pong_protocol(),
+    ];
 
-    for i in 0..PROTOCOLS.len() {
-        if m_type.contains(&PROTOCOLS[i].name) {
-            let protocol = &PROTOCOLS[i];
-            protocolName = String::from(&protocol.name);
+    for i in 0..protocols.len() {
+        let protocol = &protocols[i];
+        println!("{}", &protocol.name);
+        if m_type.contains(&protocol.name) {
+            protocol_name = String::from(&protocol.name);
 
             for x in 0..protocol.steps.len() {
-                let protocolStep = &protocol.steps[x];
+                let step = &protocol.steps[x];
 
-                if m_type.contains(&protocolStep.name) {
-                    step = String::from(&protocolStep.name);
-                    (protocolStep.handler)(message, encrypt);
+                if matches!(&step.direction, direction) && m_type.contains(&step.name) {
+                    stepName = String::from(&step.name);
+                    (step.handler)(message, encrypt);
                     break;
                 }
             }
         }
 
-        if protocolName != "unknown" && step != "unknown" {
+        if protocol_name != "unknown" && stepName != "unknown" {
             break;
         }
     }
@@ -52,8 +52,8 @@ fn handle_protocol(
     return Ok(ProtocolHandleResult {
         direction,
         encrypt: encrypt.to_owned(),
-        protocol: protocolName,
-        step,
+        protocol: protocol_name,
+        step: stepName.to_owned(),
     });
 }
 
@@ -63,12 +63,12 @@ impl ProtocolHandler {
     pub fn before_send(
         message: &mut Message,
     ) -> Result<ProtocolHandleResult, Box<dyn std::error::Error>> {
-        return handle_protocol(message, String::from("send"));
+        return handle_protocol(message, Direction::SEND);
     }
 
     pub fn after_receive(
         message: &mut Message,
     ) -> Result<ProtocolHandleResult, Box<dyn std::error::Error>> {
-        return handle_protocol(message, String::from("receive"));
+        return handle_protocol(message, Direction::RECEIVE);
     }
 }

@@ -1,4 +1,4 @@
-use crate::{Message, Protocol, ProtocolConfig};
+use crate::{ Message, Protocol, ProtocolStep, receive_step, send_step};
 
 macro_rules! sf {
     ( $var:expr ) => ( String::from($var) );
@@ -33,12 +33,10 @@ pub fn get_ping_pong_protocol() -> Protocol {
         steps: Vec::new(),
     };
 
-    protocol.steps.push(ProtocolConfig { name: sf!("send_ping"), handler: send_ping });
-    protocol.steps.push(ProtocolConfig { name: sf!("send_ping_response"), handler: send_pong });
-    protocol.steps.push(ProtocolConfig { name: sf!("receive_ping"), handler: receive_ping });
-    protocol.steps.push(ProtocolConfig { name: sf!("receive_ping_response"), handler: receive_pong });
+    protocol.steps.push(send_step("ping", send_ping));
+    protocol.steps.push(send_step("ping_response", send_pong));
+    protocol.steps.push(receive_step("ping", receive_ping));
+    protocol.steps.push(receive_step("ping_response", receive_pong));
 
     return protocol;
 }
-
-pub static PING_PONG_PROTOCOL: Protocol = get_ping_pong_protocol();

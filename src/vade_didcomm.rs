@@ -44,12 +44,12 @@ impl VadePlugin for VadeDidComm {
     ) -> AsyncResult<VadePluginResultValue<Option<String>>> {
         log::debug!("preparing DIDComm message for being sent");
 
-        let options = serde_json::from_str::<DidcommSendOptions>(&options)?;
         let mut message = Message::from_string(payload)?;
         let protocol_result = ProtocolHandler::before_send(&mut message).asyncify()?;
         let result: String;
 
         if protocol_result.encrypt {
+            let options = serde_json::from_str::<DidcommSendOptions>(&options)?;
             let encrypted = Message::encrypt(
                 &message.to_string()?,
                 &options.encryption_key,

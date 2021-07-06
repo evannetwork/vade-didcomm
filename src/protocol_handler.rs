@@ -1,4 +1,4 @@
-use crate::{Direction, Protocol, get_ping_pong_protocol, message::{Message}};
+use crate::{Direction, Protocol, get_ping_pong_protocol, message::{Message}, utils::SyncResult};
 
 pub struct ProtocolHandleResult {
     pub protocol: String,
@@ -14,7 +14,7 @@ pub struct ReceiveResult {
 fn handle_protocol(
     message: &mut Message,
     direction: Direction,
-) -> Result<ProtocolHandleResult, Box<dyn std::error::Error>> {
+) -> SyncResult<ProtocolHandleResult> {
     let m_type = message
         .r#type
         .as_ref()
@@ -49,6 +49,8 @@ fn handle_protocol(
         }
     }
 
+    println!("-------------testest: {}", encrypt);
+
     return Ok(ProtocolHandleResult {
         direction,
         encrypt: encrypt.to_owned(),
@@ -62,13 +64,13 @@ pub struct ProtocolHandler {}
 impl ProtocolHandler {
     pub fn before_send(
         message: &mut Message,
-    ) -> Result<ProtocolHandleResult, Box<dyn std::error::Error>> {
+    ) -> SyncResult<ProtocolHandleResult> {
         return handle_protocol(message, Direction::SEND);
     }
 
     pub fn after_receive(
         message: &mut Message,
-    ) -> Result<ProtocolHandleResult, Box<dyn std::error::Error>> {
+    ) -> SyncResult<ProtocolHandleResult> {
         return handle_protocol(message, Direction::RECEIVE);
     }
 }

@@ -8,3 +8,5 @@ impl<T> ResultAsyncifier<T> for Result<T, Box<dyn std::error::Error + Send + Syn
         self.map_err(|err| err.to_string().into())
     }
 }
+
+pub type SyncResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;

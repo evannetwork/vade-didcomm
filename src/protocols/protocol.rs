@@ -1,4 +1,4 @@
-use crate::Message;
+use crate::{Message, utils::SyncResult};
 
 pub enum Direction {
     SEND,
@@ -7,7 +7,7 @@ pub enum Direction {
 
 pub struct ProtocolStep {
     pub direction: Direction,
-    pub handler: fn(message: &mut Message, encrypt: &mut bool),
+    pub handler: fn(message: &mut Message, encrypt: &mut bool) -> SyncResult<String>,
     pub name: String,
 }
 
@@ -16,7 +16,10 @@ pub struct Protocol {
     pub steps: Vec<ProtocolStep>,
 }
 
-pub fn send_step(name: &str, handler: fn(message: &mut Message, encrypt: &mut bool)) -> ProtocolStep {
+pub fn send_step(
+    name: &str,
+    handler: fn(message: &mut Message, encrypt: &mut bool) -> SyncResult<String>,
+) -> ProtocolStep {
     return ProtocolStep {
         direction: Direction::SEND,
         name: String::from(name),
@@ -24,7 +27,10 @@ pub fn send_step(name: &str, handler: fn(message: &mut Message, encrypt: &mut bo
     };
 }
 
-pub fn receive_step(name: &str, handler: fn(message: &mut Message, encrypt: &mut bool)) -> ProtocolStep {
+pub fn receive_step(
+    name: &str,
+    handler: fn(message: &mut Message, encrypt: &mut bool) -> SyncResult<String>,
+) -> ProtocolStep {
     return ProtocolStep {
         direction: Direction::RECEIVE,
         name: String::from(name),

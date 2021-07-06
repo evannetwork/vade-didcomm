@@ -5,6 +5,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate hex;
+extern crate ed25519_dalek;
 #[macro_use]
 extern crate serde_big_array;
 
@@ -16,7 +17,7 @@ mod protocols;
 mod rocks_db;
 
 pub use crate::{
-    utils::{AsyncResult, ResultAsyncifier},
+    utils::*,
     vade_didcomm::*,
     message::*,
     protocol_handler::*,

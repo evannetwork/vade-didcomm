@@ -10,3 +10,5 @@ Cargo.lock
 **/*.rs.bk
 
 ./utilities/target/
+
+./didcomm_rocks_db/

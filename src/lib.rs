@@ -13,6 +13,7 @@ mod vade_didcomm;
 mod message;
 mod protocol_handler;
 mod protocols;
+mod rocks_db;
 
 pub use crate::{
     utils::{AsyncResult, ResultAsyncifier},
@@ -22,4 +23,5 @@ pub use crate::{
     protocols::protocol::*,
     protocols::pingpong::*,
     protocols::did_exchange::*,
+    rocks_db::*,
 };

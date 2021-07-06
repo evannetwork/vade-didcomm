@@ -24,7 +24,7 @@ async fn do_request(
     );
     // let results = vade.didcomm_send(&options, &exchange_request).await?;
 
-    panic!("{}", exchange_request);
+    // panic!("{}", exchange_request);
 
 }
 

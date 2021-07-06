@@ -21,7 +21,7 @@ async fn can_instantiate_message() -> AsyncResult<()> {
 
 #[tokio::test]
 async fn can_encrypt_message() -> AsyncResult<()> {
-    let sign_keypair = keypair::get_signed_keypair();
+    let sign_keypair = keypair::get_keypair_set();
     let payload = format!(
         r#"{{
             "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
@@ -51,7 +51,7 @@ async fn can_encrypt_message() -> AsyncResult<()> {
 
 #[tokio::test]
 async fn can_decrypt_message() -> AsyncResult<()> {
-    let sign_keypair = keypair::get_signed_keypair();
+    let sign_keypair = keypair::get_keypair_set();
     let payload = format!(
         r#"{{
             "to": [ "did::xyz:34r3cu403hnth03r49g03" ],

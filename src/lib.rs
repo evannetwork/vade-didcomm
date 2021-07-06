@@ -4,6 +4,7 @@ extern crate redis;
 extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
+extern crate hex;
 #[macro_use]
 extern crate serde_big_array;
 
@@ -20,4 +21,5 @@ pub use crate::{
     protocol_handler::*,
     protocols::protocol::*,
     protocols::pingpong::*,
+    protocols::did_exchange::*,
 };

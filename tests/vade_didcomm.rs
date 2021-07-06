@@ -1,4 +1,4 @@
-use utilities::keypair::get_signed_keypair;
+use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{AsyncResult, EncryptedMessage, Message, VadeDidComm};
 use serde::{Deserialize, Serialize};
@@ -59,7 +59,7 @@ async fn can_be_registered_as_plugin() -> AsyncResult<()> {
 async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
     let mut vade = get_vade().await?;
 
-    let sign_keypair = get_signed_keypair();
+    let sign_keypair = get_keypair_set();
     let options = get_send_options(&sign_keypair.user1_shared, &sign_keypair.sign_keypair);
     let payload = format!(
         r#"{{
@@ -87,7 +87,7 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
 async fn can_decrypt_received_messages() -> AsyncResult<()> {
     let mut vade = get_vade().await?;
 
-    let sign_keypair = get_signed_keypair();
+    let sign_keypair = get_keypair_set();
     let options = get_send_options(&sign_keypair.user1_shared, &sign_keypair.sign_keypair);
 
     let payload = format!(
@@ -131,7 +131,7 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
 async fn can_receive_unencrypted() -> AsyncResult<()> {
     let mut vade = get_vade().await?;
 
-    let sign_keypair = get_signed_keypair();
+    let sign_keypair = get_keypair_set();
 
     let payload = format!(
         r#"{{

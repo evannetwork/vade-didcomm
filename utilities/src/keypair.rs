@@ -11,7 +11,7 @@ pub struct KeyPairSet {
     pub sign_keypair: ed25519_dalek::Keypair,
 }
 
-pub fn get_signed_keypair() -> KeyPairSet {
+pub fn get_keypair_set() -> KeyPairSet {
     let user1_secret = StaticSecret::new(OsRng);
     let user1_public = PublicKey::from(&user1_secret);
     let user2_secret = StaticSecret::new(OsRng);

@@ -2,7 +2,7 @@ use uuid::Uuid;
 use k256::elliptic_curve::rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 
-use crate::{Message, protocol::DID_EXCHANGE_PROTOCOL_URL, utils::SyncResult, write_db};
+use crate::{Message, StepOutput, StepResult, protocol::DID_EXCHANGE_PROTOCOL_URL, utils::SyncResult, write_db};
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -119,18 +119,17 @@ pub fn get_request_message(
     return Ok(exchange_request);
 }
 
-pub fn send_request(message: &mut Message, encrypt: &mut bool) -> SyncResult<String> {
+pub fn send_request(message: &mut Message) -> StepResult {
     let from = message.from.as_ref().ok_or("from is required")?;
     let to_vec = message.to.as_ref().ok_or("to is required")?;
     let to = &to_vec[0];
 
     // TODO: replace empty string with from_service_endpoint
     message.body = get_request_message(&from, to, "")?;
-    *encrypt = false;
 
-    return Ok(String::from("{}"));
+    return Ok(StepOutput { encrypt: false, metadata: String::from("{}") });
 }
 
-pub fn receive_request(message: &mut Message, _encrypt: &mut bool) -> SyncResult<String> {
-    return Ok(String::from("{}"));
+pub fn receive_request(message: &mut Message) -> StepResult {
+    return Ok(StepOutput { encrypt: true, metadata: String::from("{}") });
 }

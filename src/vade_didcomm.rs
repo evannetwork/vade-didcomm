@@ -45,8 +45,8 @@ impl VadePlugin for VadeDidComm {
         log::debug!("preparing DIDComm message for being sent");
 
         let mut message = Message::from_string(payload)?;
+        let message_string: String;
         let protocol_result = ProtocolHandler::before_send(&mut message).asyncify()?;
-        let result: String;
 
         if protocol_result.encrypt {
             let options = serde_json::from_str::<DidcommSendOptions>(&options)?;
@@ -55,12 +55,21 @@ impl VadePlugin for VadeDidComm {
                 &options.encryption_key,
                 &options.sign_keypair,
             )?;
-            result = encrypted.ok_or("Could not encrypt message")?;
+            message_string = encrypted.ok_or("Could not encrypt message")?;
         } else {
-            result = message.to_string()?;
+            message_string = message.to_string()?;
         }
 
-        Ok(VadePluginResultValue::Success(Some(result)))
+        let send_result = format!(
+            r#"{{
+                "message": {},
+                "metadata": {}
+            }}"#,
+            message_string,
+            protocol_result.metadata,
+        );
+
+        return Ok(VadePluginResultValue::Success(Some(send_result)));
     }
 
     async fn didcomm_receive(
@@ -87,6 +96,14 @@ impl VadePlugin for VadeDidComm {
             message = decrypted.body;
         }
 
-        return Ok(VadePluginResultValue::Success(Some(serde_json::to_string(&message)?)));
+        let receive_result = format!(
+            r#"{{
+                "message": {},
+                "metadata": {{}}
+            }}"#,
+            serde_json::to_string(&message)?,
+        );
+
+        return Ok(VadePluginResultValue::Success(Some(receive_result)));
     }
 }

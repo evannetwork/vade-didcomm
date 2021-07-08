@@ -36,6 +36,12 @@ pub struct EncryptedMessage {
     pub other: HashMap<String, String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ProtocolOutput<MessageType> {
+    pub message: MessageType,
+    pub metadata: HashMap<String, String>,
+}
+
 macro_rules! apply_optional {
     ($message:ident, $payload:ident, $payload_arg:ident) => {{
         match $payload.$payload_arg {

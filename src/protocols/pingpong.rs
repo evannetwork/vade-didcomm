@@ -1,34 +1,7 @@
-use crate::{Message, Protocol, receive_step, send_step, utils::SyncResult};
+use crate::{Message, Protocol, StepOutput, StepResult, receive_step, send_step};
 
 macro_rules! sf {
     ( $var:expr ) => ( String::from($var) );
-}
-
-pub fn send_ping(message: &mut Message, _encrypt: &mut bool) -> SyncResult<String> {
-    message.body = format!(
-        r#"{{
-            "response_requested": true
-        }}"#,
-    );
-    return Ok(sf!("{}"));
-}
-
-pub fn send_pong(message: &mut Message, _encrypt: &mut bool) -> SyncResult<String> {
-    let thread_id = message.other.get("thread_id");
-    thread_id.ok_or("PING-PONG Message does not contain header thread_id");
-    return Ok(sf!("{}"));
-}
-
-pub fn receive_ping(message: &mut Message, _encrypt: &mut bool) -> SyncResult<String> {
-    let thread_id = message.other.get("thread_id");
-    thread_id.ok_or("PING-PONG Message does not contain header thread_id");
-    return Ok(sf!("{}"));
-}
-
-pub fn receive_pong(message: &mut Message, _encrypt: &mut bool) -> SyncResult<String> {
-    let thread_id = message.other.get("thread_id");
-    thread_id.ok_or("PING-PONG Message does not contain header thread_id");
-    return Ok(sf!("{}"));
 }
 
 pub fn get_ping_pong_protocol() -> Protocol {
@@ -43,4 +16,31 @@ pub fn get_ping_pong_protocol() -> Protocol {
     protocol.steps.push(receive_step("ping_response", receive_pong));
 
     return protocol;
+}
+
+pub fn send_ping(message: &mut Message) -> StepResult {
+    message.body = format!(
+        r#"{{
+            "response_requested": true
+        }}"#,
+    );
+    return Ok(StepOutput { encrypt: true, metadata: String::from("{}") });
+}
+
+pub fn send_pong(message: &mut Message) -> StepResult {
+    let thread_id = message.other.get("thread_id");
+    thread_id.ok_or("PING-PONG Message does not contain header thread_id");
+    return Ok(StepOutput { encrypt: true, metadata: String::from("{}") });
+}
+
+pub fn receive_ping(message: &mut Message) -> StepResult {
+    let thread_id = message.other.get("thread_id");
+    thread_id.ok_or("PING-PONG Message does not contain header thread_id");
+    return Ok(StepOutput { encrypt: true, metadata: String::from("{}") });
+}
+
+pub fn receive_pong(message: &mut Message) -> StepResult {
+    let thread_id = message.other.get("thread_id");
+    thread_id.ok_or("PING-PONG Message does not contain header thread_id");
+    return Ok(StepOutput { encrypt: true, metadata: String::from("{}") });
 }

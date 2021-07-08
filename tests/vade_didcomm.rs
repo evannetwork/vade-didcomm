@@ -1,6 +1,6 @@
 use utilities::keypair::get_keypair_set;
 use vade::Vade;
-use vade_didcomm::{AsyncResult, EncryptedMessage, Message, VadeDidComm};
+use vade_didcomm::{AsyncResult, EncryptedMessage, Message, ProtocolOutput, VadeDidComm};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -76,9 +76,9 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let parsed: EncryptedMessage = serde_json::from_str(result)?;
+    let parsed: ProtocolOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
-    assert_eq!(parsed.other.get("custom1").ok_or("could not field custom1")?, "ichi");
+    assert_eq!(parsed.message.other.get("custom1").ok_or("could not field custom1")?, "ichi");
 
     Ok(())
 }
@@ -101,22 +101,22 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
 
     match results.get(0) {
         Some(Some(value)) => {
+            let encrypted: ProtocolOutput<EncryptedMessage> = serde_json::from_str(value)?;
+            let encrypted_message = serde_json::to_string(&encrypted.message)?;
             let options = get_receive_options(&sign_keypair.user2_shared, &sign_keypair.sign_keypair);
-            let results = vade.didcomm_receive(&options, &value).await?;
+            let results = vade.didcomm_receive(&options, &encrypted_message).await?;
             let result = results
                 .get(0)
                 .ok_or("no result")?
                 .as_ref()
                 .ok_or("no value in result")?;
-            let parsed: Message = serde_json::from_str(result)?;
+            let parsed: ProtocolOutput<Message> = serde_json::from_str(result)?;
             assert_eq!(
                 "https://didcomm.org/trust_ping/1.0/ping",
-                parsed.r#type.ok_or("could not parse vade decrypted result")?,
+                parsed.message.r#type.ok_or("could not parse vade decrypted result")?,
             );
             // ensure that send processor was executed
-            println!("----------------------------------");
-            println!("BODY: {}", parsed.body);
-            let body: PingBody = serde_json::from_str(&parsed.body)?;
+            let body: PingBody = serde_json::from_str(&parsed.message.body)?;
             assert_eq!(body.response_requested, true);
         }
         _ => {

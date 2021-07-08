@@ -1,10 +1,11 @@
-use crate::{Direction, Protocol, get_ping_pong_protocol, message::{Message}, utils::SyncResult};
+use crate::{Direction, Protocol, get_ping_pong_protocol, message::{Message}, protocol::get_did_exchange_protocol, utils::SyncResult};
 
-pub struct ProtocolHandleResult {
-    pub protocol: String,
-    pub step: String,
-    pub encrypt: bool,
+pub struct ProtocolHandleOutput {
     pub direction: Direction,
+    pub encrypt: bool,
+    pub protocol: String,
+    pub metadata: String,
+    pub step: String,
 }
 
 pub struct ReceiveResult {
@@ -14,7 +15,7 @@ pub struct ReceiveResult {
 fn handle_protocol(
     message: &mut Message,
     direction: Direction,
-) -> SyncResult<ProtocolHandleResult> {
+) -> SyncResult<ProtocolHandleOutput> {
     let m_type = message
         .r#type
         .as_ref()
@@ -22,8 +23,10 @@ fn handle_protocol(
         .to_owned();
     let mut protocol_name: String = String::from("unknown");
     let mut stepName: String = String::from("unknown");
-    let encrypt = &mut true;
-    let protocols: [&Protocol; 1] = [
+    let mut encrypt = true;
+    let mut metadata: String = String::from("{}");
+    let protocols: [&Protocol; 2] = [
+        &get_did_exchange_protocol(),
         &get_ping_pong_protocol(),
     ];
 
@@ -36,9 +39,11 @@ fn handle_protocol(
             for x in 0..protocol.steps.len() {
                 let step = &protocol.steps[x];
 
-                if matches!(&step.direction, direction) && m_type.contains(&step.name) {
+                if step.direction == direction && m_type.contains(&step.name) {
                     stepName = String::from(&step.name);
-                    (step.handler)(message, encrypt);
+                    let step_outcome = (step.handler)(message)?;
+                    encrypt = step_outcome.encrypt;
+                    metadata = step_outcome.metadata;
                     break;
                 }
             }
@@ -49,12 +54,11 @@ fn handle_protocol(
         }
     }
 
-    println!("-------------testest: {}", encrypt);
-
-    return Ok(ProtocolHandleResult {
+    return Ok(ProtocolHandleOutput {
         direction,
-        encrypt: encrypt.to_owned(),
+        encrypt: encrypt,
         protocol: protocol_name,
+        metadata,
         step: stepName.to_owned(),
     });
 }
@@ -64,13 +68,13 @@ pub struct ProtocolHandler {}
 impl ProtocolHandler {
     pub fn before_send(
         message: &mut Message,
-    ) -> SyncResult<ProtocolHandleResult> {
+    ) -> SyncResult<ProtocolHandleOutput> {
         return handle_protocol(message, Direction::SEND);
     }
 
     pub fn after_receive(
         message: &mut Message,
-    ) -> SyncResult<ProtocolHandleResult> {
+    ) -> SyncResult<ProtocolHandleOutput> {
         return handle_protocol(message, Direction::RECEIVE);
     }
 }

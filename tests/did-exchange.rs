@@ -15,13 +15,6 @@ async fn do_request(
     inviter: &str,
     invitee: &str,
 ) -> AsyncResult<()> {
-    // let exchange_request = get_request_message(
-    //     &inviter,
-    //     &invitee,
-    //     "http://evan.network",
-    // );
-    // check if keys were saved in rocks db
-
     let exchange_request = format!(
         r#"{{
             "type": "{}/request",
@@ -39,7 +32,7 @@ async fn do_request(
         &exchange_request,
     ).await?;
 
-    let db_result = read_db(&format!("comm_keypair_{}", invitee)).asyncify()?;
+    let db_result = read_db(&format!("comm_keypair_{}_{}", inviter, invitee)).asyncify()?;
     let _: CommKeyPair = serde_json::from_str(&db_result)?;
 
     return Ok(());

@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Message, StepOutput, StepResult, protocol::DID_EXCHANGE_PROTOCOL_URL, utils::SyncResult, write_db};
 
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CommKeyPair {
     pub encoded_pub_key: String,
@@ -12,8 +11,24 @@ pub struct CommKeyPair {
     pub encoded_target_pub_key: String,
 }
 
-pub fn get_encoded_pub_key() {
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DidCommPubKey {
+    pub id: String,
+    pub public_key_base_58: String
+}
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DidCommService {
+    pub service_endpoint: String,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DidcommObj {
+    pub public_key: Vec<DidCommPubKey>,
+    pub service: Vec<DidCommService>,
 }
 
 pub fn save_com_keypair(
@@ -81,15 +96,8 @@ pub fn get_request_message(
     from_did: &str,
     to_did: &str,
     from_service_endpoint: &str,
+    encoded_keypair: CommKeyPair,
 ) -> SyncResult<String> {
-    let keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
-    let encoded_keypair = save_com_keypair(
-        from_did,
-        to_did,
-        &keypair.secret,
-        &keypair.public,
-        &None,
-    )?;
     let message_payload = get_com_did_obj(
         from_did,
         &encoded_keypair.encoded_pub_key,
@@ -120,16 +128,39 @@ pub fn get_request_message(
 }
 
 pub fn send_request(message: &mut Message) -> StepResult {
-    let from = message.from.as_ref().ok_or("from is required")?;
+    let from_did = message.from.as_ref().ok_or("from is required")?;
     let to_vec = message.to.as_ref().ok_or("to is required")?;
-    let to = &to_vec[0];
+    let to_did = &to_vec[0];
+    let keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
+    let encoded_keypair = save_com_keypair(
+        from_did,
+        to_did,
+        &keypair.secret,
+        &keypair.public,
+        &None,
+    )?;
+    let metadata = serde_json::to_string(&encoded_keypair)?;
 
-    // TODO: replace empty string with from_service_endpoint
-    message.body = get_request_message(&from, to, "")?;
+    message.body = get_request_message(&from_did, to_did, "", encoded_keypair)?;
 
-    return Ok(StepOutput { encrypt: false, metadata: String::from("{}") });
+    return Ok(StepOutput { encrypt: false, metadata });
 }
 
 pub fn receive_request(message: &mut Message) -> StepResult {
+    println!("---------------------------");
+    let from_did = message.from.as_ref().ok_or("from is required")?;
+    let to_vec = message.to.as_ref().ok_or("to is required")?;
+    let to_did = &to_vec[0];
+    let thread_id = message.other.get("thid").ok_or("thid is missing")?;
+    println!("thread_id: {}", thread_id);
+    let didcomm_obj: DidcommObj = serde_json::from_str(&message.body)?;
+    let pub_key_hex = &didcomm_obj.public_key[0].public_key_base_58;
+    let service_endpoint = &didcomm_obj.service[0].service_endpoint;
+
+    println!("from_did: {}", from_did);
+    println!("to_did: {}", to_did);
+    println!("pub_key_hex: {}", pub_key_hex);
+    println!("service_endpoint: {}", service_endpoint);
+
     return Ok(StepOutput { encrypt: true, metadata: String::from("{}") });
 }

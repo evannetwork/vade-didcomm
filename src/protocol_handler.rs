@@ -32,7 +32,6 @@ fn handle_protocol(
 
     for i in 0..protocols.len() {
         let protocol = &protocols[i];
-        println!("{}", &protocol.name);
         if m_type.contains(&protocol.name) {
             protocol_name = String::from(&protocol.name);
 

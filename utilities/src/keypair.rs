@@ -9,6 +9,7 @@ pub struct KeyPairSet {
     pub user2_secret: StaticSecret,
     pub user2_shared: x25519_dalek::SharedSecret,
     pub sign_keypair: ed25519_dalek::Keypair,
+    pub sign_keypair2: ed25519_dalek::Keypair,
 }
 
 pub fn get_keypair_set() -> KeyPairSet {
@@ -21,6 +22,7 @@ pub fn get_keypair_set() -> KeyPairSet {
     let user2_shared = user2_secret.diffie_hellman(&user1_public);
 
     let sign_keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
+    let sign_keypair2: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
 
     return KeyPairSet {
         user1_pub: user1_public,
@@ -30,5 +32,6 @@ pub fn get_keypair_set() -> KeyPairSet {
         user2_secret: user2_secret,
         user2_shared: user2_shared,
         sign_keypair: sign_keypair,
+        sign_keypair2: sign_keypair2,
     }
 }

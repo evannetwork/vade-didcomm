@@ -145,7 +145,7 @@ pub fn encrypt_message(
             SignatureAlgorithm::EdDsa,
         ).map_err(|err| {
             format!(
-                "could not run searl_signed while encrypting message: {}",
+                "could not run seal_signed while encrypting message: {}",
                 &err.to_string()
             )
         })?;

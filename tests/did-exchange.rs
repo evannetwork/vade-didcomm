@@ -35,23 +35,22 @@ async fn send_request(
     let db_result = read_db(&format!("comm_keypair_{}_{}", inviter, invitee)).asyncify()?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
-    let encoded_pub_key = prepared.metadata
-        .get("encoded_pub_key")
-        .ok_or("send didcomm request does not return encoded_pub_key")?
+    let pub_key = prepared.metadata
+        .get("pub_key")
+        .ok_or("send didcomm request does not return pub_key")?
         .to_owned();
-    let encoded_secret_key = prepared.metadata
-        .get("encoded_secret_key")
-        .ok_or("send didcomm request does not return encoded_secret_key")?
+    let secret_key = prepared.metadata
+        .get("secret_key")
+        .ok_or("send didcomm request does not return secret_key")?
         .to_owned();
-    let encoded_target_pub_key = prepared.metadata
-        .get("encoded_target_pub_key")
-        .ok_or("send didcomm request does not return encoded_target_pub_key")?
+    let target_pub_key = prepared.metadata
+        .get("target_pub_key")
+        .ok_or("send didcomm request does not return target_pub_key")?
         .to_owned();
-    println!("============> 5");
 
-    assert_eq!(encoded_target_pub_key, comm_keypair.encoded_target_pub_key);
-    assert_eq!(encoded_pub_key, comm_keypair.encoded_pub_key);
-    assert_eq!(encoded_secret_key, comm_keypair.encoded_secret_key);
+    assert_eq!(target_pub_key, comm_keypair.target_pub_key);
+    assert_eq!(pub_key, comm_keypair.pub_key);
+    assert_eq!(secret_key, comm_keypair.secret_key);
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
@@ -62,8 +61,32 @@ async fn receive_request(
     invitee: &str,
     message: String,
 ) -> AsyncResult<()> {
-    let prepared: ProtocolOutput<MessageWithBody<DidcommObj>> = serde_json::from_str(&message)?;
     let results = vade.didcomm_receive("{}", &message).await?;
+    let result = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+    let prepared: ProtocolOutput<MessageWithBody<DidcommObj>> = serde_json::from_str(result)?;
+    let db_result = read_db(&format!("comm_keypair_{}_{}", invitee, inviter)).asyncify()?;
+    let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
+
+    let pub_key = prepared.metadata
+        .get("pub_key")
+        .ok_or("send didcomm request does not return pub_key")?
+        .to_owned();
+    let secret_key = prepared.metadata
+        .get("secret_key")
+        .ok_or("send didcomm request does not return secret_key")?
+        .to_owned();
+    let target_pub_key = prepared.metadata
+        .get("target_pub_key")
+        .ok_or("send didcomm request does not return target_pub_key")?
+        .to_owned();
+
+    assert_eq!(target_pub_key, comm_keypair.target_pub_key);
+    assert_eq!(pub_key, comm_keypair.pub_key);
+    assert_eq!(secret_key, comm_keypair.secret_key);
 
     return Ok(());
 }

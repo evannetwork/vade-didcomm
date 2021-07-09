@@ -1,7 +1,13 @@
-use crate::{Message, Protocol, StepOutput, StepResult, receive_step, send_step};
+use serde::{Deserialize, Serialize};
+use crate::{MessageWithBody, Protocol, StepResult, get_step_output, receive_step, send_step};
 
 macro_rules! sf {
     ( $var:expr ) => ( String::from($var) );
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct PingBody {
+    response_requested: Option<bool>,
 }
 
 pub fn get_ping_pong_protocol() -> Protocol {
@@ -18,29 +24,20 @@ pub fn get_ping_pong_protocol() -> Protocol {
     return protocol;
 }
 
-pub fn send_ping(message: &mut Message) -> StepResult {
-    message.body = format!(
-        r#"{{
-            "response_requested": true
-        }}"#,
-    );
-    return Ok(StepOutput { encrypt: true, metadata: String::from("{}") });
+pub fn send_ping(message: &str) -> StepResult {
+    let parsed_message: MessageWithBody<PingBody> = serde_json::from_str(message)?;
+    parsed_message.body.response_requested = Some(true);
+    return get_step_output("{}", &serde_json::to_string(&parsed_message)?);
 }
 
-pub fn send_pong(message: &mut Message) -> StepResult {
-    let thread_id = message.other.get("thread_id");
-    thread_id.ok_or("PING-PONG Message does not contain header thread_id");
-    return Ok(StepOutput { encrypt: true, metadata: String::from("{}") });
+pub fn send_pong(message: &str) -> StepResult {
+    return get_step_output("{}", message);
 }
 
-pub fn receive_ping(message: &mut Message) -> StepResult {
-    let thread_id = message.other.get("thread_id");
-    thread_id.ok_or("PING-PONG Message does not contain header thread_id");
-    return Ok(StepOutput { encrypt: true, metadata: String::from("{}") });
+pub fn receive_ping(message: &str) -> StepResult {
+    return get_step_output("{}", message);
 }
 
-pub fn receive_pong(message: &mut Message) -> StepResult {
-    let thread_id = message.other.get("thread_id");
-    thread_id.ok_or("PING-PONG Message does not contain header thread_id");
-    return Ok(StepOutput { encrypt: true, metadata: String::from("{}") });
+pub fn receive_pong(message: &str) -> StepResult {
+    return get_step_output("{}", message);
 }

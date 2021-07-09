@@ -5,19 +5,45 @@ use didcomm_rs::{
 };
 use std::{collections::HashMap};
 
-pub struct Decrypted {
-    pub body: Message,
-    pub message: DIDCommMessage,
+use crate::SyncResult;
+
+/// Base message with only the type (used for protocol handling to analyze only the message type)
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MessageWithType {
+    pub r#type: String,
 }
 
+/// Decrypted message format without dynamic body
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Message {
-    #[serde(default)]
-    pub body: String,
+pub struct BaseMessage {
     pub from: Option<String>,
-    pub kid: Option<String>,
+    pub r#type: String,
     pub to: Option<Vec<String>>,
-    pub r#type: Option<String>,
+}
+
+/// Decrypted message format without dynamic body
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ExtendedMessage {
+    pub from: Option<String>,
+    pub id: Option<String>,
+    pub pthid: Option<String>,
+    pub r#type: String,
+    pub thid: Option<String>,
+    pub to: Option<Vec<String>>,
+    #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
+    pub other: HashMap<String, String>,
+}
+
+/// Decrypted messaged with dynamic body struct
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MessageWithBody<T> {
+    pub body: T,
+    pub from: Option<String>,
+    pub id: Option<String>,
+    pub pthid: Option<String>,
+    pub r#type: String,
+    pub thid: Option<String>,
+    pub to: Option<Vec<String>>,
     #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
     pub other: HashMap<String, String>,
 }
@@ -37,8 +63,8 @@ pub struct EncryptedMessage {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ProtocolOutput<MessageType> {
-    pub message: MessageType,
+pub struct ProtocolOutput<T> {
+    pub message: T,
     pub metadata: HashMap<String, String>,
 }
 
@@ -53,101 +79,74 @@ macro_rules! apply_optional {
     }};
 }
 
-impl Message {
-    pub fn from_string(message: &str) -> Result<Message, String> {
-        let message: Message = serde_json::from_str(message)
-            .map_err(|err| {
-                format!(
-                    "could not get valid message from received data: {}",
-                    &err.to_string()
-                )
-            })?;
-        return Ok(message);
-    }
-
-    pub fn to_string(self) -> Result<String, String> {
-        let message = serde_json::to_string(&self)
-            .map_err(|err| {
-                format!(
-                    "Could not format message to string: {}",
-                    &err.to_string()
-                )
-            })?;
-        return Ok(message);
-    }
-
-    pub fn decrypt(
-        message: &str,
-        decryption_key: &[u8],
-        sign_public: &[u8],
-    ) -> Result<Decrypted, String> {
-        let received =
-            DIDCommMessage::receive(
-                &message,
-                Some(decryption_key),
-                Some(sign_public),
-            ).map_err(|err| {
-                format!(
-                    "could not decrypt message: {}",
-                    &err.to_string()
-                )
-            })?;
-
-        let body = String::from_utf8(received.body.clone()).map_err(|err| {
+pub fn decrypt_message(
+    message: &str,
+    decryption_key: &[u8],
+    sign_public: &[u8],
+) -> SyncResult<String> {
+    let received =
+        DIDCommMessage::receive(
+            &message,
+            Some(decryption_key),
+            Some(sign_public),
+        ).map_err(|err| {
             format!(
-                "could not get body from message while decrypting message: {}",
+                "could not decrypt message: {}",
                 &err.to_string()
             )
         })?;
 
-        return Ok(Decrypted {
-            message: received,
-            body: Message::from_string(&body)?,
-        });
-    }
+    let decrypted = String::from_utf8(received.body.clone()).map_err(|err| {
+        format!(
+            "could not get body from message while decrypting message: {}",
+            &err.to_string()
+        )
+    })?;
 
-    pub fn encrypt(
-        message_string: &str,
-        encryption_key: &[u8],
-        key_pair: &[u8],
-    ) -> Result<Option<String>, String> {
-        let mut d_message = DIDCommMessage::new()
-            .body(message_string.to_string().as_bytes())
-            .as_jwe(&CryptoAlgorithm::XC20P);
-        let message = Message::from_string(message_string)?;
+    return Ok(decrypted);
+}
 
-        // apply optional headers to known sections, use remaining as custom headers
-        apply_optional!(d_message, message, from);
+pub fn encrypt_message(
+    message_string: &str,
+    encryption_key: &[u8],
+    key_pair: &[u8],
+) -> SyncResult<String> {
+    let mut d_message = DIDCommMessage::new()
+        .body(message_string.to_string().as_bytes())
+        .as_jwe(&CryptoAlgorithm::XC20P);
+    let message: ExtendedMessage = serde_json::from_str(message_string)?;
 
-        match message.to {
-            Some(values) => {
-                let to: Vec<&str> = values.iter().map(AsRef::as_ref).collect();
-                d_message = d_message.to(&to);
-            }
-            _ => (),
-        };
+    // apply optional headers to known sections, use remaining as custom headers
+    apply_optional!(d_message, message, from);
 
-        // insert custom headers
-        for (key, val) in message.other.iter() {
-            d_message = d_message.add_header_field(
-                key.to_owned(),
-                val.to_string().to_owned(),
-            );
+    match message.to {
+        Some(values) => {
+            let to: Vec<&str> = values.iter().map(AsRef::as_ref).collect();
+            d_message = d_message.to(&to);
         }
+        _ => (),
+    };
 
-        // finally sign and encrypt
-        let encrypted = d_message
-            .seal_signed(
-                encryption_key,
-                key_pair,
-                SignatureAlgorithm::EdDsa,
-            ).map_err(|err| {
-                format!(
-                    "could not run searl_signed while encrypting message: {}",
-                    &err.to_string()
-                )
-            })?;
-
-        Ok(Some(encrypted))
+    // insert custom headers
+    for (key, val) in message.other.iter() {
+        d_message = d_message.add_header_field(
+            key.to_owned(),
+            val.to_string().to_owned(),
+        );
     }
+
+    // finally sign and encrypt
+    let encrypted = d_message
+        .seal_signed(
+            encryption_key,
+            key_pair,
+            SignatureAlgorithm::EdDsa,
+        ).map_err(|err| {
+            format!(
+                "could not run searl_signed while encrypting message: {}",
+                &err.to_string()
+            )
+        })?;
+
+    return Ok(encrypted);
 }

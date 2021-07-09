@@ -6,7 +6,7 @@ macro_rules! sf {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct PingBody {
+pub struct PingBody {
     response_requested: Option<bool>,
 }
 
@@ -25,19 +25,21 @@ pub fn get_ping_pong_protocol() -> Protocol {
 }
 
 pub fn send_ping(message: &str) -> StepResult {
-    let parsed_message: MessageWithBody<PingBody> = serde_json::from_str(message)?;
-    parsed_message.body.response_requested = Some(true);
-    return get_step_output("{}", &serde_json::to_string(&parsed_message)?);
+    let mut parsed_message: MessageWithBody<PingBody> = serde_json::from_str(message)?;
+    parsed_message.body = Some(PingBody {
+        response_requested: Some(true)
+    });
+    return get_step_output(&serde_json::to_string(&parsed_message)?, "{}");
 }
 
 pub fn send_pong(message: &str) -> StepResult {
-    return get_step_output("{}", message);
+    return get_step_output(message, "{}");
 }
 
 pub fn receive_ping(message: &str) -> StepResult {
-    return get_step_output("{}", message);
+    return get_step_output(message, "{}");
 }
 
 pub fn receive_pong(message: &str) -> StepResult {
-    return get_step_output("{}", message);
+    return get_step_output(message, "{}");
 }

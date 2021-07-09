@@ -3,6 +3,7 @@ use didcomm_rs::{
     crypto::{CryptoAlgorithm, SignatureAlgorithm},
     Message as DIDCommMessage,
 };
+use serde_json::Value;
 use std::{collections::HashMap};
 
 use crate::SyncResult;
@@ -24,6 +25,7 @@ pub struct BaseMessage {
 /// Decrypted message format without dynamic body
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExtendedMessage {
+    pub body: Option<HashMap<String, Value>>,
     pub from: Option<String>,
     pub id: Option<String>,
     pub pthid: Option<String>,
@@ -37,7 +39,7 @@ pub struct ExtendedMessage {
 /// Decrypted messaged with dynamic body struct
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MessageWithBody<T> {
-    pub body: T,
+    pub body: Option<T>,
     pub from: Option<String>,
     pub id: Option<String>,
     pub pthid: Option<String>,
@@ -55,8 +57,8 @@ pub struct EncryptedMessage {
     pub kid: Option<String>,
     pub to: Option<Vec<String>>,
     pub r#type: Option<String>,
-    pub ciphertext: Option<Vec<u8>>,
-    pub iv: Option<Vec<u8>>,
+    pub ciphertext: Vec<u8>,
+    pub iv: Vec<u8>,
     pub id: Option<u64>,
     #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
     pub other: HashMap<String, String>,

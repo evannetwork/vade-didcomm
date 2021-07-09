@@ -1,7 +1,5 @@
-use didcomm_rs::Message;
-use utilities::keypair::{get_keypair_set};
 use vade::{ResultAsyncifier, Vade};
-use vade_didcomm::{AsyncResult, EncryptedMessage, ProtocolOutput, VadeDidComm, protocol::DID_EXCHANGE_PROTOCOL_URL, read_db, request::CommKeyPair};
+use vade_didcomm::{AsyncResult, MessageWithBody, ProtocolOutput, VadeDidComm, protocol::DID_EXCHANGE_PROTOCOL_URL, read_db, request::{CommKeyPair, DidcommObj}};
 
 async fn get_vade() -> AsyncResult<Vade> {
     let mut vade = Vade::new();
@@ -27,20 +25,15 @@ async fn send_request(
         inviter,
         invitee
     );
-    println!("============> 1");
     let results = vade.didcomm_send("{}", &exchange_request).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    println!("============> 1.1: {}", result);
-    let prepared: ProtocolOutput<Message> = serde_json::from_str(result)?;
-    println!("============> 2");
+    let prepared: ProtocolOutput<MessageWithBody<DidcommObj>> = serde_json::from_str(result)?;
     let db_result = read_db(&format!("comm_keypair_{}_{}", inviter, invitee)).asyncify()?;
-    println!("============> 3");
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
-    println!("============> 4");
 
     let encoded_pub_key = prepared.metadata
         .get("encoded_pub_key")
@@ -69,7 +62,7 @@ async fn receive_request(
     invitee: &str,
     message: String,
 ) -> AsyncResult<()> {
-    println!("------------- {}", &message);
+    let prepared: ProtocolOutput<MessageWithBody<DidcommObj>> = serde_json::from_str(&message)?;
     let results = vade.didcomm_receive("{}", &message).await?;
 
     return Ok(());
@@ -82,7 +75,7 @@ async fn can_do_key_exchange() -> AsyncResult<()> {
     let invitee = String::from("did:uknow:d34db33f");
 
     let send_message = send_request(&mut vade, &inviter, &invitee).await?;
-    // receive_request(&mut vade, &inviter, &invitee, send_message).await?;
+    receive_request(&mut vade, &inviter, &invitee, send_message).await?;
 
     Ok(())
 }

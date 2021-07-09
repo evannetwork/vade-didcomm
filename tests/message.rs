@@ -1,80 +1,65 @@
-use uuid::Uuid;
-use vade_didcomm::{AsyncResult, Message};
+use serde::{Deserialize, Serialize};
+use vade_didcomm::{SyncResult, EncryptedMessage, MessageWithBody, decrypt_message, encrypt_message};
 use utilities::{keypair};
 
-#[tokio::test]
-async fn can_instantiate_message() -> AsyncResult<()> {
-    let id = Uuid::new_v4().to_simple().to_string();
-    let message_string = format!(
-        r#"{{
-            "type": "https://didcomm.org/trust_ping/1.0/ping",
-            "id": {:?},
-            "body": "test"
-        }}"#,
-        &id,
-    );
-    let message = Message::from_string(&message_string)?;
-    assert_eq!(message.r#type.ok_or("Could not get type")?, "https://didcomm.org/trust_ping/1.0/ping");
-
-    Ok(())
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct TestBody {
+    test: bool,
 }
 
-#[tokio::test]
-async fn can_encrypt_message() -> AsyncResult<()> {
+#[test]
+fn can_encrypt_message() -> SyncResult<()> {
     let sign_keypair = keypair::get_keypair_set();
     let payload = format!(
         r#"{{
-            "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
-            "body": "test",
+            "body": {{"test": true}},
             "custom1": "ichi",
             "custom2": "ni",
-            "custom3": "san"
+            "custom3": "san",
+            "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+            "type": "test"
         }}"#,
     );
 
-    let encrypted = Message::encrypt(
+    let encrypted = encrypt_message(
         &payload,
         sign_keypair.user1_shared.as_bytes(),
         &sign_keypair.sign_keypair.to_bytes(),
     )?;
-    match encrypted {
-        Some(value) => {
-            println!("got didcomm msg: {}", &value);
-        }
-        _ => {
-            return Err(Box::from("invalid result from Message::encrypt"));
-        }
-    };
+    let _: EncryptedMessage = serde_json::from_str(&encrypted)?;
 
     Ok(())
 }
 
-#[tokio::test]
-async fn can_decrypt_message() -> AsyncResult<()> {
+#[test]
+fn can_decrypt_message() -> SyncResult<()> {
     let sign_keypair = keypair::get_keypair_set();
     let payload = format!(
         r#"{{
-            "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
-            "body": "test",
+            "body": {{"test": true}},
             "custom1": "ichi",
             "custom2": "ni",
-            "custom3": "san"
+            "custom3": "san",
+            "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+            "type": "test"
         }}"#,
     );
 
-    let encrypted = Message::encrypt(
+    let encrypted = encrypt_message(
         &payload,
         sign_keypair.user1_shared.as_bytes(),
         &sign_keypair.sign_keypair.to_bytes(),
     )?;
 
-    let decrypted = Message::decrypt(
-        &encrypted.ok_or("Could not encrypt")?,
+    let decrypted = decrypt_message(
+        &encrypted,
         sign_keypair.user2_shared.as_bytes(),
         &sign_keypair.sign_keypair.public.to_bytes(),
     )?;
 
-    assert_eq!(decrypted.body.body, "test");
+    let decryped_parsed: MessageWithBody<TestBody> = serde_json::from_str(&decrypted)?;
+
+    assert_eq!(decryped_parsed.body.ok_or("body not available")?.test, true);
 
     Ok(())
 }

@@ -1,4 +1,4 @@
-use crate::{AsyncResult, BaseMessage, ProtocolHandler, decrypt_message, encrypt_message};
+use crate::{AsyncResult, BaseMessage, EncryptedMessage, ProtocolHandler, decrypt_message, encrypt_message};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use vade::{ResultAsyncifier, VadePlugin, VadePluginResultValue};
@@ -45,15 +45,17 @@ impl VadePlugin for VadeDidComm {
         log::debug!("preparing DIDComm message for being sent");
 
         let protocol_result = ProtocolHandler::before_send(message).asyncify()?;
-        let final_message = &protocol_result.message;
+        let final_message: String;
 
         if protocol_result.encrypt {
             let options = serde_json::from_str::<DidcommSendOptions>(&options)?;
-            final_message = &decrypt_message(
+            final_message = encrypt_message(
                 &protocol_result.message,
                 &options.encryption_key,
                 &options.sign_keypair,
             ).asyncify()?;
+        } else {
+            final_message = protocol_result.message;
         }
 
         let send_result = format!(
@@ -76,25 +78,27 @@ impl VadePlugin for VadeDidComm {
         log::debug!("handling receival of DIDComm message");
 
         // check if message is encrypted or not
-        let parsed_message = serde_json::from_str::<BaseMessage>(message);
-        let decrypted = message;
-        if !parsed_message.is_ok() {
+        let parsed_message = serde_json::from_str::<EncryptedMessage>(message);
+        let decrypted: String;
+        if parsed_message.is_ok() {
             let options = serde_json::from_str::<DidcommReceiveOptions>(&options)?;
-            decrypted = &encrypt_message(
+            decrypted = decrypt_message(
                 &message,
                 &options.decryption_key,
                 &options.sign_public,
             ).asyncify()?;
+        } else {
+            decrypted = String::from(message);
         }
 
-        let protocol_result = ProtocolHandler::after_receive(decrypted).asyncify()?;
+        let protocol_result = ProtocolHandler::after_receive(&decrypted).asyncify()?;
         let receive_result = format!(
             r#"{{
                 "message": {},
                 "metadata": {}
             }}"#,
-            serde_json::to_string(&protocol_result.message)?,
-            protocol_result.protocol,
+            protocol_result.message,
+            protocol_result.metadata,
         );
 
         return Ok(VadePluginResultValue::Success(Some(receive_result)));

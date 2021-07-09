@@ -1,6 +1,6 @@
 use utilities::keypair::get_keypair_set;
 use vade::Vade;
-use vade_didcomm::{AsyncResult, EncryptedMessage, Message, ProtocolOutput, VadeDidComm};
+use vade_didcomm::{AsyncResult, BaseMessage, EncryptedMessage, MessageWithBody, ProtocolOutput, VadeDidComm};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -76,9 +76,11 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let parsed: ProtocolOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
-    assert_eq!(parsed.message.other.get("custom1").ok_or("could not field custom1")?, "ichi");
+    let parsed: ProtocolOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let custom_field = parsed.message.other.get("custom1").ok_or("could not field custom1")?;
+
+    assert_eq!(custom_field, "ichi");
 
     Ok(())
 }
@@ -110,14 +112,13 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
                 .ok_or("no result")?
                 .as_ref()
                 .ok_or("no value in result")?;
-            let parsed: ProtocolOutput<Message> = serde_json::from_str(result)?;
+            let parsed: ProtocolOutput<MessageWithBody<PingBody>> = serde_json::from_str(result)?;
             assert_eq!(
                 "https://didcomm.org/trust_ping/1.0/ping",
-                parsed.message.r#type.ok_or("could not parse vade decrypted result")?,
+                parsed.message.r#type,
             );
             // ensure that send processor was executed
-            let body: PingBody = serde_json::from_str(&parsed.message.body)?;
-            assert_eq!(body.response_requested, true);
+            assert_eq!(parsed.message.body.ok_or("no body filled")?.response_requested, true);
         }
         _ => {
             return Err(Box::from("invalid result from didcomm_send"));
@@ -148,11 +149,11 @@ async fn can_receive_unencrypted() -> AsyncResult<()> {
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let parsed: Message = serde_json::from_str(result)?;
+    let parsed: ProtocolOutput<BaseMessage> = serde_json::from_str(result)?;
 
     assert_eq!(
         "https://didcomm.org/trust_ping/1.0/ping",
-        parsed.r#type.ok_or("could not parse vade decrypted result")?,
+        parsed.message.r#type,
     );
 
     Ok(())

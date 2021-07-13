@@ -9,20 +9,22 @@ extern crate ed25519_dalek;
 #[macro_use]
 extern crate serde_big_array;
 
-mod utils;
-mod vade_didcomm;
+mod keypair;
 mod message;
 mod protocol_handler;
 mod protocols;
 mod rocks_db;
+mod utils;
+mod vade_didcomm;
 
 pub use crate::{
-    utils::*,
-    vade_didcomm::*,
+    keypair::*,
     message::*,
     protocol_handler::*,
-    protocols::protocol::*,
-    protocols::pingpong::*,
     protocols::did_exchange::*,
+    protocols::pingpong::*,
+    protocols::protocol::*,
     rocks_db::*,
+    utils::*,
+    vade_didcomm::*,
 };

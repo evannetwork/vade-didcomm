@@ -1,4 +1,4 @@
-use crate::{AsyncResult, BaseMessage, EncryptedMessage, ProtocolHandler, decrypt_message, encrypt_message};
+use crate::{AsyncResult, BaseMessage, EncryptedMessage, MessageWithBody, ProtocolHandler, decrypt_message, encrypt_message, get_com_keypair};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use vade::{ResultAsyncifier, VadePlugin, VadePluginResultValue};
@@ -48,12 +48,29 @@ impl VadePlugin for VadeDidComm {
         let final_message: String;
 
         if protocol_result.encrypt {
-            let options = serde_json::from_str::<DidcommSendOptions>(&options)?;
-            final_message = encrypt_message(
-                &protocol_result.message,
-                &options.encryption_key,
-                &options.sign_keypair,
-            ).asyncify()?;
+            // if encryption opts were passed to the message, use the passed encryption keys
+            let options = serde_json::from_str::<DidcommSendOptions>(&options);
+            if options.is_ok() {
+                let parsed_options = options?;
+                final_message = encrypt_message(
+                    &protocol_result.message,
+                    &parsed_options.encryption_key,
+                    &parsed_options.sign_keypair,
+                ).asyncify()?;
+            } else {
+                // otherwise use keys from did exchange
+                let parsed_message: BaseMessage = serde_json::from_str(message)?;
+                let from_did = parsed_message.from.as_ref().ok_or("from is required")?;
+                let to_vec = parsed_message.to.as_ref().ok_or("to is required")?;
+                let to_did = &to_vec[0];
+
+                // let encoded_keypair = get_com_keypair(
+                //     from_did,
+                //     to_did,
+                // ).asyncify()?;
+                // let sign_keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
+                final_message = protocol_result.message;
+            }
         } else {
             final_message = protocol_result.message;
         }

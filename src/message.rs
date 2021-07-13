@@ -108,11 +108,9 @@ pub fn decrypt_message(
     return Ok(decrypted);
 }
 
-pub fn encrypt_message(
+pub fn prepare_message_sending(
     message_string: &str,
-    encryption_key: &[u8],
-    key_pair: &[u8],
-) -> SyncResult<String> {
+) -> SyncResult<DIDCommMessage> {
     let mut d_message = DIDCommMessage::new()
         .body(message_string.to_string().as_bytes())
         .as_jwe(&CryptoAlgorithm::XC20P);
@@ -136,6 +134,16 @@ pub fn encrypt_message(
             val.to_string().to_owned(),
         );
     }
+
+    return Ok(d_message);
+}
+
+pub fn encrypt_message(
+    message_string: &str,
+    encryption_key: &[u8],
+    key_pair: &[u8],
+) -> SyncResult<String> {
+    let d_message = prepare_message_sending(message_string)?;
 
     // finally sign and encrypt
     let encrypted = d_message

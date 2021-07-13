@@ -1,5 +1,5 @@
 use vade::{ResultAsyncifier, Vade};
-use vade_didcomm::{AsyncResult, CommKeyPair, MessageWithBody, ProtocolOutput, VadeDidComm, get_com_keypair, helper::DidcommObj, protocol::DID_EXCHANGE_PROTOCOL_URL, read_db};
+use vade_didcomm::{AsyncResult, BaseMessage, CommKeyPair, MessageWithBody, ProtocolOutput, VadeDidComm, get_com_keypair, helper::DidcommObj, protocol::DID_EXCHANGE_PROTOCOL_URL, read_db};
 
 async fn get_vade() -> AsyncResult<Vade> {
     let mut vade = Vade::new();
@@ -137,6 +137,49 @@ async fn receive_response(
     return Ok(());
 }
 
+async fn send_complete(
+    vade: &mut Vade,
+    sender: &str,
+    receiver: &str,
+) -> AsyncResult<String> {
+    let exchange_complete = format!(
+        r#"{{
+            "type": "{}/complete",
+            "from": "{}",
+            "to": ["{}"]
+        }}"#,
+        DID_EXCHANGE_PROTOCOL_URL,
+        sender,
+        receiver
+    );
+    let results = vade.didcomm_send("{}", &exchange_complete).await?;
+    let result = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+    let prepared: ProtocolOutput<MessageWithBody<DidcommObj>> = serde_json::from_str(result)?;
+
+    return Ok(serde_json::to_string(&prepared.message)?);
+}
+
+async fn receive_complete(
+    vade: &mut Vade,
+    sender: &str,
+    receiver: &str,
+    message: String,
+) -> AsyncResult<()> {
+    let results = vade.didcomm_receive("{}", &message).await?;
+    let received = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+    let _: ProtocolOutput<BaseMessage> = serde_json::from_str(received)?;
+
+    return Ok(());
+}
+
 #[tokio::test]
 async fn can_do_key_exchange() -> AsyncResult<()> {
     let mut vade = get_vade().await?;
@@ -149,5 +192,8 @@ async fn can_do_key_exchange() -> AsyncResult<()> {
     let response_message = send_response(&mut vade, &user_2_did, &user_1_did).await?;
     receive_response(&mut vade, &user_2_did, &user_1_did, response_message).await?;
 
-    Ok(())
+    let complete_message = send_complete(&mut vade, &user_1_did, &user_2_did).await?;
+    receive_complete(&mut vade, &user_1_did, &user_2_did, complete_message).await?;
+
+    return Ok(());
 }

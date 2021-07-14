@@ -18,6 +18,6 @@ mod utils;
 mod vade_didcomm;
 
 pub use crate::{
-    keypair::*, message::*, protocol_handler::*, protocols::did_exchange::*,
-    protocols::pingpong::*, protocols::protocol::*, rocks_db::*, utils::*, vade_didcomm::*,
+    keypair::*, message::*, protocol_handler::*, protocols::pingpong::*, protocols::protocol::*,
+    rocks_db::*, utils::*, vade_didcomm::*,
 };

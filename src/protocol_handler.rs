@@ -1,9 +1,7 @@
 use crate::{
-    get_ping_pong_protocol, protocol::get_did_exchange_protocol, utils::SyncResult, Direction,
-    MessageWithType, Protocol,
+    get_ping_pong_protocol, protocols::did_exchange::did_exchange::get_did_exchange_protocol,
+    utils::SyncResult, Direction, MessageWithType, Protocol,
 };
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Output of a protocol step. Specifies, if a message should be encrypted. Metadata is generic stringified
 /// json, that contains protocol step specific information.

@@ -2,11 +2,18 @@ use k256::elliptic_curve::rand_core::OsRng;
 use x25519_dalek::{PublicKey, StaticSecret};
 
 use crate::{
-    get_step_output, get_step_output_decrypted,
-    helper::{get_did_exchange_message, DidcommObj},
-    save_com_keypair, BaseMessage, MessageWithBody, StepResult,
+    get_step_output, get_step_output_decrypted, save_com_keypair, BaseMessage, MessageWithBody,
+    StepResult,
 };
 
+use super::helper::{get_did_exchange_message, DidcommObj};
+
+/// protocol handler for direction: `send`, type: `DID_EXCHANGE_PROTOCOL_URL/request`
+/// Uses the protocols/did_exchange/helper.rs/get_did_exchange_message to construct the request message,
+/// that should be sent. Message will be sent NOT encrypted. (the other party does not have any keys
+/// to decrypt the message)
+/// Creates and stores a new communication keypair, that will be used for further communication with
+/// the target did.
 pub fn send_request(message: &str) -> StepResult {
     let parsed_message: BaseMessage = serde_json::from_str(message)?;
     let from_did = parsed_message.from.as_ref().ok_or("from is required")?;
@@ -29,6 +36,9 @@ pub fn send_request(message: &str) -> StepResult {
     return get_step_output_decrypted(&serde_json::to_string(&request_message)?, &metadata);
 }
 
+/// protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/request`
+/// Receives the partners did and communication pub key and generates new communication keypairs,
+/// stores it within the rocks.db.
 pub fn receive_request(message: &str) -> StepResult {
     let parsed_message: MessageWithBody<DidcommObj> = serde_json::from_str(message)?;
     let from_did = parsed_message.from.as_ref().ok_or("from is required")?;

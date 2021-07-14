@@ -3,8 +3,12 @@ use std::collections::HashMap;
 
 use uuid::Uuid;
 
-use crate::{protocol::DID_EXCHANGE_PROTOCOL_URL, utils::SyncResult, CommKeyPair, MessageWithBody};
+use crate::{
+    protocols::did_exchange::did_exchange::DID_EXCHANGE_PROTOCOL_URL, utils::SyncResult,
+    CommKeyPair, MessageWithBody,
+};
 
+/// Struct for a pub key that will be sent during did exchange with the users communication did document.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DidCommPubKey {
@@ -13,6 +17,7 @@ pub struct DidCommPubKey {
     pub r#type: Vec<String>,
 }
 
+/// Struct for a service definition that will be sent during did exchange with the users communication did document.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DidCommService {
@@ -23,6 +28,7 @@ pub struct DidCommService {
     pub recipient_keys: Vec<String>,
 }
 
+/// Communication didcomm object that will be sent to the target user during did exchange.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DidcommObj {
@@ -34,6 +40,16 @@ pub struct DidcommObj {
     pub service: Vec<DidCommService>,
 }
 
+/// Creates a new communication didcomm object for a specific did, a communication pub key and the
+/// service url, where the user can be reached.
+///
+/// # Arguments
+/// * `from_did` - did to build the didcomm obj for
+/// * `public_key_encoded` - communication pub key for the did exchange that will be sent to the target
+/// * `service_endpoint` - url where the user can be reached
+///
+/// # Returns
+/// * `DidcommObj` - constructed didcomm object, ready to be sent
 pub fn get_com_did_obj(
     from_did: &str,
     public_key_encoded: &str,
@@ -64,6 +80,17 @@ pub fn get_com_did_obj(
     };
 }
 
+/// Constructs a new did exchange message, including the didcomm object as message body.
+///
+/// # Arguments
+/// * `step_type` - step to build the message type (request, response)
+/// * `from_did` - did that sends the message
+/// * `to_did` - did that receives the message
+/// * `from_service_endpoint` - url where the user can be reached
+/// * `encoded_keypair` - communication keypair (only pubkey will be used)
+///
+/// # Returns
+/// * `MessageWithBody<DidcommObj>` - constructed didcomm object, ready to be sent
 pub fn get_did_exchange_message(
     step_type: &str,
     from_did: &str,

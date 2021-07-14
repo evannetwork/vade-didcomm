@@ -1,22 +1,38 @@
 use crate::utils::SyncResult;
 
+/// Specifies all possible message directions.
 #[derive(PartialEq)]
 pub enum Direction {
     SEND,
     RECEIVE,
 }
 
+/// Each protocol are constructed by a name and multiple steps. The protocol handler will iterate over
+/// all registered protocols and checks, if the name exists in the didcomm message type. Afterwards
+/// each step will be checked against the type as well.
+///
+/// Example:
+///     - name          -> https://didcomm.org/didexchange/1.0
+///     - step[0].name  -> request
+///
+///     new message 1 -> type = trust_ping/ping -> protocol step will not be executed
+///     new message 2 -> type = https://didcomm.org/didexchange/1.0/request -> protocol step will be executed
 pub struct Protocol {
     pub name: String,
     pub steps: Vec<ProtocolStep>,
 }
 
+/// Each protocol step specifies the direction and the name, when the handler function will be executed.
+/// The step handler can take the incoming message, parse it and can return an adjusted message to be
+/// returned to the user.
 pub struct ProtocolStep {
     pub direction: Direction,
     pub handler: fn(message: &str) -> StepResult,
     pub name: String,
 }
 
+/// Result of each protocol step. Includes the custom stringified metadata, the modified message and
+/// a bool flag, if the message should be encrypted (ignored for direction == receive).
 pub struct StepOutput {
     pub encrypt: bool,
     pub metadata: String,
@@ -25,6 +41,15 @@ pub struct StepOutput {
 
 pub type StepResult = SyncResult<StepOutput>;
 
+/// Shorthand constructor for a protocol step, with direction send.
+///
+/// # Arguments
+/// * `message` - message string (should match message.rs/ExtendedMessage)
+/// * `handler` - function that will be executed, when the protocol and the step name matches the
+///               message type
+///
+/// # Returns
+/// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
 pub fn send_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
     return ProtocolStep {
         direction: Direction::SEND,
@@ -33,6 +58,15 @@ pub fn send_step(name: &str, handler: fn(message: &str) -> StepResult) -> Protoc
     };
 }
 
+/// Shorthand constructor for a protocol step, with direction receive.
+///
+/// # Arguments
+/// * `message` - message string (should match message.rs/ExtendedMessage)
+/// * `handler` - function that will be executed, when the protocol and the step name matches the
+///               message type
+///
+/// # Returns
+/// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
 pub fn receive_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
     return ProtocolStep {
         direction: Direction::RECEIVE,
@@ -41,6 +75,14 @@ pub fn receive_step(name: &str, handler: fn(message: &str) -> StepResult) -> Pro
     };
 }
 
+/// Shorthand constructor for a protocol step out, with encrypt flag set to true.
+///
+/// # Arguments
+/// * `message`  - message string (should match message.rs/ExtendedMessage)
+/// * `metadata` - general protocol step specific data
+///
+/// # Returns
+/// * `StepResult` - Result that will be populated to the vade_didcomm
 pub fn get_step_output(message: &str, metadata: &str) -> StepResult {
     return Ok(StepOutput {
         encrypt: true,
@@ -49,6 +91,14 @@ pub fn get_step_output(message: &str, metadata: &str) -> StepResult {
     });
 }
 
+/// Shorthand constructor for a protocol step out, with encrypt flag set to false.
+///
+/// # Arguments
+/// * `message`  - message string (should match message.rs/ExtendedMessage)
+/// * `metadata` - general protocol step specific data
+///
+/// # Returns
+/// * `StepResult` - Result that will be populated to the vade_didcomm
 pub fn get_step_output_decrypted(message: &str, metadata: &str) -> StepResult {
     return Ok(StepOutput {
         encrypt: false,

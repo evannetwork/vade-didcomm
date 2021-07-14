@@ -1,4 +1,4 @@
-use rocksdb::{DB, DBWithThreadMode, SingleThreaded};
+use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 
 use crate::utils::SyncResult;
 
@@ -40,4 +40,3 @@ pub fn read_db(key: &str) -> SyncResult<String> {
         Err(e) => Err(format!("Error while loading key: {0}, {1}", key, e).into()),
     }
 }
-

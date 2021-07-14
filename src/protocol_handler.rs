@@ -1,4 +1,7 @@
-use crate::{Direction, MessageWithType, Protocol, get_ping_pong_protocol, protocol::get_did_exchange_protocol, utils::SyncResult};
+use crate::{
+    get_ping_pong_protocol, protocol::get_did_exchange_protocol, utils::SyncResult, Direction,
+    MessageWithType, Protocol,
+};
 
 /// Output of a protocol step. Specifies, if a message should be encrypted. Metadata is generic stringified
 /// json, that contains protocol step specific information.
@@ -24,30 +27,20 @@ impl ProtocolHandler {
     ///
     /// # Returns
     /// * `ProtocolHandleOutput` - general information about the analyzed protocol step
-    pub fn before_send(
-        message: &str,
-    ) -> SyncResult<ProtocolHandleOutput> {
+    pub fn before_send(message: &str) -> SyncResult<ProtocolHandleOutput> {
         return handle_protocol(message, Direction::SEND);
     }
 
-    pub fn after_receive(
-        message: &str,
-    ) -> SyncResult<ProtocolHandleOutput> {
+    pub fn after_receive(message: &str) -> SyncResult<ProtocolHandleOutput> {
         return handle_protocol(message, Direction::RECEIVE);
     }
 }
 
-fn handle_protocol(
-    message: &str,
-    direction: Direction,
-) -> SyncResult<ProtocolHandleOutput> {
+fn handle_protocol(message: &str, direction: Direction) -> SyncResult<ProtocolHandleOutput> {
     let parsed_message: MessageWithType = serde_json::from_str(message)?;
     let m_type = parsed_message.r#type.to_owned();
     // handle multiple protocols dynamically
-    let protocols: [&Protocol; 2] = [
-        &get_did_exchange_protocol(),
-        &get_ping_pong_protocol(),
-    ];
+    let protocols: [&Protocol; 2] = [&get_did_exchange_protocol(), &get_ping_pong_protocol()];
     // protocol results
     let mut protocol_name: String = String::from("unknown");
     let mut step_name: String = String::from("unknown");

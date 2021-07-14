@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
-use vade_didcomm::{SyncResult, EncryptedMessage, MessageWithBody, decrypt_message, encrypt_message};
-use utilities::{keypair};
+use utilities::keypair;
+use vade_didcomm::{
+    decrypt_message, encrypt_message, EncryptedMessage, MessageWithBody, SyncResult,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct TestBody {

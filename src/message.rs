@@ -1,10 +1,10 @@
-use serde::{Deserialize, Serialize};
 use didcomm_rs::{
     crypto::{CryptoAlgorithm, SignatureAlgorithm},
     Message as DIDCommMessage,
 };
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use crate::SyncResult;
 
@@ -86,17 +86,8 @@ pub fn decrypt_message(
     decryption_key: &[u8],
     sign_public: &[u8],
 ) -> SyncResult<String> {
-    let received =
-        DIDCommMessage::receive(
-            &message,
-            Some(decryption_key),
-            Some(sign_public),
-        ).map_err(|err| {
-            format!(
-                "could not decrypt message: {}",
-                &err.to_string()
-            )
-        })?;
+    let received = DIDCommMessage::receive(&message, Some(decryption_key), Some(sign_public))
+        .map_err(|err| format!("could not decrypt message: {}", &err.to_string()))?;
 
     let decrypted = String::from_utf8(received.body.clone()).map_err(|err| {
         format!(
@@ -131,10 +122,7 @@ pub fn encrypt_message(
 
     // insert custom headers
     for (key, val) in message.other.iter() {
-        d_message = d_message.add_header_field(
-            key.to_owned(),
-            val.to_string().to_owned(),
-        );
+        d_message = d_message.add_header_field(key.to_owned(), val.to_string().to_owned());
     }
 
     // ensure to set kid to pub key of temporary keypair for encryption / signing
@@ -146,7 +134,8 @@ pub fn encrypt_message(
             encryption_key,
             &keypair.to_bytes(),
             SignatureAlgorithm::EdDsa,
-        ).map_err(|err| {
+        )
+        .map_err(|err| {
             format!(
                 "could not run seal_signed while encrypting message: {}",
                 &err.to_string()

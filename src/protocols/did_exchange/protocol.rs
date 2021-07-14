@@ -1,9 +1,16 @@
-use crate::{Protocol, receive_step, request::{receive_request, send_request}, response::{receive_response, send_response}, send_step};
+use crate::{
+    receive_step,
+    request::{receive_request, send_request},
+    response::{receive_response, send_response},
+    send_step, Protocol,
+};
 
 pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
 
 macro_rules! sf {
-    ( $var:expr ) => ( String::from($var) );
+    ( $var:expr ) => {
+        String::from($var)
+    };
 }
 
 pub fn get_did_exchange_protocol() -> Protocol {
@@ -13,9 +20,13 @@ pub fn get_did_exchange_protocol() -> Protocol {
     };
 
     protocol.steps.push(send_step("request", send_request));
-    protocol.steps.push(receive_step("request", receive_request));
+    protocol
+        .steps
+        .push(receive_step("request", receive_request));
     protocol.steps.push(send_step("response", send_response));
-    protocol.steps.push(receive_step("response", receive_response));
+    protocol
+        .steps
+        .push(receive_step("response", receive_response));
 
     return protocol;
 }

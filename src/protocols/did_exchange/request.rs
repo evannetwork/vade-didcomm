@@ -1,7 +1,11 @@
 use k256::elliptic_curve::rand_core::OsRng;
 use x25519_dalek::{PublicKey, StaticSecret};
 
-use crate::{BaseMessage, MessageWithBody, StepResult, get_step_output, get_step_output_decrypted, helper::{DidcommObj, get_did_exchange_message}, save_com_keypair};
+use crate::{
+    get_step_output, get_step_output_decrypted,
+    helper::{get_did_exchange_message, DidcommObj},
+    save_com_keypair, BaseMessage, MessageWithBody, StepResult,
+};
 
 pub fn send_request(message: &str) -> StepResult {
     let parsed_message: BaseMessage = serde_json::from_str(message)?;
@@ -19,12 +23,10 @@ pub fn send_request(message: &str) -> StepResult {
         None,
     )?;
     let metadata = serde_json::to_string(&encoded_keypair)?;
-    let request_message = get_did_exchange_message("request", &from_did, to_did, "", &encoded_keypair)?;
+    let request_message =
+        get_did_exchange_message("request", &from_did, to_did, "", &encoded_keypair)?;
 
-    return get_step_output_decrypted(
-        &serde_json::to_string(&request_message)?,
-        &metadata,
-    );
+    return get_step_output_decrypted(&serde_json::to_string(&request_message)?, &metadata);
 }
 
 pub fn receive_request(message: &str) -> StepResult {

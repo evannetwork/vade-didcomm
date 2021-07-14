@@ -1,5 +1,8 @@
 use vade::{ResultAsyncifier, Vade};
-use vade_didcomm::{AsyncResult, BaseMessage, CommKeyPair, EncryptedMessage, MessageWithBody, ProtocolOutput, VadeDidComm, get_com_keypair, helper::DidcommObj, protocol::DID_EXCHANGE_PROTOCOL_URL, read_db};
+use vade_didcomm::{
+    get_com_keypair, helper::DidcommObj, protocol::DID_EXCHANGE_PROTOCOL_URL, read_db, AsyncResult,
+    BaseMessage, CommKeyPair, EncryptedMessage, MessageWithBody, ProtocolOutput, VadeDidComm,
+};
 
 async fn get_vade() -> AsyncResult<Vade> {
     let mut vade = Vade::new();
@@ -9,11 +12,7 @@ async fn get_vade() -> AsyncResult<Vade> {
     Ok(vade)
 }
 
-async fn send_request(
-    vade: &mut Vade,
-    sender: &str,
-    receiver: &str,
-) -> AsyncResult<String> {
+async fn send_request(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncResult<String> {
     let exchange_request = format!(
         r#"{{
             "type": "{}/request",
@@ -21,9 +20,7 @@ async fn send_request(
             "from": "{}",
             "to": ["{}"]
         }}"#,
-        DID_EXCHANGE_PROTOCOL_URL,
-        sender,
-        receiver
+        DID_EXCHANGE_PROTOCOL_URL, sender, receiver
     );
     let results = vade.didcomm_send("{}", &exchange_request).await?;
     let result = results
@@ -35,15 +32,18 @@ async fn send_request(
     let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver)).asyncify()?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
-    let pub_key = prepared.metadata
+    let pub_key = prepared
+        .metadata
         .get("pub_key")
         .ok_or("send didcomm request does not return pub_key")?
         .to_owned();
-    let secret_key = prepared.metadata
+    let secret_key = prepared
+        .metadata
         .get("secret_key")
         .ok_or("send didcomm request does not return secret_key")?
         .to_owned();
-    let target_pub_key = prepared.metadata
+    let target_pub_key = prepared
+        .metadata
         .get("target_pub_key")
         .ok_or("send didcomm request does not return target_pub_key")?
         .to_owned();
@@ -70,15 +70,18 @@ async fn receive_request(
     let received: ProtocolOutput<MessageWithBody<DidcommObj>> = serde_json::from_str(result)?;
     let comm_keypair = get_com_keypair(receiver, sender).asyncify()?;
 
-    let pub_key = received.metadata
+    let pub_key = received
+        .metadata
         .get("pub_key")
         .ok_or("send didcomm request does not return pub_key")?
         .to_owned();
-    let secret_key = received.metadata
+    let secret_key = received
+        .metadata
         .get("secret_key")
         .ok_or("send didcomm request does not return secret_key")?
         .to_owned();
-    let target_pub_key = received.metadata
+    let target_pub_key = received
+        .metadata
         .get("target_pub_key")
         .ok_or("send didcomm request does not return target_pub_key")?
         .to_owned();
@@ -90,11 +93,7 @@ async fn receive_request(
     return Ok(());
 }
 
-async fn send_response(
-    vade: &mut Vade,
-    sender: &str,
-    receiver: &str,
-) -> AsyncResult<String> {
+async fn send_response(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncResult<String> {
     let exchange_response = format!(
         r#"{{
             "type": "{}/response",
@@ -102,9 +101,7 @@ async fn send_response(
             "from": "{}",
             "to": ["{}"]
         }}"#,
-        DID_EXCHANGE_PROTOCOL_URL,
-        sender,
-        receiver
+        DID_EXCHANGE_PROTOCOL_URL, sender, receiver
     );
     let results = vade.didcomm_send("{}", &exchange_response).await?;
     let result = results
@@ -132,25 +129,22 @@ async fn receive_response(
     let comm_keypair_sender = get_com_keypair(sender, receiver).asyncify()?;
     let comm_keypair_receiver = get_com_keypair(receiver, sender).asyncify()?;
 
-    assert_eq!(comm_keypair_sender.target_pub_key, comm_keypair_receiver.pub_key);
+    assert_eq!(
+        comm_keypair_sender.target_pub_key,
+        comm_keypair_receiver.pub_key
+    );
 
     return Ok(());
 }
 
-async fn send_complete(
-    vade: &mut Vade,
-    sender: &str,
-    receiver: &str,
-) -> AsyncResult<String> {
+async fn send_complete(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncResult<String> {
     let exchange_complete = format!(
         r#"{{
             "type": "{}/complete",
             "from": "{}",
             "to": ["{}"]
         }}"#,
-        DID_EXCHANGE_PROTOCOL_URL,
-        sender,
-        receiver
+        DID_EXCHANGE_PROTOCOL_URL, sender, receiver
     );
     let results = vade.didcomm_send("{}", &exchange_complete).await?;
     let result = results
@@ -177,7 +171,10 @@ async fn receive_complete(
         .ok_or("no value in result")?;
     let complete_message: ProtocolOutput<BaseMessage> = serde_json::from_str(received)?;
 
-    assert_eq!(complete_message.message.r#type, format!("{}/complete", DID_EXCHANGE_PROTOCOL_URL));
+    assert_eq!(
+        complete_message.message.r#type,
+        format!("{}/complete", DID_EXCHANGE_PROTOCOL_URL)
+    );
 
     return Ok(());
 }

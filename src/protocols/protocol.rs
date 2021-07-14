@@ -1,4 +1,4 @@
-use crate::{utils::SyncResult};
+use crate::utils::SyncResult;
 
 #[derive(PartialEq)]
 pub enum Direction {
@@ -25,10 +25,7 @@ pub struct StepOutput {
 
 pub type StepResult = SyncResult<StepOutput>;
 
-pub fn send_step(
-    name: &str,
-    handler: fn(message: &str) -> StepResult,
-) -> ProtocolStep {
+pub fn send_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
     return ProtocolStep {
         direction: Direction::SEND,
         name: String::from(name),
@@ -36,10 +33,7 @@ pub fn send_step(
     };
 }
 
-pub fn receive_step(
-    name: &str,
-    handler: fn(message: &str) -> StepResult,
-) -> ProtocolStep {
+pub fn receive_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
     return ProtocolStep {
         direction: Direction::RECEIVE,
         name: String::from(name),

@@ -1,4 +1,4 @@
-use vade_didcomm::{SyncResult, read_db, write_db};
+use vade_didcomm::{read_db, write_db, SyncResult};
 
 #[test]
 fn can_use_rocks_db() -> SyncResult<()> {

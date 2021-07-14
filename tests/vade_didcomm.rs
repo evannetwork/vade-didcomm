@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
 use utilities::keypair::get_keypair_set;
 use vade::Vade;
-use vade_didcomm::{AsyncResult, BaseMessage, EncryptedMessage, MessageWithBody, ProtocolOutput, VadeDidComm};
-use serde::{Deserialize, Serialize};
+use vade_didcomm::{
+    AsyncResult, BaseMessage, EncryptedMessage, MessageWithBody, ProtocolOutput, VadeDidComm,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct PingBody {
@@ -16,9 +18,7 @@ async fn get_vade() -> AsyncResult<Vade> {
     Ok(vade)
 }
 
-fn get_didcomm_options(
-    shared_secret: &x25519_dalek::SharedSecret,
-) -> String {
+fn get_didcomm_options(shared_secret: &x25519_dalek::SharedSecret) -> String {
     let options = format!(
         r#"{{
             "sharedSecret": {:?}
@@ -59,7 +59,11 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
         .ok_or("no value in result")?;
 
     let parsed: ProtocolOutput<EncryptedMessage> = serde_json::from_str(result)?;
-    let custom_field = parsed.message.other.get("custom1").ok_or("could not field custom1")?;
+    let custom_field = parsed
+        .message
+        .other
+        .get("custom1")
+        .ok_or("could not field custom1")?;
 
     assert_eq!(custom_field, "ichi");
 
@@ -99,7 +103,14 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
                 parsed.message.r#type,
             );
             // ensure that send processor was executed
-            assert_eq!(parsed.message.body.ok_or("no body filled")?.response_requested, true);
+            assert_eq!(
+                parsed
+                    .message
+                    .body
+                    .ok_or("no body filled")?
+                    .response_requested,
+                true
+            );
         }
         _ => {
             return Err(Box::from("invalid result from didcomm_send"));

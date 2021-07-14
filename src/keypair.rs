@@ -37,10 +37,7 @@ pub fn save_com_keypair(
     return Ok(comm_keypair);
 }
 
-pub fn get_com_keypair(
-    from_did: &str,
-    to_did: &str,
-) -> SyncResult<CommKeyPair> {
+pub fn get_com_keypair(from_did: &str, to_did: &str) -> SyncResult<CommKeyPair> {
     let db_result = read_db(&format!("comm_keypair_{}_{}", from_did, to_did))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 

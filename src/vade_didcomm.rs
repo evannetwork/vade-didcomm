@@ -1,4 +1,7 @@
-use crate::{AsyncResult, BaseMessage, EncryptedMessage, ProtocolHandler, decrypt_message, encrypt_message, get_com_keypair, vec_to_array};
+use crate::{
+    decrypt_message, encrypt_message, get_com_keypair, vec_to_array, AsyncResult, BaseMessage,
+    EncryptedMessage, ProtocolHandler,
+};
 use async_trait::async_trait;
 use k256::elliptic_curve::rand_core::OsRng;
 use serde::{Deserialize, Serialize};
@@ -15,7 +18,7 @@ pub struct DidcommOptions {
 }
 
 #[allow(dead_code)]
-pub struct VadeDidComm { }
+pub struct VadeDidComm {}
 
 impl VadeDidComm {
     /// Creates new instance of `VadeDidComm`.
@@ -23,7 +26,7 @@ impl VadeDidComm {
         match env_logger::try_init() {
             Ok(_) | Err(_) => (),
         };
-        let vade_didcomm = VadeDidComm { };
+        let vade_didcomm = VadeDidComm {};
 
         Ok(vade_didcomm)
     }
@@ -62,7 +65,8 @@ impl VadePlugin for VadeDidComm {
                     &protocol_result.message,
                     &parsed_options.shared_secret,
                     &sign_keypair,
-                ).asyncify()?;
+                )
+                .asyncify()?;
             } else {
                 // otherwise use keys from did exchange
                 let parsed_message: BaseMessage = serde_json::from_str(message)?;
@@ -81,7 +85,8 @@ impl VadePlugin for VadeDidComm {
                     &protocol_result.message,
                     shared_secret.as_bytes(),
                     &sign_keypair,
-                ).asyncify()?;
+                )
+                .asyncify()?;
             }
         } else {
             final_message = protocol_result.message;
@@ -92,8 +97,7 @@ impl VadePlugin for VadeDidComm {
                 "message": {},
                 "metadata": {}
             }}"#,
-            final_message,
-            protocol_result.metadata,
+            final_message, protocol_result.metadata,
         );
 
         return Ok(VadePluginResultValue::Success(Some(send_result)));
@@ -118,7 +122,9 @@ impl VadePlugin for VadeDidComm {
         // if the message is encrypted, try to decrypt it
         if parsed_message.is_ok() {
             let encrypted_message = parsed_message?;
-            let signing_pub_key = encrypted_message.kid.ok_or("kid not set in encrypted message")?;
+            let signing_pub_key = encrypted_message
+                .kid
+                .ok_or("kid not set in encrypted message")?;
 
             // if shared secret was passed to the options, use this one
             let options = serde_json::from_str::<DidcommOptions>(&options);
@@ -128,7 +134,8 @@ impl VadePlugin for VadeDidComm {
                     &message,
                     &parsed_options.shared_secret,
                     &hex::decode(signing_pub_key)?,
-                ).asyncify()?;
+                )
+                .asyncify()?;
             } else {
                 // otherwise use keys from did exchange
                 let from_did = encrypted_message.from.as_ref().ok_or("from is required")?;
@@ -146,7 +153,8 @@ impl VadePlugin for VadeDidComm {
                     &message,
                     shared_secret.as_bytes(),
                     &hex::decode(signing_pub_key)?,
-                ).asyncify()?;
+                )
+                .asyncify()?;
             }
         } else {
             decrypted = String::from(message);
@@ -160,8 +168,7 @@ impl VadePlugin for VadeDidComm {
                 "message": {},
                 "metadata": {}
             }}"#,
-            protocol_result.message,
-            protocol_result.metadata,
+            protocol_result.message, protocol_result.metadata,
         );
 
         return Ok(VadePluginResultValue::Success(Some(receive_result)));

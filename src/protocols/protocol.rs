@@ -1,11 +1,4 @@
-use crate::utils::SyncResult;
-
-/// Specifies all possible message directions.
-#[derive(PartialEq)]
-pub enum Direction {
-    SEND,
-    RECEIVE,
-}
+use crate::{utils::SyncResult, MessageDirection};
 
 /// Each protocol are constructed by a name and multiple steps. The protocol handler will iterate over
 /// all registered protocols and checks, if the name exists in the didcomm message type. Afterwards
@@ -14,9 +7,8 @@ pub enum Direction {
 /// Example:
 ///     - name          -> https://didcomm.org/didexchange/1.0
 ///     - step[0].name  -> request
-///
-///     new message 1 -> type = trust_ping/ping -> protocol step will not be executed
-///     new message 2 -> type = https://didcomm.org/didexchange/1.0/request -> protocol step will be executed
+///     - message 1 -> type = trust_ping/ping -> protocol step will not be executed
+///     - message 2 -> type = https://didcomm.org/didexchange/1.0/request -> protocol step will be executed
 pub struct Protocol {
     pub name: String,
     pub steps: Vec<ProtocolStep>,
@@ -26,7 +18,7 @@ pub struct Protocol {
 /// The step handler can take the incoming message, parse it and can return an adjusted message to be
 /// returned to the user.
 pub struct ProtocolStep {
-    pub direction: Direction,
+    pub direction: MessageDirection,
     pub handler: fn(message: &str) -> StepResult,
     pub name: String,
 }
@@ -52,7 +44,7 @@ pub type StepResult = SyncResult<StepOutput>;
 /// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
 pub fn send_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
     return ProtocolStep {
-        direction: Direction::SEND,
+        direction: MessageDirection::SEND,
         name: String::from(name),
         handler,
     };
@@ -69,7 +61,7 @@ pub fn send_step(name: &str, handler: fn(message: &str) -> StepResult) -> Protoc
 /// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
 pub fn receive_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
     return ProtocolStep {
-        direction: Direction::RECEIVE,
+        direction: MessageDirection::RECEIVE,
         name: String::from(name),
         handler,
     };

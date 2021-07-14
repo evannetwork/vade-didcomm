@@ -1,12 +1,6 @@
 use crate::{get_step_output, receive_step, send_step, MessageWithBody, Protocol, StepResult};
 use serde::{Deserialize, Serialize};
 
-macro_rules! sf {
-    ( $var:expr ) => {
-        String::from($var)
-    };
-}
-
 /// Struct for parsing incoming ping messages.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PingBody {
@@ -19,7 +13,7 @@ pub struct PingBody {
 /// * `Protocol` - the new ping pong protocol handler
 pub fn get_ping_pong_protocol() -> Protocol {
     let mut protocol = Protocol {
-        name: sf!("trust_ping"),
+        name: String::from("trust_ping"),
         steps: Vec::new(),
     };
 

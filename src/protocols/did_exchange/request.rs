@@ -2,11 +2,11 @@ use k256::elliptic_curve::rand_core::OsRng;
 use x25519_dalek::{PublicKey, StaticSecret};
 
 use crate::{
-    get_step_output, get_step_output_decrypted, save_com_keypair, BaseMessage, MessageWithBody,
-    StepResult,
+    get_step_output, get_step_output_decrypted, save_com_keypair, BaseMessage, DidcommObj,
+    MessageWithBody, StepResult,
 };
 
-use super::helper::{get_did_exchange_message, DidcommObj};
+use super::helper::get_did_exchange_message;
 
 /// protocol handler for direction: `send`, type: `DID_EXCHANGE_PROTOCOL_URL/request`
 /// Uses the protocols/did_exchange/helper.rs/get_did_exchange_message to construct the request message,

@@ -1,9 +1,9 @@
 use crate::{
     get_com_keypair, get_step_output, get_step_output_decrypted, save_com_keypair, BaseMessage,
-    MessageWithBody, StepResult,
+    DidcommObj, MessageWithBody, StepResult,
 };
 
-use super::helper::{get_did_exchange_message, DidcommObj};
+use super::helper::get_did_exchange_message;
 
 /// protocol handler for direction: `send`, type: `DID_EXCHANGE_PROTOCOL_URL/response`
 /// Uses the protocols/did_exchange/helper.rs/get_did_exchange_message to construct the request message,

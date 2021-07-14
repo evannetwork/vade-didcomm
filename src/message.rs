@@ -1,69 +1,8 @@
+use crate::{ExtendedMessage, SyncResult};
 use didcomm_rs::{
     crypto::{CryptoAlgorithm, SignatureAlgorithm},
     Message as DIDCommMessage,
 };
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::collections::HashMap;
-
-use crate::SyncResult;
-
-/// Base message with only the type (used for protocol handling to analyze only the message type)
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MessageWithType {
-    pub r#type: String,
-}
-
-/// Decrypted message format without dynamic body
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BaseMessage {
-    pub from: Option<String>,
-    pub r#type: String,
-    pub to: Option<Vec<String>>,
-}
-
-/// Decrypted message format without dynamic body
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ExtendedMessage {
-    pub body: Option<HashMap<String, Value>>,
-    pub from: Option<String>,
-    pub id: Option<String>,
-    pub pthid: Option<String>,
-    pub r#type: String,
-    pub thid: Option<String>,
-    pub to: Option<Vec<String>>,
-    #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
-    pub other: HashMap<String, String>,
-}
-
-/// Decrypted messaged with dynamic body struct
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MessageWithBody<T> {
-    pub body: Option<T>,
-    pub from: Option<String>,
-    pub id: Option<String>,
-    pub pthid: Option<String>,
-    pub r#type: String,
-    pub thid: Option<String>,
-    pub to: Option<Vec<String>>,
-    #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
-    pub other: HashMap<String, String>,
-}
-
-/// Message format, when a message was encrypted with didcomm rs.
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct EncryptedMessage {
-    #[serde(default)]
-    pub from: Option<String>,
-    pub kid: Option<String>,
-    pub to: Option<Vec<String>>,
-    pub r#type: Option<String>,
-    pub ciphertext: Vec<u8>,
-    pub iv: Vec<u8>,
-    pub id: Option<u64>,
-    #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
-    pub other: HashMap<String, String>,
-}
 
 macro_rules! apply_optional {
     ($message:ident, $payload:ident, $payload_arg:ident) => {{
@@ -160,4 +99,77 @@ pub fn decrypt_message(
     })?;
 
     return Ok(decrypted);
+}
+
+#[cfg(test)]
+mod tests {
+    extern crate utilities;
+
+    use crate::{EncryptedMessage, MessageWithBody};
+
+    use super::*;
+    use serde::{Deserialize, Serialize};
+    use utilities::keypair::get_keypair_set;
+
+    #[derive(Debug, Serialize, Deserialize, Clone)]
+    struct TestBody {
+        test: bool,
+    }
+
+    #[test]
+    fn can_encrypt_message() -> SyncResult<()> {
+        let sign_keypair = get_keypair_set();
+        let payload = format!(
+            r#"{{
+                "body": {{"test": true}},
+                "custom1": "ichi",
+                "custom2": "ni",
+                "custom3": "san",
+                "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+                "type": "test"
+            }}"#,
+        );
+
+        let encrypted = encrypt_message(
+            &payload,
+            sign_keypair.user1_shared.as_bytes(),
+            &sign_keypair.sign_keypair,
+        )?;
+        let _: EncryptedMessage = serde_json::from_str(&encrypted)?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn can_decrypt_message() -> SyncResult<()> {
+        let sign_keypair = get_keypair_set();
+        let payload = format!(
+            r#"{{
+                "body": {{"test": true}},
+                "custom1": "ichi",
+                "custom2": "ni",
+                "custom3": "san",
+                "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+                "type": "test"
+            }}"#,
+        );
+
+        let encrypted = encrypt_message(
+            &payload,
+            sign_keypair.user1_shared.as_bytes(),
+            &sign_keypair.sign_keypair,
+        )?;
+
+        let decrypted = decrypt_message(
+            &encrypted,
+            sign_keypair.user2_shared.as_bytes(),
+            &sign_keypair.sign_keypair.public.to_bytes(),
+        )?;
+
+        let decryped_parsed: MessageWithBody<TestBody> = serde_json::from_str(&decrypted)?;
+
+        assert_eq!(decryped_parsed.body.ok_or("body not available")?.test, true);
+
+        Ok(())
+    }
 }

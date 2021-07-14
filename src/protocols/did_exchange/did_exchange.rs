@@ -4,16 +4,8 @@ use crate::{
         request::{receive_request, send_request},
         response::{receive_response, send_response},
     },
-    receive_step, send_step, Protocol,
+    receive_step, send_step, Protocol, DID_EXCHANGE_PROTOCOL_URL,
 };
-
-pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
-
-macro_rules! sf {
-    ( $var:expr ) => {
-        String::from($var)
-    };
-}
 
 /// Creates a new did_exchange protocol and maps the specific step handler functions.
 ///
@@ -21,7 +13,7 @@ macro_rules! sf {
 /// * `Protocol` - the new did exchange protocol handler
 pub fn get_did_exchange_protocol() -> Protocol {
     let mut protocol = Protocol {
-        name: sf!(DID_EXCHANGE_PROTOCOL_URL),
+        name: String::from(DID_EXCHANGE_PROTOCOL_URL),
         steps: Vec::new(),
     };
 

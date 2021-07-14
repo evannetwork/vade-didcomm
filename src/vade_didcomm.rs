@@ -1,30 +1,13 @@
-use std::collections::HashMap;
-
 use crate::{
     decrypt_message, encrypt_message, get_com_keypair, vec_to_array, AsyncResult, BaseMessage,
-    EncryptedMessage, ProtocolHandler,
+    DidcommOptions, EncryptedMessage, ProtocolHandler,
 };
 use async_trait::async_trait;
 use k256::elliptic_curve::rand_core::OsRng;
-use serde::{Deserialize, Serialize};
 use vade::{ResultAsyncifier, VadePlugin, VadePluginResultValue};
 use x25519_dalek::{PublicKey, StaticSecret};
 
 big_array! { BigArray; }
-
-/// Optional parameter that can be passed to vade didcomm functions to enforce a specific encryption key
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DidcommOptions {
-    pub shared_secret: [u8; 32],
-}
-
-/// Output of didcomm_send or didcomm_receive.
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct VadeDidCommPluginOutput<T> {
-    pub message: T,
-    pub metadata: HashMap<String, String>,
-}
 
 #[allow(dead_code)]
 pub struct VadeDidComm {}

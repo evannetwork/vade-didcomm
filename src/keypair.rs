@@ -1,22 +1,4 @@
-use serde::{Deserialize, Serialize};
-
-use crate::{read_db, utils::SyncResult, write_db};
-
-/// Communication keypair with the complete information to encrypt and decrypt a message from a
-/// specific comm partner. Each key is saved as hex encoded u8 array. Please checkout vade_didcomm.rs
-/// and did_exchange/request.rs for reference implementations.
-///
-///     let secret_key = StaticSecret::new(OsRng);
-///     let pub_key = PublicKey::from(&secret_key)
-///     let encoded_pub_key = &hex::encode(pub_key.to_bytes());
-///     ket encoded_secret_key = &hex::encode(secret_key.to_bytes());
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct CommKeyPair {
-    pub pub_key: String,
-    pub secret_key: String,
-    pub target_pub_key: String,
-    pub target_service_endpoint: String,
-}
+use crate::{read_db, utils::SyncResult, write_db, CommKeyPair};
 
 /// Saves a communication keypair within the rocks.db for two dids (from -> to). Save entry will be
 /// comm_keypair_{from}_{to}.

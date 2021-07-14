@@ -40,3 +40,18 @@ pub fn read_db(key: &str) -> SyncResult<String> {
         Err(e) => Err(format!("Error while loading key: {0}, {1}", key, e).into()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_use_rocks_db() -> SyncResult<()> {
+        let _ = write_db("test1", "helloooo");
+        let result = read_db("test1")?;
+
+        assert_eq!(result, "helloooo");
+
+        return Ok(());
+    }
+}

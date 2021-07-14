@@ -1,9 +1,28 @@
+use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 use vade::{ResultAsyncifier, Vade};
 use vade_didcomm::{
-    get_com_keypair, helper::DidcommObj, protocol::DID_EXCHANGE_PROTOCOL_URL, read_db, AsyncResult,
-    BaseMessage, CommKeyPair, EncryptedMessage, MessageWithBody, VadeDidComm,
-    VadeDidCommPluginOutput,
+    AsyncResult, BaseMessage, CommKeyPair, DidcommObj, EncryptedMessage, MessageWithBody,
+    SyncResult, VadeDidComm, VadeDidCommPluginOutput, DID_EXCHANGE_PROTOCOL_URL,
 };
+
+const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
+
+pub fn read_db(key: &str) -> SyncResult<String> {
+    let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;
+
+    match db.get(key) {
+        Ok(Some(result)) => Ok(String::from_utf8(result)?),
+        Ok(None) => Err(format!("{0} not found", key).into()),
+        Err(e) => Err(format!("Error while loading key: {0}, {1}", key, e).into()),
+    }
+}
+
+pub fn get_com_keypair(from_did: &str, to_did: &str) -> SyncResult<CommKeyPair> {
+    let db_result = read_db(&format!("comm_keypair_{}_{}", from_did, to_did))?;
+    let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
+
+    return Ok(comm_keypair);
+}
 
 async fn get_vade() -> AsyncResult<Vade> {
     let mut vade = Vade::new();
@@ -163,8 +182,8 @@ async fn send_complete(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncRe
 
 async fn receive_complete(
     vade: &mut Vade,
-    sender: &str,
-    receiver: &str,
+    _sender: &str,
+    _receiver: &str,
     message: String,
 ) -> AsyncResult<()> {
     let results = vade.didcomm_receive("{}", &message).await?;

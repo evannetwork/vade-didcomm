@@ -1,44 +1,11 @@
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use uuid::Uuid;
 
 use crate::{
-    protocols::did_exchange::did_exchange::DID_EXCHANGE_PROTOCOL_URL, utils::SyncResult,
-    CommKeyPair, MessageWithBody,
+    utils::SyncResult, CommKeyPair, DidCommPubKey, DidCommService, DidcommObj, MessageWithBody,
+    DID_EXCHANGE_PROTOCOL_URL,
 };
-
-/// Struct for a pub key that will be sent during did exchange with the users communication did document.
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DidCommPubKey {
-    pub id: String,
-    pub public_key_base_58: String,
-    pub r#type: Vec<String>,
-}
-
-/// Struct for a service definition that will be sent during did exchange with the users communication did document.
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DidCommService {
-    pub id: String,
-    pub r#type: String,
-    pub priority: u8,
-    pub service_endpoint: String,
-    pub recipient_keys: Vec<String>,
-}
-
-/// Communication didcomm object that will be sent to the target user during did exchange.
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DidcommObj {
-    #[serde(rename(serialize = "@context", deserialize = "@context"))]
-    pub context: String,
-    pub id: String,
-    pub authentication: Vec<String>,
-    pub public_key: Vec<DidCommPubKey>,
-    pub service: Vec<DidCommService>,
-}
 
 /// Creates a new communication didcomm object for a specific did, a communication pub key and the
 /// service url, where the user can be reached.

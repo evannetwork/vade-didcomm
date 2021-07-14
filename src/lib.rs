@@ -9,6 +9,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate serde_big_array;
 
+mod datatypes;
 mod keypair;
 mod message;
 mod protocol_handler;
@@ -18,6 +19,6 @@ mod utils;
 mod vade_didcomm;
 
 pub use crate::{
-    keypair::*, message::*, protocol_handler::*, protocols::pingpong::*, protocols::protocol::*,
-    rocks_db::*, utils::*, vade_didcomm::*,
+    datatypes::*, keypair::*, message::*, protocol_handler::*, protocols::pingpong::*,
+    protocols::protocol::*, rocks_db::*, utils::*, vade_didcomm::*,
 };

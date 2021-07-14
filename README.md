@@ -19,9 +19,9 @@ Currently supported protocols:
 
 ## Usage
 
-`didcomm_send` prepares the message for being sent to the recipient and `didcomm_receive` is used for decryption and analyzing an incoming message. Per default each sent message will be encrypted, either with the saved communication key from a existing did exchange with the communication partner, or with the provided one. Specific protocol types can override the encryption setting of the message to just send a plain message (like did exchange).
+`didcomm_send` prepares the message for being sent to the recipient and `didcomm_receive` is used for decryption and analyzing an incoming message. Per default each sent message will be encrypted, either with the saved encryption key from a existing did exchange with the communication partner, or with the provided one. Specific protocol types can override the encryption setting of the message to just send a plain message (like did exchange).
 
-*NOTE*: Please ensure, that when you sent any message that will be encrypted, to have a finished did exchange or correct encryption keys, that can be passed to vade_didcomm.
+*NOTE*: When you send any message that will be encrypted, you need to have a finished did exchange or correct encryption keys, that are passed to vade_didcomm.
 
 Each function always takes 2 arguments:
 
@@ -132,13 +132,13 @@ This will return the following result:
 }
 ```
 
-As you can see, the whole message was enriched with the data that is necessary for the did exchange. The metadata contains the generated communication hex encoded public key and secret key. The receiver can just pass the whole json to the `didcomm_receive` function, that will analyse the message, will save the communication keys and will generate also new ones for himself as well. The receiver can then use the logic for sending the response, by just replacing the type of the message `https://didcomm.org/didexchange/1.0/response.`
+As you can see, the whole message was enriched with the data that is necessary for the did exchange. The metadata contains the generated communication hex encoded public key and secret key. The receiver can just pass the whole json to the `didcomm_receive` function, that will analyse the message, will save the communication keys and generate new ones for himself as well. The receiver can then use the logic for sending the response, by just replacing the type of the message `https://didcomm.org/didexchange/1.0/response.`
 
 ## Registering a new protocol
 
 Each protocol is represented by a set of steps. To register a new protocol, just follow the following steps:
 
-1. add new file into `src/protocols` with the following sample content
+1. add new file into `src/protocols` with the following sample content:
 
 ```rs
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -152,13 +152,13 @@ pub fn get_my_custom_protocol() -> Protocol {
         steps: Vec::new(),
     };
 
-    protocol.steps.push(send_step("step1", send_ping));
-    protocol.steps.push(receive_step("step1", receive_ping));
+    protocol.steps.push(send_step("step1", send_step1));
+    protocol.steps.push(receive_step("step1", receive_step1));
 
     return protocol;
 }
 
-pub fn send_ping(message: &str) -> StepResult {
+pub fn send_step1(message: &str) -> StepResult {
     let mut parsed_message: MessageWithBody<CustomBody> = serde_json::from_str(message)?;
     parsed_message.body = Some(CustomBody {
         response_requested: Some(true),
@@ -166,18 +166,18 @@ pub fn send_ping(message: &str) -> StepResult {
     return get_step_output(&serde_json::to_string(&parsed_message)?, "{}");
 }
 
-pub fn receive_ping(message: &str) -> StepResult {
+pub fn receive_step1(message: &str) -> StepResult {
     return get_step_output(message, "{}");
 }
 ```
 
-2. Import it into the protocols `mod.rs` file
+2. Import it into the protocols `mod.rs` file:
 
 ```rs
 pub(crate) mod my_custom_protocol;
 ```
 
-3. Register it within the `protocol_handler.rs`
+3. Register it within the `protocol_handler.rs`:
 
 ```rs
 let protocols: [&Protocol; 3] = [

@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
-    AsyncResult, BaseMessage, EncryptedMessage, MessageWithBody, ProtocolOutput, VadeDidComm,
+    AsyncResult, BaseMessage, EncryptedMessage, MessageWithBody, VadeDidComm,
+    VadeDidCommPluginOutput,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -58,7 +59,7 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
         .as_ref()
         .ok_or("no value in result")?;
 
-    let parsed: ProtocolOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let parsed: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
     let custom_field = parsed
         .message
         .other
@@ -88,7 +89,7 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
 
     match results.get(0) {
         Some(Some(value)) => {
-            let encrypted: ProtocolOutput<EncryptedMessage> = serde_json::from_str(value)?;
+            let encrypted: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(value)?;
             let encrypted_message = serde_json::to_string(&encrypted.message)?;
             let options = get_didcomm_options(&sign_keypair.user2_shared);
             let results = vade.didcomm_receive(&options, &encrypted_message).await?;
@@ -97,7 +98,8 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
                 .ok_or("no result")?
                 .as_ref()
                 .ok_or("no value in result")?;
-            let parsed: ProtocolOutput<MessageWithBody<PingBody>> = serde_json::from_str(result)?;
+            let parsed: VadeDidCommPluginOutput<MessageWithBody<PingBody>> =
+                serde_json::from_str(result)?;
             assert_eq!(
                 "https://didcomm.org/trust_ping/1.0/ping",
                 parsed.message.r#type,
@@ -141,7 +143,7 @@ async fn can_receive_unencrypted() -> AsyncResult<()> {
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let parsed: ProtocolOutput<BaseMessage> = serde_json::from_str(result)?;
+    let parsed: VadeDidCommPluginOutput<BaseMessage> = serde_json::from_str(result)?;
 
     assert_eq!(
         "https://didcomm.org/trust_ping/1.0/ping",

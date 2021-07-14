@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     decrypt_message, encrypt_message, get_com_keypair, vec_to_array, AsyncResult, BaseMessage,
     EncryptedMessage, ProtocolHandler,
@@ -15,6 +17,13 @@ big_array! { BigArray; }
 #[serde(rename_all = "camelCase")]
 pub struct DidcommOptions {
     pub shared_secret: [u8; 32],
+}
+
+/// Output of didcomm_send or didcomm_receive.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct VadeDidCommPluginOutput<T> {
+    pub message: T,
+    pub metadata: HashMap<String, String>,
 }
 
 #[allow(dead_code)]

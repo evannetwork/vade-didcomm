@@ -50,6 +50,7 @@ pub struct MessageWithBody<T> {
     pub other: HashMap<String, String>,
 }
 
+/// Message format, when a message was encrypted with didcomm rs.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EncryptedMessage {
     #[serde(default)]
@@ -64,12 +65,6 @@ pub struct EncryptedMessage {
     pub other: HashMap<String, String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ProtocolOutput<T> {
-    pub message: T,
-    pub metadata: HashMap<String, String>,
-}
-
 macro_rules! apply_optional {
     ($message:ident, $payload:ident, $payload_arg:ident) => {{
         match $payload.$payload_arg {
@@ -81,24 +76,18 @@ macro_rules! apply_optional {
     }};
 }
 
-pub fn decrypt_message(
-    message: &str,
-    decryption_key: &[u8],
-    sign_public: &[u8],
-) -> SyncResult<String> {
-    let received = DIDCommMessage::receive(&message, Some(decryption_key), Some(sign_public))
-        .map_err(|err| format!("could not decrypt message: {}", &err.to_string()))?;
-
-    let decrypted = String::from_utf8(received.body.clone()).map_err(|err| {
-        format!(
-            "could not get body from message while decrypting message: {}",
-            &err.to_string()
-        )
-    })?;
-
-    return Ok(decrypted);
-}
-
+/// Encrypt a stringified plain message, with a given encryption_key and a ed25519_dalek keypair using
+/// didcomm rs. (checkout vade_didcomm.rs or tests/message.rs for example usage)
+/// Note: Ensure to always create new signing_key pairs to have altering results. Encryption key
+/// should be the shared_secret.
+///
+/// # Arguments
+/// * `message` - message string (should match message.rs/EncryptedMessage)
+/// * `encryption_key` - encryption public key (usually the shared_secret)
+/// * `keypair` - signing key_pair (ed25519_dalek keypair)
+///
+/// # Returns
+/// * `String` - encrypted stringified message
 pub fn encrypt_message(
     message_string: &str,
     encryption_key: &[u8],
@@ -143,4 +132,32 @@ pub fn encrypt_message(
         })?;
 
     return Ok(encrypted);
+}
+
+/// Decrypt a stringified encrypted message, with a given decryption_key and signing key using
+/// didcomm rs. (checkout vade_didcomm.rs or tests/message.rs for example usage)
+///
+/// # Arguments
+/// * `message` - message string (should match message.rs/EncryptedMessage)
+/// * `decryption_key` - decryption public key (usually the shared_secret)
+/// * `sign_public` - signing public key (usually delivered within the encrypted message kid field)
+///
+/// # Returns
+/// * `String` - decrypted stringified message
+pub fn decrypt_message(
+    message: &str,
+    decryption_key: &[u8],
+    sign_public: &[u8],
+) -> SyncResult<String> {
+    let received = DIDCommMessage::receive(&message, Some(decryption_key), Some(sign_public))
+        .map_err(|err| format!("could not decrypt message: {}", &err.to_string()))?;
+
+    let decrypted = String::from_utf8(received.body.clone()).map_err(|err| {
+        format!(
+            "could not get body from message while decrypting message: {}",
+            &err.to_string()
+        )
+    })?;
+
+    return Ok(decrypted);
 }

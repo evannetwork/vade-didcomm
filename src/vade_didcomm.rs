@@ -1,10 +1,13 @@
 use crate::{
-    decrypt_message, encrypt_message, get_com_keypair, vec_to_array, AsyncResult, BaseMessage,
-    DidcommOptions, EncryptedMessage, ProtocolHandler,
+    datatypes::{BaseMessage, DidcommOptions, EncryptedMessage},
+    keypair::get_com_keypair,
+    message::{decrypt_message, encrypt_message},
+    protocol_handler::ProtocolHandler,
+    utils::vec_to_array,
 };
 use async_trait::async_trait;
 use k256::elliptic_curve::rand_core::OsRng;
-use vade::{ResultAsyncifier, VadePlugin, VadePluginResultValue};
+use vade::{AsyncResult, ResultAsyncifier, VadePlugin, VadePluginResultValue};
 use x25519_dalek::{PublicKey, StaticSecret};
 
 big_array! { BigArray; }

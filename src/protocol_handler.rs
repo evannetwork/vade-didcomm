@@ -1,6 +1,10 @@
 use crate::{
-    get_ping_pong_protocol, protocols::did_exchange::did_exchange::get_did_exchange_protocol,
-    utils::SyncResult, MessageDirection, MessageWithType, Protocol, ProtocolHandleOutput,
+    datatypes::{MessageDirection, MessageWithType, ProtocolHandleOutput},
+    protocols::{
+        did_exchange::did_exchange::get_did_exchange_protocol, pingpong::get_ping_pong_protocol,
+        protocol::Protocol,
+    },
+    utils::SyncResult,
 };
 
 pub struct ProtocolHandler {}

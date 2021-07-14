@@ -1,4 +1,4 @@
-use crate::{ExtendedMessage, SyncResult};
+use crate::{datatypes::ExtendedMessage, utils::SyncResult};
 use didcomm_rs::{
     crypto::{CryptoAlgorithm, SignatureAlgorithm},
     Message as DIDCommMessage,
@@ -105,7 +105,7 @@ pub fn decrypt_message(
 mod tests {
     extern crate utilities;
 
-    use crate::{EncryptedMessage, MessageWithBody};
+    use crate::datatypes::{EncryptedMessage, MessageWithBody};
 
     use super::*;
     use serde::{Deserialize, Serialize};

@@ -1,6 +1,7 @@
 use crate::{
-    get_com_keypair, get_step_output, get_step_output_decrypted, save_com_keypair, BaseMessage,
-    DidcommObj, MessageWithBody, StepResult,
+    datatypes::{BaseMessage, DidcommObj, MessageWithBody},
+    keypair::{get_com_keypair, save_com_keypair},
+    protocols::protocol::{get_step_output, get_step_output_decrypted, StepResult},
 };
 
 use super::helper::get_did_exchange_message;

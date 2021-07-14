@@ -2,8 +2,9 @@ use k256::elliptic_curve::rand_core::OsRng;
 use x25519_dalek::{PublicKey, StaticSecret};
 
 use crate::{
-    get_step_output, get_step_output_decrypted, save_com_keypair, BaseMessage, DidcommObj,
-    MessageWithBody, StepResult,
+    datatypes::{BaseMessage, DidcommObj, MessageWithBody},
+    keypair::save_com_keypair,
+    protocols::protocol::{get_step_output, get_step_output_decrypted, StepResult},
 };
 
 use super::helper::get_did_exchange_message;

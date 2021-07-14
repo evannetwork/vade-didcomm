@@ -3,8 +3,11 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::{
-    utils::SyncResult, CommKeyPair, DidCommPubKey, DidCommService, DidcommObj, MessageWithBody,
-    DID_EXCHANGE_PROTOCOL_URL,
+    datatypes::{
+        CommKeyPair, DidCommPubKey, DidCommService, DidcommObj, MessageWithBody,
+        DID_EXCHANGE_PROTOCOL_URL,
+    },
+    utils::SyncResult,
 };
 
 /// Creates a new communication didcomm object for a specific did, a communication pub key and the

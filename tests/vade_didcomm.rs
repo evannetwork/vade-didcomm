@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
-    AsyncResult, BaseMessage, EncryptedMessage, MessageWithBody, VadeDidComm,
-    VadeDidCommPluginOutput,
+    datatypes::{BaseMessage, EncryptedMessage, MessageWithBody, VadeDidCommPluginOutput},
+    AsyncResult, VadeDidComm,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -1,8 +1,11 @@
 use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 use vade::{ResultAsyncifier, Vade};
 use vade_didcomm::{
-    AsyncResult, BaseMessage, CommKeyPair, DidcommObj, EncryptedMessage, MessageWithBody,
-    SyncResult, VadeDidComm, VadeDidCommPluginOutput, DID_EXCHANGE_PROTOCOL_URL,
+    datatypes::{
+        BaseMessage, CommKeyPair, DidcommObj, EncryptedMessage, MessageWithBody,
+        VadeDidCommPluginOutput, DID_EXCHANGE_PROTOCOL_URL,
+    },
+    AsyncResult, SyncResult, VadeDidComm,
 };
 
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";

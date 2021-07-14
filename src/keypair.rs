@@ -1,4 +1,8 @@
-use crate::{read_db, utils::SyncResult, write_db, CommKeyPair};
+use crate::{
+    datatypes::CommKeyPair,
+    rocks_db::{read_db, write_db},
+    utils::SyncResult,
+};
 
 /// Saves a communication keypair within the rocks.db for two dids (from -> to). Save entry will be
 /// comm_keypair_{from}_{to}.

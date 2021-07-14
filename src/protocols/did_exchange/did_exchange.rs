@@ -1,10 +1,13 @@
 use crate::{
-    protocols::did_exchange::{
-        complete::{receive_complete, send_complete},
-        request::{receive_request, send_request},
-        response::{receive_response, send_response},
+    datatypes::DID_EXCHANGE_PROTOCOL_URL,
+    protocols::{
+        did_exchange::{
+            complete::{receive_complete, send_complete},
+            request::{receive_request, send_request},
+            response::{receive_response, send_response},
+        },
+        protocol::{receive_step, send_step, Protocol},
     },
-    receive_step, send_step, Protocol, DID_EXCHANGE_PROTOCOL_URL,
 };
 
 /// Creates a new did_exchange protocol and maps the specific step handler functions.

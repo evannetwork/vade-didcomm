@@ -1,4 +1,4 @@
-use crate::{utils::SyncResult, MessageDirection};
+use crate::{datatypes::MessageDirection, utils::SyncResult};
 
 /// Each protocol are constructed by a name and multiple steps. The protocol handler will iterate over
 /// all registered protocols and checks, if the name exists in the didcomm message type. Afterwards

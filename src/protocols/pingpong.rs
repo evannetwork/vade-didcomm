@@ -1,5 +1,7 @@
-use crate::{get_step_output, receive_step, send_step, MessageWithBody, Protocol, StepResult};
+use crate::datatypes::MessageWithBody;
 use serde::{Deserialize, Serialize};
+
+use super::protocol::{get_step_output, receive_step, send_step, Protocol, StepResult};
 
 /// Struct for parsing incoming ping messages.
 #[derive(Debug, Serialize, Deserialize, Clone)]

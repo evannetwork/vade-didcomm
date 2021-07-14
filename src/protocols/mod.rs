@@ -1,3 +1,3 @@
-pub mod did_exchange;
-pub mod pingpong;
-pub mod protocol;
+pub(crate) mod did_exchange;
+pub(crate) mod pingpong;
+pub(crate) mod protocol;

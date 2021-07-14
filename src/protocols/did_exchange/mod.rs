@@ -1,5 +1,5 @@
-pub mod complete;
-pub mod did_exchange;
-pub mod helper;
-pub mod request;
-pub mod response;
+pub(crate) mod complete;
+pub(crate) mod did_exchange;
+pub(crate) mod helper;
+pub(crate) mod request;
+pub(crate) mod response;

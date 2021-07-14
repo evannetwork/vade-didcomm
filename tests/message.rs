@@ -24,7 +24,7 @@ fn can_encrypt_message() -> SyncResult<()> {
     let encrypted = encrypt_message(
         &payload,
         sign_keypair.user1_shared.as_bytes(),
-        &sign_keypair.sign_keypair.to_bytes(),
+        &sign_keypair.sign_keypair,
     )?;
     let _: EncryptedMessage = serde_json::from_str(&encrypted)?;
 
@@ -48,7 +48,7 @@ fn can_decrypt_message() -> SyncResult<()> {
     let encrypted = encrypt_message(
         &payload,
         sign_keypair.user1_shared.as_bytes(),
-        &sign_keypair.sign_keypair.to_bytes(),
+        &sign_keypair.sign_keypair,
     )?;
 
     let decrypted = decrypt_message(

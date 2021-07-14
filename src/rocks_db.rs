@@ -4,12 +4,18 @@ use crate::utils::SyncResult;
 
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
 
-pub fn get_db() -> SyncResult<DBWithThreadMode<SingleThreaded>> {
+/// Return a new instance of the rocks db.
+fn get_db() -> SyncResult<DBWithThreadMode<SingleThreaded>> {
     let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;
 
     return Ok(db);
 }
 
+/// Write a value into the rocks db.
+///
+/// # Arguments
+/// * `key` - key to save the value for
+/// * `value` - string value to store
 pub fn write_db(key: &str, value: &str) -> SyncResult<()> {
     let db = get_db()?;
 
@@ -18,6 +24,13 @@ pub fn write_db(key: &str, value: &str) -> SyncResult<()> {
     return Ok(());
 }
 
+/// Gets a value from the rocks db.
+///
+/// # Arguments
+/// * `key` - key to load the value for
+///
+/// # Returns
+/// * `String` - stored value
 pub fn read_db(key: &str) -> SyncResult<String> {
     let db = get_db()?;
 

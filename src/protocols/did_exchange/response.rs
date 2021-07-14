@@ -43,8 +43,5 @@ pub fn receive_response(message: &str) -> StepResult {
 
     let metadata = serde_json::to_string(&encoded_keypair)?;
 
-    println!("pub key: {}", encoded_keypair.pub_key);
-    println!("target pub key: {}", encoded_keypair.target_pub_key);
-
     return get_step_output(message, &metadata);
 }

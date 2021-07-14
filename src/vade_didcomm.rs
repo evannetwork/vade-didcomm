@@ -1,23 +1,17 @@
-use crate::{AsyncResult, BaseMessage, EncryptedMessage, MessageWithBody, ProtocolHandler, decrypt_message, encrypt_message, get_com_keypair};
+use crate::{AsyncResult, BaseMessage, EncryptedMessage, ProtocolHandler, decrypt_message, encrypt_message, get_com_keypair, vec_to_array};
 use async_trait::async_trait;
+use k256::elliptic_curve::rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use vade::{ResultAsyncifier, VadePlugin, VadePluginResultValue};
+use x25519_dalek::{PublicKey, StaticSecret};
 
 big_array! { BigArray; }
 
+/// Optional parameter that can be passed to vade didcomm functions to enforce a specific encryption key
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DidcommSendOptions {
-    pub encryption_key: [u8; 32],
-    #[serde(with = "BigArray")]
-    pub sign_keypair: [u8; 64],
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DidcommReceiveOptions {
-    pub decryption_key: [u8; 32],
-    pub sign_public: [u8; 32],
+pub struct DidcommOptions {
+    pub shared_secret: [u8; 32],
 }
 
 #[allow(dead_code)]
@@ -37,6 +31,11 @@ impl VadeDidComm {
 
 #[async_trait]
 impl VadePlugin for VadeDidComm {
+    /// Prepare a plain didcomm json message to be sent, including encryption and protocol specific
+    /// message enhancement.
+    /// The didcomm options can include a shared secret to encrypt the message with a specific key.
+    /// If no key was given and the message should be encrypted (depends on protocol implementation),
+    /// the didcomm keypair from rocks db will be used.
     async fn didcomm_send(
         &mut self,
         options: &str,
@@ -44,18 +43,25 @@ impl VadePlugin for VadeDidComm {
     ) -> AsyncResult<VadePluginResultValue<Option<String>>> {
         log::debug!("preparing DIDComm message for being sent");
 
+        // run protocol specific logic
         let protocol_result = ProtocolHandler::before_send(message).asyncify()?;
+
+        // message string, that will be returned
         let final_message: String;
 
         if protocol_result.encrypt {
-            // if encryption opts were passed to the message, use the passed encryption keys
-            let options = serde_json::from_str::<DidcommSendOptions>(&options);
+            // generate random keypair for message encryption and signing to always have altering
+            // signatures
+            let sign_keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
+
+            // if shared secret was passed to the options, use this one
+            let options = serde_json::from_str::<DidcommOptions>(&options);
             if options.is_ok() {
                 let parsed_options = options?;
                 final_message = encrypt_message(
                     &protocol_result.message,
-                    &parsed_options.encryption_key,
-                    &parsed_options.sign_keypair,
+                    &parsed_options.shared_secret,
+                    &sign_keypair,
                 ).asyncify()?;
             } else {
                 // otherwise use keys from did exchange
@@ -64,12 +70,18 @@ impl VadePlugin for VadeDidComm {
                 let to_vec = parsed_message.to.as_ref().ok_or("to is required")?;
                 let to_did = &to_vec[0];
 
-                // let encoded_keypair = get_com_keypair(
-                //     from_did,
-                //     to_did,
-                // ).asyncify()?;
-                // let sign_keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
-                final_message = protocol_result.message;
+                let encoded_keypair = get_com_keypair(from_did, to_did).asyncify()?;
+                let secret_decoded = vec_to_array(hex::decode(encoded_keypair.secret_key)?);
+                let target_pub_decoded = vec_to_array(hex::decode(encoded_keypair.target_pub_key)?);
+                let secret = StaticSecret::from(secret_decoded);
+                let target_pub_key = PublicKey::from(target_pub_decoded);
+                let shared_secret = secret.diffie_hellman(&target_pub_key);
+
+                final_message = encrypt_message(
+                    &protocol_result.message,
+                    shared_secret.as_bytes(),
+                    &sign_keypair,
+                ).asyncify()?;
             }
         } else {
             final_message = protocol_result.message;
@@ -87,28 +99,62 @@ impl VadePlugin for VadeDidComm {
         return Ok(VadePluginResultValue::Success(Some(send_result)));
     }
 
+    /// Receive a plain didcomm json message, including decryption and protocol specific message parsing.
+    /// The didcomm options can include a shared secret to encrypt the message with a specific key.
+    /// If no key was given and the message is encrypted the didcomm keypair from rocks db will be used.
     async fn didcomm_receive(
         &mut self,
         options: &str,
         message: &str,
     ) -> AsyncResult<VadePluginResultValue<Option<String>>> {
-        log::debug!("handling receival of DIDComm message");
+        log::debug!("handling incoming DIDComm message");
 
-        // check if message is encrypted or not
+        // run protocol specific logic
         let parsed_message = serde_json::from_str::<EncryptedMessage>(message);
+
+        // message string, that will be returned
         let decrypted: String;
+
+        // if the message is encrypted, try to decrypt it
         if parsed_message.is_ok() {
-            let options = serde_json::from_str::<DidcommReceiveOptions>(&options)?;
-            decrypted = decrypt_message(
-                &message,
-                &options.decryption_key,
-                &options.sign_public,
-            ).asyncify()?;
+            let encrypted_message = parsed_message?;
+            let signing_pub_key = encrypted_message.kid.ok_or("kid not set in encrypted message")?;
+
+            // if shared secret was passed to the options, use this one
+            let options = serde_json::from_str::<DidcommOptions>(&options);
+            if options.is_ok() {
+                let parsed_options = options?;
+                decrypted = decrypt_message(
+                    &message,
+                    &parsed_options.shared_secret,
+                    &hex::decode(signing_pub_key)?,
+                ).asyncify()?;
+            } else {
+                // otherwise use keys from did exchange
+                let from_did = encrypted_message.from.as_ref().ok_or("from is required")?;
+                let to_vec = encrypted_message.to.as_ref().ok_or("to is required")?;
+                let to_did = &to_vec[0];
+
+                let encoded_keypair = get_com_keypair(to_did, from_did).asyncify()?;
+                let secret_decoded = vec_to_array(hex::decode(encoded_keypair.secret_key)?);
+                let target_pub_decoded = vec_to_array(hex::decode(encoded_keypair.target_pub_key)?);
+                let secret = StaticSecret::from(secret_decoded);
+                let target_pub_key = PublicKey::from(target_pub_decoded);
+                let shared_secret = secret.diffie_hellman(&target_pub_key);
+
+                decrypted = decrypt_message(
+                    &message,
+                    shared_secret.as_bytes(),
+                    &hex::decode(signing_pub_key)?,
+                ).asyncify()?;
+            }
         } else {
             decrypted = String::from(message);
         }
 
+        // run protocol specific logic
         let protocol_result = ProtocolHandler::after_receive(&decrypted).asyncify()?;
+
         let receive_result = format!(
             r#"{{
                 "message": {},

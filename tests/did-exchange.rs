@@ -1,5 +1,5 @@
 use vade::{ResultAsyncifier, Vade};
-use vade_didcomm::{AsyncResult, BaseMessage, CommKeyPair, MessageWithBody, ProtocolOutput, VadeDidComm, get_com_keypair, helper::DidcommObj, protocol::DID_EXCHANGE_PROTOCOL_URL, read_db};
+use vade_didcomm::{AsyncResult, BaseMessage, CommKeyPair, EncryptedMessage, MessageWithBody, ProtocolOutput, VadeDidComm, get_com_keypair, helper::DidcommObj, protocol::DID_EXCHANGE_PROTOCOL_URL, read_db};
 
 async fn get_vade() -> AsyncResult<Vade> {
     let mut vade = Vade::new();
@@ -158,7 +158,7 @@ async fn send_complete(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: ProtocolOutput<MessageWithBody<DidcommObj>> = serde_json::from_str(result)?;
+    let prepared: ProtocolOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
@@ -175,7 +175,9 @@ async fn receive_complete(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let _: ProtocolOutput<BaseMessage> = serde_json::from_str(received)?;
+    let complete_message: ProtocolOutput<BaseMessage> = serde_json::from_str(received)?;
+
+    assert_eq!(complete_message.message.r#type, format!("{}/complete", DID_EXCHANGE_PROTOCOL_URL));
 
     return Ok(());
 }

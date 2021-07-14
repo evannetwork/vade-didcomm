@@ -16,33 +16,14 @@ async fn get_vade() -> AsyncResult<Vade> {
     Ok(vade)
 }
 
-fn get_send_options(
-    encryption_key: &x25519_dalek::SharedSecret,
-    sign_keypair: &ed25519_dalek::Keypair,
+fn get_didcomm_options(
+    shared_secret: &x25519_dalek::SharedSecret,
 ) -> String {
     let options = format!(
         r#"{{
-            "encryptionKey": {:?},
-            "signKeypair": {:?}
+            "sharedSecret": {:?}
         }}"#,
-        &encryption_key.as_bytes(),
-        &sign_keypair.to_bytes(),
-    );
-
-    return options;
-}
-
-fn get_receive_options(
-    decryption_key: &x25519_dalek::SharedSecret,
-    sign_keypair: &ed25519_dalek::Keypair,
-) -> String {
-    let options = format!(
-        r#"{{
-            "decryptionKey": {:?},
-            "signPublic": {:?}
-        }}"#,
-        &decryption_key.as_bytes(),
-        &sign_keypair.public.to_bytes()
+        &shared_secret.as_bytes(),
     );
 
     return options;
@@ -60,7 +41,7 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
     let mut vade = get_vade().await?;
 
     let sign_keypair = get_keypair_set();
-    let options = get_send_options(&sign_keypair.user1_shared, &sign_keypair.sign_keypair);
+    let options = get_didcomm_options(&sign_keypair.user1_shared);
     let payload = format!(
         r#"{{
             "type": "https://didcomm.org/trust_ping/1.0/ping",
@@ -90,7 +71,7 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
     let mut vade = get_vade().await?;
 
     let sign_keypair = get_keypair_set();
-    let options = get_send_options(&sign_keypair.user1_shared, &sign_keypair.sign_keypair);
+    let options = get_didcomm_options(&sign_keypair.user1_shared);
 
     let payload = format!(
         r#"{{
@@ -105,7 +86,7 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
         Some(Some(value)) => {
             let encrypted: ProtocolOutput<EncryptedMessage> = serde_json::from_str(value)?;
             let encrypted_message = serde_json::to_string(&encrypted.message)?;
-            let options = get_receive_options(&sign_keypair.user2_shared, &sign_keypair.sign_keypair);
+            let options = get_didcomm_options(&sign_keypair.user2_shared);
             let results = vade.didcomm_receive(&options, &encrypted_message).await?;
             let result = results
                 .get(0)
@@ -142,7 +123,7 @@ async fn can_receive_unencrypted() -> AsyncResult<()> {
         }}"#,
     );
 
-    let options = get_receive_options(&sign_keypair.user2_shared, &sign_keypair.sign_keypair);
+    let options = get_didcomm_options(&sign_keypair.user2_shared);
     let results = vade.didcomm_receive(&options, &payload).await?;
     let result = results
         .get(0)

@@ -1,5 +1,7 @@
 use crate::{Direction, MessageWithType, Protocol, get_ping_pong_protocol, protocol::get_did_exchange_protocol, utils::SyncResult};
 
+/// Output of a protocol step. Specifies, if a message should be encrypted. Metadata is generic stringified
+/// json, that contains protocol step specific information.
 pub struct ProtocolHandleOutput {
     pub direction: Direction,
     pub encrypt: bool,
@@ -15,6 +17,13 @@ pub struct ReceiveResult {
 
 pub struct ProtocolHandler {}
 impl ProtocolHandler {
+    /// Runs all protocol handlers for a message, that should be sent.
+    ///
+    /// # Arguments
+    /// * `message` - message string (should match message.rs/)
+    ///
+    /// # Returns
+    /// * `ProtocolHandleOutput` - general information about the analyzed protocol step
     pub fn before_send(
         message: &str,
     ) -> SyncResult<ProtocolHandleOutput> {

@@ -13,6 +13,13 @@ impl<T> ResultAsyncifier<T> for Result<T, Box<dyn std::error::Error + Send + Syn
 
 pub type SyncResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
+/// Formats an vector into an array dynamically.
+///
+/// # Arguments
+/// * `v` - vector to format
+///
+/// # Returns
+/// * `Array` - the transformed array
 pub fn vec_to_array<T, const N: usize>(v: Vec<T>) -> [T; N] {
     v.try_into()
         .unwrap_or_else(|v: Vec<T>| panic!("Expected a Vec of length {} but it was {}", N, v.len()))

@@ -30,7 +30,7 @@ pub fn vec_to_array<T, const N: usize>(v: Vec<T>) -> [T; N] {
 /// Takes an didcomm message and extracts the basic information that are required.
 ///
 /// # Arguments
-/// * `message` - didcomm message with communication did document as body
+/// * `message` - didcomm message with communication DID document as body
 ///
 /// # Returns
 /// * `ExchangeInfo` - necessary information
@@ -40,7 +40,7 @@ pub fn get_from_to_from_message(message: BaseMessage) -> SyncResult<FromTo> {
     let to_vec = message.to.ok_or("to is required")?;
     if to_vec.is_empty() {
         return Err(Box::from(
-            "did exchange requires at least one did in the to field.",
+            "DID exchange requires at least one did in the to field.",
         ));
     }
     let to_did = &to_vec[0];

@@ -16,7 +16,7 @@ macro_rules! apply_optional {
 }
 
 /// Encrypt a stringified plain message, with a given encryption_key and a ed25519_dalek keypair using
-/// didcomm rs. (checkout vade_didcomm.rs or tests/message.rs for example usage)
+/// DIDComm rs. (checkout vade_didcomm.rs or tests/message.rs for example usage)
 /// Note: Ensure to always create new signing_key pairs to have altering results. Encryption key
 /// should be the shared_secret.
 ///
@@ -71,7 +71,7 @@ pub fn encrypt_message(
 }
 
 /// Decrypt a stringified encrypted message, with a given decryption_key and signing key using
-/// didcomm rs. (checkout vade_didcomm.rs or tests/message.rs for example usage)
+/// DIDComm rs. (checkout vade_didcomm.rs or tests/message.rs for example usage)
 ///
 /// # Arguments
 /// * `message` - message string (should match message.rs/EncryptedMessage)

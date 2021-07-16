@@ -4,12 +4,12 @@ use crate::{
     utils::SyncResult,
 };
 
-/// Saves a communication keypair within the rocks.db for two dids (from -> to). Entry key will be
+/// Saves a communication keypair within the rocks.db for two DIDs (from -> to). Entry key will be
 /// comm_keypair_{from}_{to}.
 ///
 /// # Arguments
-/// * `from_did` - from did
-/// * `to_did` - to did as string
+/// * `from_did` - from DID
+/// * `to_did` - to DID as string
 /// * `pub_key` - pub key of the active did to communicate with the target did
 /// * `secret_key` - secret key of the active did to encrypt message for the target did
 /// * `target_pub_key` - pub key of the target did (optional nullable, default will be empty string)
@@ -40,12 +40,12 @@ pub fn save_com_keypair(
     return Ok(comm_keypair);
 }
 
-/// Loads a communication keypair from the rocks db for two dids (from -> to). Entry key will be
+/// Loads a communication keypair from the rocks db for two DIDs (from -> to). Entry key will be
 /// comm_keypair_{from}_{to}.
 ///
 /// # Arguments
-/// * `from_did` - from did
-/// * `to_did` - to did as string
+/// * `from_did` - from DID
+/// * `to_did` - to DID as string
 ///
 /// # Returns
 /// * `CommKeyPair` - new instance of the comm key pair

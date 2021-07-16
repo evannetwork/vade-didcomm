@@ -18,16 +18,16 @@ use crate::{
 //     COMPLETE = "complete",
 // }
 
-/// Creates a new communication didcomm object for a specific did, a communication pub key and the
+/// Creates a new communication DIDComm object for a specific DID, a communication pub key and the
 /// service url, where the user can be reached.
 ///
 /// # Arguments
-/// * `from_did` - did to build the didcomm obj for
-/// * `public_key_encoded` - communication pub key for the did exchange that will be sent to the target
+/// * `from_did` - DID to build the DIDComm obj for
+/// * `public_key_encoded` - communication pub key for the DID exchange that will be sent to the target
 /// * `service_endpoint` - url where the user can be reached
 ///
 /// # Returns
-/// * `CommunicationDidDocument` - constructed didcomm object, ready to be sent
+/// * `CommunicationDidDocument` - constructed DIDComm object, ready to be sent
 pub fn get_communication_did_doc(
     from_did: &str,
     public_key_encoded: &str,
@@ -58,17 +58,17 @@ pub fn get_communication_did_doc(
     };
 }
 
-/// Constructs a new did exchange message, including the didcomm object as message body.
+/// Constructs a new DID exchange message, including the DIDComm object as message body.
 ///
 /// # Arguments
 /// * `step_type` - step to build the message type (request, response)
-/// * `from_did` - did that sends the message
-/// * `to_did` - did that receives the message
+/// * `from_did` - DID that sends the message
+/// * `to_did` - DID that receives the message
 /// * `from_service_endpoint` - url where the user can be reached
 /// * `encoded_keypair` - communication keypair (only pubkey will be used)
 ///
 /// # Returns
-/// * `MessageWithBody<CommunicationDidDocument>` - constructed didcomm object, ready to be sent
+/// * `MessageWithBody<CommunicationDidDocument>` - constructed DIDComm object, ready to be sent
 pub fn get_did_exchange_message(
     step_type: &str,
     from_did: &str,
@@ -93,11 +93,11 @@ pub fn get_did_exchange_message(
     return Ok(exchange_request);
 }
 
-/// Takes an didcomm message and extracts all necessary information to process it during request /
+/// Takes an DIDComm message and extracts all necessary information to process it during request /
 /// response.
 ///
 /// # Arguments
-/// * `message` - didcomm message with communication did document as body
+/// * `message` - DIDComm message with communication DID document as body
 ///
 /// # Returns
 /// * `ExchangeInfo` - necessary information
@@ -109,20 +109,20 @@ pub fn get_exchange_info_from_message(
     let to_vec = message.to.ok_or("to is required")?;
     if to_vec.is_empty() {
         return Err(Box::from(
-            "did exchange requires at least one did in the to field.",
+            "DID exchange requires at least one DID in the to field.",
         ));
     }
     let to_did = &to_vec[0];
     let didcomm_obj: CommunicationDidDocument = message.body.ok_or("body is required")?;
     if didcomm_obj.public_key.is_empty() {
         return Err(Box::from(
-            "No pub key was attached to the communication did document.",
+            "No pub key was attached to the communication DID document.",
         ));
     }
     let pub_key_hex = &didcomm_obj.public_key[0].public_key_base_58;
     if didcomm_obj.service.is_empty() {
         return Err(Box::from(
-            "No service_endpoint was attached to the communication did document.",
+            "No service_endpoint was attached to the communication DID document.",
         ));
     }
     let service_endpoint = &didcomm_obj.service[0].service_endpoint;

@@ -18,7 +18,7 @@ use crate::{
 /// Creates a new did_exchange protocol and maps the specific step handler functions.
 ///
 /// # Returns
-/// * `Protocol` - the new did exchange protocol handler
+/// * `Protocol` - the new DID exchange protocol handler
 pub fn generate_did_exchange_protocol() -> Protocol {
     let protocol = Protocol {
         name: String::from(DID_EXCHANGE_PROTOCOL_URL),

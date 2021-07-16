@@ -28,11 +28,11 @@ impl VadeDIDComm {
 
 #[async_trait]
 impl VadePlugin for VadeDIDComm {
-    /// Prepare a plain didcomm json message to be sent, including encryption and protocol specific
+    /// Prepare a plain DIDComm json message to be sent, including encryption and protocol specific
     /// message enhancement.
-    /// The didcomm options can include a shared secret to encrypt the message with a specific key.
+    /// The DIDComm options can include a shared secret to encrypt the message with a specific key.
     /// If no key was given and the message should be encrypted (depends on protocol implementation),
-    /// the didcomm keypair from rocks db will be used.
+    /// the DIDComm keypair from rocks db will be used.
     async fn didcomm_send(
         &mut self,
         options: &str,
@@ -62,7 +62,7 @@ impl VadePlugin for VadeDIDComm {
                 )
                 .asyncify()?;
             } else {
-                // otherwise use keys from did exchange
+                // otherwise use keys from DID exchange
                 let parsed_message: BaseMessage = serde_json::from_str(message)?;
                 let from_to = get_from_to_from_message(parsed_message).asyncify()?;
                 let encoded_keypair = get_com_keypair(&from_to.from, &from_to.to).asyncify()?;
@@ -94,9 +94,9 @@ impl VadePlugin for VadeDIDComm {
         return Ok(VadePluginResultValue::Success(Some(send_result)));
     }
 
-    /// Receive a plain didcomm json message, including decryption and protocol specific message parsing.
-    /// The didcomm options can include a shared secret to encrypt the message with a specific key.
-    /// If no key was given and the message is encrypted the didcomm keypair from rocks db will be used.
+    /// Receive a plain DIDComm json message, including decryption and protocol specific message parsing.
+    /// The DIDComm options can include a shared secret to encrypt the message with a specific key.
+    /// If no key was given and the message is encrypted the DIDComm keypair from rocks db will be used.
     async fn didcomm_receive(
         &mut self,
         options: &str,
@@ -128,7 +128,7 @@ impl VadePlugin for VadeDIDComm {
                 )
                 .asyncify()?;
             } else {
-                // otherwise use keys from did exchange
+                // otherwise use keys from DID exchange
                 let base_message = serde_json::from_str::<BaseMessage>(message)?;
                 let from_to = get_from_to_from_message(base_message).asyncify()?;
 

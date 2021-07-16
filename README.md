@@ -19,13 +19,13 @@ Currently supported protocols:
 
 ## Usage
 
-`didcomm_send` prepares a message for being sent to the recipient and `didcomm_receive` is used for decryption and analyzing an incoming message. Per default each sent message will be encrypted, either with the saved encryption key from an existing did exchange with the communication partner, or with the provided one. Specific protocol types can override the encryption setting of a message to just send a plain message (like did exchange).
+`didcomm_send` prepares a message for being sent to the recipient and `didcomm_receive` is used for decryption and analyzing an incoming message. Per default each sent message will be encrypted, either with the saved encryption key from an existing DID exchange with the communication partner, or with the provided one. Specific protocol types can override the encryption setting of a message to just send a plain message (like DID exchange).
 
-*NOTE*: When you send any message that will be encrypted, you need to have a finished did exchange or correct encryption keys, that are passed to vade_didcomm.
+*NOTE*: When you send any message that will be encrypted, you need to have a finished DID exchange or correct encryption keys, that are passed to vade_didcomm.
 
 The two functions [`didcomm_send`] and [`didcomm_receive`] can be called with two parameters, `options` and `message`:
 
-1. Options: Contains specific information for passing special configuration to the vade_didcomm. Currently its just used to inject specific encryption configuration, to overwrite the default DIDComm did exchange key encryption.
+1. Options: Contains specific information for passing special configuration to the vade_didcomm. Currently its just used to inject specific encryption configuration, to overwrite the default DIDComm DID exchange key encryption.
 
 ```json
 {
@@ -33,7 +33,7 @@ The two functions [`didcomm_send`] and [`didcomm_receive`] can be called with tw
 }
 ```
 
-2. Message: The plain message object, containing at least the type, to did and from did.
+2. Message: The plain message object, containing at least the type, to DID and from DID.
 
 The result of both functions will have the same structure and will always return a stringified json, with the following pattern:
 
@@ -71,7 +71,7 @@ This will return an encrypted stringified message and will also add a body to th
 
 ### did_exchange
 
-The [`did exchange protocol`] is a bit more complex and consist of 3 steps. The whole flow is implemented in the [`did-exchange test`]. Like with the trust_ping, you can pass a simple message, that will be enhanced with the actual data that will be sent. Here an example for the first request (ensure, to set the service_endpoint to the url, where your did agent is available):
+The [`DID exchange protocol`] is a bit more complex and consist of 3 steps. The whole flow is implemented in the [`did-exchange test`]. Like with the trust_ping, you can pass a simple message, that will be enhanced with the actual data that will be sent. Here an example for the first request (ensure, to set the service_endpoint to the url, where your DID agent is available):
 
 ```json
 {
@@ -132,7 +132,7 @@ This will return the following result:
 }
 ```
 
-As you can see, the whole message was enriched with the data that is necessary for the did exchange. The metadata contains the generated communication hex encoded public key and secret key. The receiver can just pass the whole json to the `didcomm_receive` function, that will analyse the message, will save the communication keys and generate new ones for himself as well. The receiver can then use the logic for sending the response, by just replacing the type of the message `https://didcomm.org/didexchange/1.0/response.`
+As you can see, the whole message was enriched with the data that is necessary for the DID exchange. The metadata contains the generated communication hex encoded public key and secret key. The receiver can just pass the whole json to the `didcomm_receive` function, that will analyse the message, will save the communication keys and generate new ones for himself as well. The receiver can then use the logic for sending the response, by just replacing the type of the message `https://didcomm.org/didexchange/1.0/response.`
 
 ## Registering a new protocol
 
@@ -187,7 +187,7 @@ let protocols: [&Protocol; 3] = [
 ];
 ```
 
-Afterwards, you can just test your protocol by passing the following message to the didcomm functions:
+Afterwards, you can just test your protocol by passing the following message to the DIDComm functions:
 
 ```json
 {
@@ -201,5 +201,5 @@ Afterwards, you can just test your protocol by passing the following message to 
 [`didcomm_receive`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/src/vade_didcomm.rs#L104
 [`did_exchange`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/src/protocols/did_exchange/did_exchange.rs
 [`trust_ping`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/src/protocols/pingpong.rs
-[`did exchange protocol`]: https://github.com/hyperledger/aries-rfcs/tree/master/features/0023-did-exchange
+[`DID exchange protocol`]: https://github.com/hyperledger/aries-rfcs/tree/master/features/0023-did-exchange
 [`did-exchange test`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/tests/did-exchange.rs

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
 
-/// Struct for a pub key that will be sent during did exchange with the users communication did document.
+/// Struct for a pub key that will be sent during DID exchange with the users communication DID document.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DIDCommPubKey {
@@ -13,7 +13,7 @@ pub struct DIDCommPubKey {
     pub r#type: Vec<String>,
 }
 
-/// Struct for a service definition that will be sent during did exchange with the users communication did document.
+/// Struct for a service definition that will be sent during DID exchange with the users communication DID document.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DIDCommService {
@@ -24,7 +24,7 @@ pub struct DIDCommService {
     pub recipient_keys: Vec<String>,
 }
 
-/// Communication didcomm object that will be sent to the target user during did exchange.
+/// Communication DIDComm object that will be sent to the target user during DID exchange.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CommunicationDidDocument {
@@ -36,7 +36,7 @@ pub struct CommunicationDidDocument {
     pub service: Vec<DIDCommService>,
 }
 
-/// Basically a set of a to and a from did
+/// Basically a set of a to and a from DID
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FromTo {
@@ -44,7 +44,7 @@ pub struct FromTo {
     pub to: String,
 }
 
-/// Necessary information for a valid did exchange request / response extracted from an didcomm message
+/// Necessary information for a valid DID exchange request / response extracted from an DIDComm message
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExchangeInfo {
@@ -125,7 +125,7 @@ pub struct MessageWithBody<T> {
     pub other: HashMap<String, String>,
 }
 
-/// Message format, when a message was encrypted with didcomm rs.
+/// Message format, when a message was encrypted with DIDComm rs.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EncryptedMessage {
     #[serde(default)]
@@ -140,7 +140,7 @@ pub struct EncryptedMessage {
     pub other: HashMap<String, String>,
 }
 
-/// Optional parameter that can be passed to vade didcomm functions to enforce a specific encryption key
+/// Optional parameter that can be passed to vade DIDComm functions to enforce a specific encryption key
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DidcommOptions {

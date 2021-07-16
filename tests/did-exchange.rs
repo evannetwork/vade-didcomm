@@ -59,17 +59,17 @@ async fn send_request(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncRes
     let pub_key = prepared
         .metadata
         .get("pub_key")
-        .ok_or("send didcomm request does not return pub_key")?
+        .ok_or("send DIDComm request does not return pub_key")?
         .to_owned();
     let secret_key = prepared
         .metadata
         .get("secret_key")
-        .ok_or("send didcomm request does not return secret_key")?
+        .ok_or("send DIDComm request does not return secret_key")?
         .to_owned();
     let target_pub_key = prepared
         .metadata
         .get("target_pub_key")
-        .ok_or("send didcomm request does not return target_pub_key")?
+        .ok_or("send DIDComm request does not return target_pub_key")?
         .to_owned();
 
     assert_eq!(target_pub_key, comm_keypair.target_pub_key);
@@ -98,17 +98,17 @@ async fn receive_request(
     let pub_key = received
         .metadata
         .get("pub_key")
-        .ok_or("send didcomm request does not return pub_key")?
+        .ok_or("send DIDComm request does not return pub_key")?
         .to_owned();
     let secret_key = received
         .metadata
         .get("secret_key")
-        .ok_or("send didcomm request does not return secret_key")?
+        .ok_or("send DIDComm request does not return secret_key")?
         .to_owned();
     let target_pub_key = received
         .metadata
         .get("target_pub_key")
-        .ok_or("send didcomm request does not return target_pub_key")?
+        .ok_or("send DIDComm request does not return target_pub_key")?
         .to_owned();
 
     assert_eq!(target_pub_key, comm_keypair.target_pub_key);

@@ -115,7 +115,7 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
             );
         }
         _ => {
-            return Err(Box::from("invalid result from didcomm_send"));
+            return Err(Box::from("invalid result from DIDcomm_send"));
         }
     };
 

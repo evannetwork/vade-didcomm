@@ -15,7 +15,7 @@ use super::helper::{get_did_exchange_message, get_exchange_info_from_message};
 /// that should be sent. Message will be sent NOT encrypted. (the other party does not have any keys
 /// to decrypt the message)
 /// Creates and stores a new communication keypair, that will be used for further communication with
-/// the target did.
+/// the target DID.
 pub fn send_request(message: &str) -> StepResult {
     let parsed_message: BaseMessage = serde_json::from_str(message)?;
     let exchange_info = get_from_to_from_message(parsed_message)?;
@@ -42,7 +42,7 @@ pub fn send_request(message: &str) -> StepResult {
 }
 
 /// protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/request`
-/// Receives the partners did and communication pub key and generates new communication keypairs,
+/// Receives the partners DID and communication pub key and generates new communication keypairs,
 /// stores it within the rocks.db.
 pub fn receive_request(message: &str) -> StepResult {
     let parsed_message: MessageWithBody<CommunicationDidDocument> = serde_json::from_str(message)?;

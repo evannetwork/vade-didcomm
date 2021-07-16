@@ -8,7 +8,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use k256::elliptic_curve::rand_core::OsRng;
-use vade::{AsyncResult, ResultAsyncifier, VadePlugin, VadePluginResultValue};
+use vade::{VadePlugin, VadePluginResultValue};
 use x25519_dalek::{PublicKey, StaticSecret};
 
 big_array! { BigArray; }
@@ -16,7 +16,7 @@ big_array! { BigArray; }
 pub struct VadeDIDComm {}
 impl VadeDIDComm {
     /// Creates new instance of `VadeDIDComm`.
-    pub async fn new() -> AsyncResult<VadeDIDComm> {
+    pub async fn new() -> Result<VadeDIDComm, Box<dyn std::error::Error>> {
         match env_logger::try_init() {
             Ok(_) | Err(_) => (),
         };
@@ -26,7 +26,7 @@ impl VadeDIDComm {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl VadePlugin for VadeDIDComm {
     /// Prepare a plain DIDComm json message to be sent, including encryption and protocol specific
     /// message enhancement.
@@ -37,11 +37,11 @@ impl VadePlugin for VadeDIDComm {
         &mut self,
         options: &str,
         message: &str,
-    ) -> AsyncResult<VadePluginResultValue<Option<String>>> {
+    ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
         log::debug!("preparing DIDComm message for being sent");
 
         // run protocol specific logic
-        let protocol_result = ProtocolHandler::before_send(message).asyncify()?;
+        let protocol_result = ProtocolHandler::before_send(message)?;
 
         // message string, that will be returned
         let final_message: String;
@@ -59,17 +59,15 @@ impl VadePlugin for VadeDIDComm {
                     &protocol_result.message,
                     &parsed_options.shared_secret,
                     &sign_keypair,
-                )
-                .asyncify()?;
+                )?;
             } else {
                 // otherwise use keys from DID exchange
                 let parsed_message: BaseMessage = serde_json::from_str(message)?;
-                let from_to = get_from_to_from_message(parsed_message).asyncify()?;
-                let encoded_keypair = get_com_keypair(&from_to.from, &from_to.to).asyncify()?;
-                let secret_decoded =
-                    vec_to_array(hex::decode(encoded_keypair.secret_key)?).asyncify()?;
+                let from_to = get_from_to_from_message(parsed_message)?;
+                let encoded_keypair = get_com_keypair(&from_to.from, &from_to.to)?;
+                let secret_decoded = vec_to_array(hex::decode(encoded_keypair.secret_key)?)?;
                 let target_pub_decoded =
-                    vec_to_array(hex::decode(encoded_keypair.target_pub_key)?).asyncify()?;
+                    vec_to_array(hex::decode(encoded_keypair.target_pub_key)?)?;
                 let secret = StaticSecret::from(secret_decoded);
                 let target_pub_key = PublicKey::from(target_pub_decoded);
                 let shared_secret = secret.diffie_hellman(&target_pub_key);
@@ -78,8 +76,7 @@ impl VadePlugin for VadeDIDComm {
                     &protocol_result.message,
                     shared_secret.as_bytes(),
                     &sign_keypair,
-                )
-                .asyncify()?;
+                )?;
             }
         } else {
             final_message = protocol_result.message;
@@ -103,7 +100,7 @@ impl VadePlugin for VadeDIDComm {
         &mut self,
         options: &str,
         message: &str,
-    ) -> AsyncResult<VadePluginResultValue<Option<String>>> {
+    ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
         log::debug!("handling incoming DIDComm message");
 
         // run protocol specific logic
@@ -127,18 +124,16 @@ impl VadePlugin for VadeDIDComm {
                     &message,
                     &parsed_options.shared_secret,
                     &hex::decode(signing_pub_key)?,
-                )
-                .asyncify()?;
+                )?;
             } else {
                 // otherwise use keys from DID exchange
                 let base_message = serde_json::from_str::<BaseMessage>(message)?;
-                let from_to = get_from_to_from_message(base_message).asyncify()?;
+                let from_to = get_from_to_from_message(base_message)?;
 
-                let encoded_keypair = get_com_keypair(&from_to.to, &from_to.from).asyncify()?;
-                let secret_decoded =
-                    vec_to_array(hex::decode(encoded_keypair.secret_key)?).asyncify()?;
+                let encoded_keypair = get_com_keypair(&from_to.to, &from_to.from)?;
+                let secret_decoded = vec_to_array(hex::decode(encoded_keypair.secret_key)?)?;
                 let target_pub_decoded =
-                    vec_to_array(hex::decode(encoded_keypair.target_pub_key)?).asyncify()?;
+                    vec_to_array(hex::decode(encoded_keypair.target_pub_key)?)?;
                 let secret = StaticSecret::from(secret_decoded);
                 let target_pub_key = PublicKey::from(target_pub_decoded);
                 let shared_secret = secret.diffie_hellman(&target_pub_key);
@@ -147,15 +142,14 @@ impl VadePlugin for VadeDIDComm {
                     &message,
                     shared_secret.as_bytes(),
                     &hex::decode(signing_pub_key)?,
-                )
-                .asyncify()?;
+                )?;
             }
         } else {
             decrypted = String::from(message);
         }
 
         // run protocol specific logic
-        let protocol_result = ProtocolHandler::after_receive(&decrypted).asyncify()?;
+        let protocol_result = ProtocolHandler::after_receive(&decrypted)?;
 
         let receive_result = format!(
             r#"{{

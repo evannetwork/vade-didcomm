@@ -1,16 +1,16 @@
 use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
-use vade::{ResultAsyncifier, Vade};
+use vade::Vade;
 use vade_didcomm::{
     datatypes::{
         BaseMessage, CommKeyPair, CommunicationDidDocument, EncryptedMessage, MessageWithBody,
         VadeDIDCommPluginOutput, DID_EXCHANGE_PROTOCOL_URL,
     },
-    AsyncResult, SyncResult, VadeDIDComm,
+    VadeDIDComm,
 };
 
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
 
-pub fn read_db(key: &str) -> SyncResult<String> {
+pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
     let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;
 
     match db.get(key) {
@@ -20,14 +20,14 @@ pub fn read_db(key: &str) -> SyncResult<String> {
     }
 }
 
-pub fn get_com_keypair(from_did: &str, to_did: &str) -> SyncResult<CommKeyPair> {
+pub fn get_com_keypair(from_did: &str, to_did: &str) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
     let db_result = read_db(&format!("comm_keypair_{}_{}", from_did, to_did))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
     return Ok(comm_keypair);
 }
 
-async fn get_vade() -> AsyncResult<Vade> {
+async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
     let mut vade = Vade::new();
     let vade_didcomm = VadeDIDComm::new().await?;
     vade.register_plugin(Box::from(vade_didcomm));
@@ -35,7 +35,7 @@ async fn get_vade() -> AsyncResult<Vade> {
     Ok(vade)
 }
 
-async fn send_request(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncResult<String> {
+async fn send_request(vade: &mut Vade, sender: &str, receiver: &str) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_request = format!(
         r#"{{
             "type": "{}/request",
@@ -53,7 +53,7 @@ async fn send_request(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncRes
         .ok_or("no value in result")?;
     let prepared: VadeDIDCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
         serde_json::from_str(result)?;
-    let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver)).asyncify()?;
+    let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
     let pub_key = prepared
@@ -84,7 +84,7 @@ async fn receive_request(
     sender: &str,
     receiver: &str,
     message: String,
-) -> AsyncResult<()> {
+) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive("{}", &message).await?;
     let result = results
         .get(0)
@@ -93,7 +93,7 @@ async fn receive_request(
         .ok_or("no value in result")?;
     let received: VadeDIDCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
         serde_json::from_str(result)?;
-    let comm_keypair = get_com_keypair(receiver, sender).asyncify()?;
+    let comm_keypair = get_com_keypair(receiver, sender)?;
 
     let pub_key = received
         .metadata
@@ -118,7 +118,7 @@ async fn receive_request(
     return Ok(());
 }
 
-async fn send_response(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncResult<String> {
+async fn send_response(vade: &mut Vade, sender: &str, receiver: &str) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_response = format!(
         r#"{{
             "type": "{}/response",
@@ -145,15 +145,15 @@ async fn receive_response(
     sender: &str,
     receiver: &str,
     message: String,
-) -> AsyncResult<()> {
+) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive("{}", &message).await?;
     let _ = results
         .get(0)
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let comm_keypair_sender = get_com_keypair(sender, receiver).asyncify()?;
-    let comm_keypair_receiver = get_com_keypair(receiver, sender).asyncify()?;
+    let comm_keypair_sender = get_com_keypair(sender, receiver)?;
+    let comm_keypair_receiver = get_com_keypair(receiver, sender)?;
 
     assert_eq!(
         comm_keypair_sender.target_pub_key,
@@ -163,7 +163,7 @@ async fn receive_response(
     return Ok(());
 }
 
-async fn send_complete(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncResult<String> {
+async fn send_complete(vade: &mut Vade, sender: &str, receiver: &str) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_complete = format!(
         r#"{{
             "type": "{}/complete",
@@ -188,7 +188,7 @@ async fn receive_complete(
     _sender: &str,
     _receiver: &str,
     message: String,
-) -> AsyncResult<()> {
+) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive("{}", &message).await?;
     let received = results
         .get(0)
@@ -206,7 +206,7 @@ async fn receive_complete(
 }
 
 #[tokio::test]
-async fn can_do_key_exchange() -> AsyncResult<()> {
+async fn can_do_key_exchange() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let user_1_did = String::from("did:uknow:d34db33d");
     let user_2_did = String::from("did:uknow:d34db33f");

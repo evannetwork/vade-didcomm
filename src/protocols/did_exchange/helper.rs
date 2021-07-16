@@ -2,12 +2,13 @@ use std::collections::HashMap;
 
 use uuid::Uuid;
 
-use crate::{
-    datatypes::{
-        CommunicationDidDocument, DIDCommPubKey, DIDCommService, ExchangeInfo, MessageWithBody,
-        DID_EXCHANGE_PROTOCOL_URL,
-    },
-    utils::SyncResult,
+use crate::datatypes::{
+    CommunicationDidDocument,
+    DIDCommPubKey,
+    DIDCommService,
+    ExchangeInfo,
+    MessageWithBody,
+    DID_EXCHANGE_PROTOCOL_URL,
 };
 
 /// Specifies all possible message directions.
@@ -74,7 +75,7 @@ pub fn get_did_exchange_message(
     to_did: &str,
     from_service_endpoint: &str,
     pub_key: &str,
-) -> SyncResult<MessageWithBody<CommunicationDidDocument>> {
+) -> Result<MessageWithBody<CommunicationDidDocument>, Box<dyn std::error::Error>> {
     let did_comm_obj = get_communication_did_doc(from_did, pub_key, from_service_endpoint);
     let thread_id = Uuid::new_v4().to_simple().to_string();
     let service_id = format!("{0}#key-1", from_did);
@@ -106,7 +107,7 @@ pub fn get_did_exchange_message(
 /// * `ExchangeInfo` - necessary information
 pub fn get_exchange_info_from_message(
     message: MessageWithBody<CommunicationDidDocument>,
-) -> SyncResult<ExchangeInfo> {
+) -> Result<ExchangeInfo, Box<dyn std::error::Error>> {
     let from_did = message.from.ok_or("from is required")?;
 
     let to_vec = message.to.ok_or("to is required")?;

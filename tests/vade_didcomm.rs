@@ -3,7 +3,7 @@ use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{BaseMessage, EncryptedMessage, MessageWithBody, VadeDIDCommPluginOutput},
-    AsyncResult, VadeDIDComm,
+    VadeDIDComm,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -11,7 +11,7 @@ struct PingBody {
     response_requested: bool,
 }
 
-async fn get_vade() -> AsyncResult<Vade> {
+async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
     let mut vade = Vade::new();
     let vade_didcomm = VadeDIDComm::new().await?;
     vade.register_plugin(Box::from(vade_didcomm));
@@ -31,14 +31,14 @@ fn get_didcomm_options(shared_secret: &x25519_dalek::SharedSecret) -> String {
 }
 
 #[tokio::test]
-async fn can_be_registered_as_plugin() -> AsyncResult<()> {
+async fn can_be_registered_as_plugin() -> Result<(), Box<dyn std::error::Error>> {
     get_vade().await?;
 
     Ok(())
 }
 
 #[tokio::test]
-async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
+async fn can_prepare_didcomm_message_for_sending() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
 
     let sign_keypair = get_keypair_set();
@@ -72,7 +72,7 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
 }
 
 #[tokio::test]
-async fn can_decrypt_received_messages() -> AsyncResult<()> {
+async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
 
     let sign_keypair = get_keypair_set();
@@ -123,7 +123,7 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
 }
 
 #[tokio::test]
-async fn can_receive_unencrypted() -> AsyncResult<()> {
+async fn can_receive_unencrypted() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
 
     let sign_keypair = get_keypair_set();

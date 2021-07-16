@@ -1,7 +1,6 @@
 use crate::{
     datatypes::CommKeyPair,
     rocks_db::{read_db, write_db},
-    utils::SyncResult,
 };
 
 /// Saves a communication keypair within the rocks.db for two DIDs (from -> to). Entry key will be
@@ -24,7 +23,7 @@ pub fn save_com_keypair(
     secret_key: &str,
     target_pub_key: Option<String>,
     service_endpoint: Option<String>,
-) -> SyncResult<CommKeyPair> {
+) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
     let comm_keypair = CommKeyPair {
         pub_key: String::from(pub_key),
         secret_key: String::from(secret_key),
@@ -49,7 +48,10 @@ pub fn save_com_keypair(
 ///
 /// # Returns
 /// * `CommKeyPair` - new instance of the comm key pair
-pub fn get_com_keypair(from_did: &str, to_did: &str) -> SyncResult<CommKeyPair> {
+pub fn get_com_keypair(
+    from_did: &str,
+    to_did: &str,
+) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
     let db_result = read_db(&format!("comm_keypair_{}_{}", from_did, to_did))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 

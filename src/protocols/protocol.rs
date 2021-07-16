@@ -1,4 +1,4 @@
-use crate::{datatypes::MessageDirection, utils::SyncResult};
+use crate::datatypes::MessageDirection;
 
 /// Each protocol are constructed by a name and multiple steps. The protocol handler will iterate over
 /// all registered protocols and checks, if the name exists in the DIDComm message type. Afterwards
@@ -31,7 +31,7 @@ pub struct StepOutput {
     pub message: String,
 }
 
-pub type StepResult = SyncResult<StepOutput>;
+pub type StepResult = Result<StepOutput, Box<dyn std::error::Error>>;
 
 /// Shorthand generator for a protocol step, with direction send.
 ///

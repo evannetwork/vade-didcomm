@@ -33,6 +33,14 @@ impl VadePlugin for VadeDIDComm {
     /// The DIDComm options can include a shared secret to encrypt the message with a specific key.
     /// If no key was given and the message should be encrypted (depends on protocol implementation),
     /// the DIDComm keypair from rocks db will be used.
+    ///
+    /// # Arguments
+    /// * `options` - of type DidcommOptions, used to apply a custom signing_key
+    /// * `message` - the plain didcomm message (should be of type datatypes.rs/BaseMessage)
+    ///
+    /// # Returns
+    /// * `VadeDIDCommPluginOutput` - stringified datatypes.rs/VadeDIDCommPluginOutput contains the
+    ///                               final message and protocol step specific metadata
     async fn didcomm_send(
         &mut self,
         options: &str,
@@ -99,6 +107,15 @@ impl VadePlugin for VadeDIDComm {
     /// Receive a plain DIDComm json message, including decryption and protocol specific message parsing.
     /// The DIDComm options can include a shared secret to encrypt the message with a specific key.
     /// If no key was given and the message is encrypted the DIDComm keypair from rocks db will be used.
+    ///
+    /// # Arguments
+    /// * `options` - of type DidcommOptions, used to apply a custom signing_key
+    /// * `message` - the plain / encrypted didcomm message (should be of type
+    ///               datatypes.rs/BaseMessage / datatypes.rs/EncryptedMessage)
+    ///
+    /// # Returns
+    /// * `VadeDIDCommPluginOutput` - stringified datatypes.rs/VadeDIDCommPluginOutput contains the
+    ///                               final message and protocol step specific metadata
     async fn didcomm_receive(
         &mut self,
         options: &str,

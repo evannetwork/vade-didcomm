@@ -1,206 +1,123 @@
-use k256::elliptic_curve::rand_core::OsRng;
-use std::time::Duration;
-use tokio::time::sleep;
-use uuid::Uuid;
+use serde::{Deserialize, Serialize};
+use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
-    AsyncResult,
-    DidcommReceiveResult,
-    VadeDidComm,
-    VadeTransport,
-    VadeTransportRedisPubsub,
+    datatypes::{
+        BaseMessage, EncryptedMessage, ExtendedMessage, MessageWithBody, VadeDIDCommPluginOutput,
+    },
+    AsyncResult, VadeDIDComm,
 };
-use x25519_dalek::{PublicKey, StaticSecret};
 
-const EXAMPLE_DID_DOCUMENT: &str = r#"{
-    "@context": "https://w3id.org/did/v1",
-    "id": "did:uknow:d34db33f",
-    "publicKey": [
-        {
-            "id": "did:uknow:d34db33f#cooked",
-            "type": "Secp256k1VerificationKey2018",
-            "owner": "did:uknow:d34db33f",
-            "publicKeyHex": "b9c5714089478a327f09197987f16f9e5d936e8a"
-        }
-    ],
-    "authentication": [
-        {
-            "type": "Secp256k1SignatureAuthentication2018",
-            "publicKey": "did:uknow:d34db33f#cooked"
-        }
-    ],
-    "service": [],
-    "created": ""
-}"#;
-const REDIS_CONNECTION: &str = "redis://localhost";
-
-fn get_transport(
-    id: Option<String>,
-    channel: Option<String>,
-) -> AsyncResult<(VadeTransportRedisPubsub, String, String)> {
-    let used_id = id.unwrap_or_else(|| Uuid::new_v4().to_simple().to_string());
-    let used_channel = channel.unwrap_or_else(|| Uuid::new_v4().to_simple().to_string());
-    let transport = VadeTransportRedisPubsub::new(
-        used_id.to_owned(),
-        String::from(REDIS_CONNECTION),
-        used_channel.to_owned(),
-    )
-    .map_err(|e| e.to_string())?;
-
-    Ok((transport, used_id, used_channel))
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct PingBody {
+    response_requested: bool,
 }
 
-async fn get_vade(
-    id: Option<String>,
-    channel: Option<String>,
-) -> AsyncResult<(Vade, String, String)> {
+async fn get_vade() -> AsyncResult<Vade> {
     let mut vade = Vade::new();
-    let (vade_didcomm, used_id, used_channel) = get_vade_didcomm(id, channel).await?;
+    let vade_didcomm = VadeDIDComm::new().await?;
     vade.register_plugin(Box::from(vade_didcomm));
 
-    Ok((vade, used_id, used_channel))
+    Ok(vade)
 }
 
-async fn get_vade_didcomm(
-    id: Option<String>,
-    channel: Option<String>,
-) -> AsyncResult<(VadeDidComm, String, String)> {
-    let (mut transport, used_id, used_channel) = get_transport(id, channel)?;
-    transport.listen().await?;
-    let vade_didcomm =
-        VadeDidComm::new(String::from(""), String::from(""), Box::new(transport)).await?;
+fn get_didcomm_options(shared_secret: &x25519_dalek::SharedSecret) -> String {
+    let options = format!(
+        r#"{{
+            "sharedSecret": {:?}
+        }}"#,
+        &shared_secret.as_bytes(),
+    );
 
-    Ok((vade_didcomm, used_id, used_channel))
+    return options;
 }
 
 #[tokio::test]
 async fn can_be_registered_as_plugin() -> AsyncResult<()> {
-    get_vade(None, None).await?;
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn can_send_a_message() -> AsyncResult<()> {
-    let (mut vade, _, _) = get_vade(None, None).await?;
-
-    // send message
-    vade.run_custom_function("did:evan", "pingpong", r#"{ "transfer": "didcomm" }"#, "{}")
-        .await?;
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn can_reply_to_a_ping_with_a_pong() -> AsyncResult<()> {
-    let (mut vade, ping_sender_id, channel) = get_vade(None, None).await?;
-    println!("sender: {}", ping_sender_id);
-
-    // start listener to check messages
-    let (mut test_transport, _, _) = get_transport(None, Some(channel.to_owned()))?;
-    let mut receiver = test_transport.listen().await?;
-
-    // start listener in separate task
-    let task = tokio::spawn(async {
-        // now start a vade, that will respond to our ping
-        let (mut listener_vade, pong_sender_id, _) = get_vade(None, Some(channel)).await.unwrap();
-        println!("receiver: {}", pong_sender_id);
-        println!("pre listen");
-        listener_vade
-            .run_custom_function("did:evan", "listen", r#"{ "transfer": "didcomm" }"#, "{}")
-            .await
-            .unwrap();
-        println!("post listen");
-    });
-
-    println!("pre sleep");
-
-    sleep(Duration::from_millis(1_000u64)).await;
-
-    // send message
-    println!("pre pingpong");
-    vade.run_custom_function("did:evan", "pingpong", r#"{ "transfer": "didcomm" }"#, "{}")
-        .await?;
-    println!("post pingpong");
-
-    // receiver will receive ping message
-    loop {
-        match receiver.try_next() {
-            Ok(Some(value)) => {
-                println!("test got: {:?}", &value);
-                break;
-            }
-            Ok(None) => {
-                println!("disconnected");
-                break;
-            }
-            Err(_) => {
-                sleep(Duration::from_millis(100u64)).await;
-            }
-        };
-    }
-
-    // and send a pong message
-    loop {
-        match receiver.try_next() {
-            Ok(Some(value)) => {
-                println!("test got: {:?}", &value);
-                break;
-            }
-            Ok(None) => {
-                println!("disconnected");
-                break;
-            }
-            Err(_) => {
-                sleep(Duration::from_millis(100u64)).await;
-            }
-        };
-    }
-
-    // cleanup / quit
-    task.await?;
+    get_vade().await?;
 
     Ok(())
 }
 
 #[tokio::test]
 async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
-    let (mut vade, _, _) = get_vade(None, None).await?;
+    let mut vade = get_vade().await?;
 
-    let alice_secret = StaticSecret::new(OsRng);
-    let bob_secret = StaticSecret::new(OsRng);
-    let bob_public = PublicKey::from(&bob_secret);
-
-    let ek = alice_secret.diffie_hellman(&bob_public);
-
-    let sign_keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
-
-    let options = format!(
-        r#"{{
-            "encryptionKey": {:?},
-            "signKeypair": {:?}
-        }}"#,
-        &ek.as_bytes(),
-        &sign_keypair.to_bytes(),
-    );
-
+    let sign_keypair = get_keypair_set();
+    let options = get_didcomm_options(&sign_keypair.user1_shared);
     let payload = format!(
         r#"{{
+            "type": "https://didcomm.org/trust_ping/1.0/ping",
             "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
-            "body": {},
             "custom1": "ichi",
             "custom2": "ni",
             "custom3": "san"
         }}"#,
-        serde_json::to_string(EXAMPLE_DID_DOCUMENT)?
     );
     let results = vade.didcomm_send(&options, &payload).await?;
+    let result = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+
+    let parsed: VadeDIDCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let custom_field = parsed
+        .message
+        .other
+        .get("custom1")
+        .ok_or("could not get custom field custom1")?;
+
+    assert_eq!(custom_field, "ichi");
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn can_decrypt_received_messages() -> AsyncResult<()> {
+    let mut vade = get_vade().await?;
+
+    let sign_keypair = get_keypair_set();
+    let options = get_didcomm_options(&sign_keypair.user1_shared);
+
+    let payload = format!(
+        r#"{{
+            "type": "https://didcomm.org/trust_ping/1.0/ping",
+            "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+            "custom1": "nyuu"
+        }}"#,
+    );
+    let results = vade.didcomm_send(&options, &payload).await?;
+
     match results.get(0) {
         Some(Some(value)) => {
-            println!("got didcomm msg: {}", &value);
+            let encrypted: VadeDIDCommPluginOutput<EncryptedMessage> = serde_json::from_str(value)?;
+            let encrypted_message = serde_json::to_string(&encrypted.message)?;
+            let options = get_didcomm_options(&sign_keypair.user2_shared);
+            let results = vade.didcomm_receive(&options, &encrypted_message).await?;
+            let result = results
+                .get(0)
+                .ok_or("no result")?
+                .as_ref()
+                .ok_or("no value in result")?;
+            let parsed: VadeDIDCommPluginOutput<MessageWithBody<PingBody>> =
+                serde_json::from_str(result)?;
+            assert_eq!(
+                "https://didcomm.org/trust_ping/1.0/ping",
+                parsed.message.r#type,
+            );
+            // ensure that send processor was executed
+            assert_eq!(
+                parsed
+                    .message
+                    .body
+                    .ok_or("no body filled")?
+                    .response_requested,
+                true
+            );
         }
         _ => {
-            return Err(Box::from("invalid result from didcomm_send"));
+            return Err(Box::from("invalid result from DIDcomm_send"));
         }
     };
 
@@ -208,60 +125,65 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
 }
 
 #[tokio::test]
-async fn can_decrypt_received_messages() -> AsyncResult<()> {
-    let (mut vade, _, _) = get_vade(None, None).await?;
+async fn can_receive_unencrypted() -> AsyncResult<()> {
+    let mut vade = get_vade().await?;
 
-    let alice_secret = StaticSecret::new(OsRng);
-    let alice_public = PublicKey::from(&alice_secret);
-    let bob_secret = StaticSecret::new(OsRng);
-    let bob_public = PublicKey::from(&bob_secret);
-
-    let ek = alice_secret.diffie_hellman(&bob_public);
-    let rk = bob_secret.diffie_hellman(&alice_public);
-
-    let sign_keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
-
-    let options = format!(
-        r#"{{
-            "encryptionKey": {:?},
-            "signKeypair": {:?}
-        }}"#,
-        &ek.as_bytes(),
-        &sign_keypair.to_bytes(),
-    );
+    let sign_keypair = get_keypair_set();
 
     let payload = format!(
         r#"{{
+            "type": "https://didcomm.org/trust_ping/1.0/ping",
             "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
-            "body": {},
             "custom1": "nyuu"
         }}"#,
-        serde_json::to_string(EXAMPLE_DID_DOCUMENT)?
     );
-    let results = vade.didcomm_send(&options, &payload).await?;
-    match results.get(0) {
-        Some(Some(value)) => {
-            let options = format!(
-                r#"{{
-                    "decryptionKey": {:?},
-                    "signPublic": {:?}
-                }}"#,
-                &rk.as_bytes(),
-                &sign_keypair.public.to_bytes(),
-            );
-            let results = vade.didcomm_receive(&options, &value).await?;
-            let result = results
-                .get(0)
-                .ok_or("no result")?
-                .as_ref()
-                .ok_or("no value in result")?;
-            let parsed: DidcommReceiveResult = serde_json::from_str(result)?;
-            assert_eq!(EXAMPLE_DID_DOCUMENT, parsed.body);
-        }
-        _ => {
-            return Err(Box::from("invalid result from didcomm_send"));
-        }
-    };
+
+    let options = get_didcomm_options(&sign_keypair.user2_shared);
+    let results = vade.didcomm_receive(&options, &payload).await?;
+    let result = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+    let parsed: VadeDIDCommPluginOutput<BaseMessage> = serde_json::from_str(result)?;
+
+    assert_eq!(
+        "https://didcomm.org/trust_ping/1.0/ping",
+        parsed.message.r#type,
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn should_fill_empty_id_and_created_time() -> AsyncResult<()> {
+    let mut vade = get_vade().await?;
+
+    let sign_keypair = get_keypair_set();
+
+    let payload = format!(
+        r#"{{
+            "type": "https://didcomm.org/trust_ping/1.0/ping",
+            "to": [ "did::xyz:34r3cu403hnth03r49g03" ]
+        }}"#,
+    );
+
+    let options = get_didcomm_options(&sign_keypair.user2_shared);
+    let results = vade.didcomm_receive(&options, &payload).await?;
+    let result = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+    let parsed: VadeDIDCommPluginOutput<ExtendedMessage> = serde_json::from_str(result)?;
+
+    if parsed.message.id.is_none() {
+        return Err(Box::from("Default id was not generated!"));
+    }
+
+    if parsed.message.created_time.is_none() {
+        return Err(Box::from("Default created_time was not generated!"));
+    }
 
     Ok(())
 }

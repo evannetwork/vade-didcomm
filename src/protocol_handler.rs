@@ -1,7 +1,7 @@
 use crate::{
     datatypes::{MessageDirection, MessageWithType, ProtocolHandleOutput},
     protocols::{
-        did_exchange::did_exchange::get_did_exchange_protocol, pingpong::get_ping_pong_protocol,
+        did_exchange::generate_did_exchange_protocol, pingpong::generate_ping_pong_protocol,
         protocol::Protocol,
     },
     utils::SyncResult,
@@ -42,7 +42,10 @@ fn handle_protocol(message: &str, direction: MessageDirection) -> SyncResult<Pro
     let parsed_message: MessageWithType = serde_json::from_str(message)?;
     let m_type = parsed_message.r#type.to_owned();
     // handle multiple protocols dynamically
-    let protocols: [&Protocol; 2] = [&get_did_exchange_protocol(), &get_ping_pong_protocol()];
+    let protocols: [&Protocol; 2] = [
+        &generate_did_exchange_protocol(),
+        &generate_ping_pong_protocol(),
+    ];
     // protocol results
     let mut protocol_name: String = String::from("unknown");
     let mut step_name: String = String::from("unknown");

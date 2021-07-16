@@ -4,11 +4,19 @@ use uuid::Uuid;
 
 use crate::{
     datatypes::{
-        CommKeyPair, DidCommPubKey, DidCommService, DidcommObj, MessageWithBody,
+        CommunicationDidDocument, DIDCommPubKey, DIDCommService, ExchangeInfo, MessageWithBody,
         DID_EXCHANGE_PROTOCOL_URL,
     },
     utils::SyncResult,
 };
+
+// /// Specifies all possible message directions.
+// #[derive(PartialEq)]
+// pub enum DidExchangeType {
+//     REQUEST = "request",
+//     RESPONSE = "response",
+//     COMPLETE = "complete",
+// }
 
 /// Creates a new communication didcomm object for a specific did, a communication pub key and the
 /// service url, where the user can be reached.
@@ -19,21 +27,21 @@ use crate::{
 /// * `service_endpoint` - url where the user can be reached
 ///
 /// # Returns
-/// * `DidcommObj` - constructed didcomm object, ready to be sent
-pub fn get_com_did_obj(
+/// * `CommunicationDidDocument` - constructed didcomm object, ready to be sent
+pub fn get_communication_did_doc(
     from_did: &str,
     public_key_encoded: &str,
     service_endpoint: &str,
-) -> DidcommObj {
+) -> CommunicationDidDocument {
     let mut pub_key_vec = Vec::new();
-    pub_key_vec.push(DidCommPubKey {
+    pub_key_vec.push(DIDCommPubKey {
         id: format!("{}#key-1", from_did),
         r#type: [String::from("Ed25519VerificationKey2018")].to_vec(),
         public_key_base_58: format!("{}", public_key_encoded),
     });
 
     let mut service_vec = Vec::new();
-    service_vec.push(DidCommService {
+    service_vec.push(DIDCommService {
         id: format!("{}#didcomm", from_did),
         r#type: String::from("did-communication"),
         priority: 0,
@@ -41,7 +49,7 @@ pub fn get_com_did_obj(
         recipient_keys: [format!("{}", public_key_encoded)].to_vec(),
     });
 
-    return DidcommObj {
+    return CommunicationDidDocument {
         context: String::from("https://w3id.org/did/v1"),
         id: format!("{}", from_did),
         public_key: pub_key_vec,
@@ -60,18 +68,18 @@ pub fn get_com_did_obj(
 /// * `encoded_keypair` - communication keypair (only pubkey will be used)
 ///
 /// # Returns
-/// * `MessageWithBody<DidcommObj>` - constructed didcomm object, ready to be sent
+/// * `MessageWithBody<CommunicationDidDocument>` - constructed didcomm object, ready to be sent
 pub fn get_did_exchange_message(
     step_type: &str,
     from_did: &str,
     to_did: &str,
     from_service_endpoint: &str,
-    encoded_keypair: &CommKeyPair,
-) -> SyncResult<MessageWithBody<DidcommObj>> {
-    let did_comm_obj = get_com_did_obj(from_did, &encoded_keypair.pub_key, from_service_endpoint);
+    pub_key: &str,
+) -> SyncResult<MessageWithBody<CommunicationDidDocument>> {
+    let did_comm_obj = get_communication_did_doc(from_did, pub_key, from_service_endpoint);
     let thread_id = Uuid::new_v4().to_simple().to_string();
     let service_id = format!("{0}#key-1", from_did);
-    let exchange_request: MessageWithBody<DidcommObj> = MessageWithBody {
+    let exchange_request: MessageWithBody<CommunicationDidDocument> = MessageWithBody {
         id: Some(String::from(&thread_id)),
         pthid: Some(format!("{}#key-1", String::from(thread_id))),
         thid: Some(service_id),
@@ -83,4 +91,46 @@ pub fn get_did_exchange_message(
     };
 
     return Ok(exchange_request);
+}
+
+/// Takes an didcomm message and extracts all necessary information to process it during request /
+/// response.
+///
+/// # Arguments
+/// * `message` - didcomm message with communication did document as body
+///
+/// # Returns
+/// * `ExchangeInfo` - necessary information
+pub fn get_exchange_info_from_message(
+    message: MessageWithBody<CommunicationDidDocument>,
+) -> SyncResult<ExchangeInfo> {
+    let from_did = message.from.ok_or("from is required")?;
+
+    let to_vec = message.to.ok_or("to is required")?;
+    if to_vec.is_empty() {
+        return Err(Box::from(
+            "did exchange requires at least one did in the to field.",
+        ));
+    }
+    let to_did = &to_vec[0];
+    let didcomm_obj: CommunicationDidDocument = message.body.ok_or("body is required")?;
+    if didcomm_obj.public_key.is_empty() {
+        return Err(Box::from(
+            "No pub key was attached to the communication did document.",
+        ));
+    }
+    let pub_key_hex = &didcomm_obj.public_key[0].public_key_base_58;
+    if didcomm_obj.service.is_empty() {
+        return Err(Box::from(
+            "No service_endpoint was attached to the communication did document.",
+        ));
+    }
+    let service_endpoint = &didcomm_obj.service[0].service_endpoint;
+
+    return Ok(ExchangeInfo {
+        from: String::from(from_did),
+        to: String::from(to_did),
+        pub_key_hex: String::from(pub_key_hex),
+        service_endpoint: String::from(service_endpoint),
+    });
 }

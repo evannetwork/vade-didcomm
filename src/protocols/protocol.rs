@@ -33,7 +33,7 @@ pub struct StepOutput {
 
 pub type StepResult = SyncResult<StepOutput>;
 
-/// Shorthand constructor for a protocol step, with direction send.
+/// Shorthand generator for a protocol step, with direction send.
 ///
 /// # Arguments
 /// * `message` - message string (should match message.rs/ExtendedMessage)
@@ -42,7 +42,7 @@ pub type StepResult = SyncResult<StepOutput>;
 ///
 /// # Returns
 /// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
-pub fn send_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
+pub fn generate_send_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
     return ProtocolStep {
         direction: MessageDirection::SEND,
         name: String::from(name),
@@ -50,7 +50,7 @@ pub fn send_step(name: &str, handler: fn(message: &str) -> StepResult) -> Protoc
     };
 }
 
-/// Shorthand constructor for a protocol step, with direction receive.
+/// Shorthand generator for a protocol step, with direction receive.
 ///
 /// # Arguments
 /// * `message` - message string (should match message.rs/ExtendedMessage)
@@ -59,7 +59,7 @@ pub fn send_step(name: &str, handler: fn(message: &str) -> StepResult) -> Protoc
 ///
 /// # Returns
 /// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
-pub fn receive_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
+pub fn generate_receive_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
     return ProtocolStep {
         direction: MessageDirection::RECEIVE,
         name: String::from(name),
@@ -67,7 +67,7 @@ pub fn receive_step(name: &str, handler: fn(message: &str) -> StepResult) -> Pro
     };
 }
 
-/// Shorthand constructor for a protocol step out, with encrypt flag set to true.
+/// Shorthand generator for a protocol step output, with encrypt flag set to true.
 ///
 /// # Arguments
 /// * `message`  - message string (should match message.rs/ExtendedMessage)
@@ -75,7 +75,7 @@ pub fn receive_step(name: &str, handler: fn(message: &str) -> StepResult) -> Pro
 ///
 /// # Returns
 /// * `StepResult` - Result that will be populated to the vade_didcomm
-pub fn get_step_output(message: &str, metadata: &str) -> StepResult {
+pub fn generate_step_output(message: &str, metadata: &str) -> StepResult {
     return Ok(StepOutput {
         encrypt: true,
         message: String::from(message),
@@ -83,7 +83,7 @@ pub fn get_step_output(message: &str, metadata: &str) -> StepResult {
     });
 }
 
-/// Shorthand constructor for a protocol step out, with encrypt flag set to false.
+/// Shorthand generator for a protocol step output, with encrypt flag set to false.
 ///
 /// # Arguments
 /// * `message`  - message string (should match message.rs/ExtendedMessage)
@@ -91,7 +91,7 @@ pub fn get_step_output(message: &str, metadata: &str) -> StepResult {
 ///
 /// # Returns
 /// * `StepResult` - Result that will be populated to the vade_didcomm
-pub fn get_step_output_decrypted(message: &str, metadata: &str) -> StepResult {
+pub fn generate_step_output_decrypted(message: &str, metadata: &str) -> StepResult {
     return Ok(StepOutput {
         encrypt: false,
         message: String::from(message),

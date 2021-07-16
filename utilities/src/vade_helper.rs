@@ -1,5 +1,5 @@
 use vade::Vade;
-use vade_didcomm::{AsyncResult, Message, VadeDidComm};
+use vade_didcomm::{AsyncResult, Message, VadeDIDComm};
 use serde::{Deserialize, Serialize};
 
 pub async fn get_vade() -> AsyncResult<Vade> {
@@ -10,8 +10,8 @@ pub async fn get_vade() -> AsyncResult<Vade> {
     Ok(vade)
 }
 
-pub async fn get_vade_didcomm() -> AsyncResult<VadeDidComm> {
-    let vade_didcomm = VadeDidComm::new().await?;
+pub async fn get_vade_didcomm() -> AsyncResult<VadeDIDComm> {
+    let vade_didcomm = VadeDIDComm::new().await?;
 
     Ok(vade_didcomm)
 }

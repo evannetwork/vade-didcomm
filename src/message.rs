@@ -40,13 +40,10 @@ pub fn encrypt_message(
     // apply optional headers to known sections, use remaining as custom headers
     apply_optional!(d_message, message, from);
 
-    match message.to {
-        Some(values) => {
-            let to: Vec<&str> = values.iter().map(AsRef::as_ref).collect();
-            d_message = d_message.to(&to);
-        }
-        _ => (),
-    };
+    if let Some(values) = message.to {
+        let to: Vec<&str> = values.iter().map(AsRef::as_ref).collect();
+        d_message = d_message.to(&to);
+    }
 
     // insert custom headers
     for (key, val) in message.other.iter() {

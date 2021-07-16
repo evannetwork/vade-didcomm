@@ -1,5 +1,6 @@
 use crate::{
     datatypes::{BaseMessage, DidcommOptions, EncryptedMessage},
+    get_from_to_from_message,
     keypair::get_com_keypair,
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
@@ -12,23 +13,21 @@ use x25519_dalek::{PublicKey, StaticSecret};
 
 big_array! { BigArray; }
 
-#[allow(dead_code)]
-pub struct VadeDidComm {}
-
-impl VadeDidComm {
-    /// Creates new instance of `VadeDidComm`.
-    pub async fn new() -> AsyncResult<VadeDidComm> {
+pub struct VadeDIDComm {}
+impl VadeDIDComm {
+    /// Creates new instance of `VadeDIDComm`.
+    pub async fn new() -> AsyncResult<VadeDIDComm> {
         match env_logger::try_init() {
             Ok(_) | Err(_) => (),
         };
-        let vade_didcomm = VadeDidComm {};
+        let vade_didcomm = VadeDIDComm {};
 
         Ok(vade_didcomm)
     }
 }
 
 #[async_trait]
-impl VadePlugin for VadeDidComm {
+impl VadePlugin for VadeDIDComm {
     /// Prepare a plain didcomm json message to be sent, including encryption and protocol specific
     /// message enhancement.
     /// The didcomm options can include a shared secret to encrypt the message with a specific key.
@@ -65,11 +64,8 @@ impl VadePlugin for VadeDidComm {
             } else {
                 // otherwise use keys from did exchange
                 let parsed_message: BaseMessage = serde_json::from_str(message)?;
-                let from_did = parsed_message.from.as_ref().ok_or("from is required")?;
-                let to_vec = parsed_message.to.as_ref().ok_or("to is required")?;
-                let to_did = &to_vec[0];
-
-                let encoded_keypair = get_com_keypair(from_did, to_did).asyncify()?;
+                let from_to = get_from_to_from_message(parsed_message).asyncify()?;
+                let encoded_keypair = get_com_keypair(&from_to.from, &from_to.to).asyncify()?;
                 let secret_decoded = vec_to_array(hex::decode(encoded_keypair.secret_key)?);
                 let target_pub_decoded = vec_to_array(hex::decode(encoded_keypair.target_pub_key)?);
                 let secret = StaticSecret::from(secret_decoded);
@@ -133,11 +129,10 @@ impl VadePlugin for VadeDidComm {
                 .asyncify()?;
             } else {
                 // otherwise use keys from did exchange
-                let from_did = encrypted_message.from.as_ref().ok_or("from is required")?;
-                let to_vec = encrypted_message.to.as_ref().ok_or("to is required")?;
-                let to_did = &to_vec[0];
+                let base_message = serde_json::from_str::<BaseMessage>(message)?;
+                let from_to = get_from_to_from_message(base_message).asyncify()?;
 
-                let encoded_keypair = get_com_keypair(to_did, from_did).asyncify()?;
+                let encoded_keypair = get_com_keypair(&from_to.to, &from_to.from).asyncify()?;
                 let secret_decoded = vec_to_array(hex::decode(encoded_keypair.secret_key)?);
                 let target_pub_decoded = vec_to_array(hex::decode(encoded_keypair.target_pub_key)?);
                 let secret = StaticSecret::from(secret_decoded);

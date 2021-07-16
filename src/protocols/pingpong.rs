@@ -1,7 +1,9 @@
 use crate::datatypes::MessageWithBody;
 use serde::{Deserialize, Serialize};
 
-use super::protocol::{get_step_output, receive_step, send_step, Protocol, StepResult};
+use super::protocol::{
+    generate_receive_step, generate_send_step, generate_step_output, Protocol, StepResult,
+};
 
 /// Struct for parsing incoming ping messages.
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -13,18 +15,16 @@ pub struct PingBody {
 ///
 /// # Returns
 /// * `Protocol` - the new ping pong protocol handler
-pub fn get_ping_pong_protocol() -> Protocol {
-    let mut protocol = Protocol {
+pub fn generate_ping_pong_protocol() -> Protocol {
+    let protocol = Protocol {
         name: String::from("trust_ping"),
-        steps: Vec::new(),
+        steps: vec![
+            generate_send_step("ping", send_ping),
+            generate_send_step("ping_response", send_pong),
+            generate_receive_step("ping", receive_ping),
+            generate_receive_step("ping_response", receive_pong),
+        ],
     };
-
-    protocol.steps.push(send_step("ping", send_ping));
-    protocol.steps.push(send_step("ping_response", send_pong));
-    protocol.steps.push(receive_step("ping", receive_ping));
-    protocol
-        .steps
-        .push(receive_step("ping_response", receive_pong));
 
     return protocol;
 }
@@ -35,20 +35,20 @@ pub fn send_ping(message: &str) -> StepResult {
     parsed_message.body = Some(PingBody {
         response_requested: Some(true),
     });
-    return get_step_output(&serde_json::to_string(&parsed_message)?, "{}");
+    return generate_step_output(&serde_json::to_string(&parsed_message)?, "{}");
 }
 
 /// Protocol handler for direction: `send`, type: `trust_ping/pong`
 pub fn send_pong(message: &str) -> StepResult {
-    return get_step_output(message, "{}");
+    return generate_step_output(message, "{}");
 }
 
 /// Protocol handler for direction: `receive`, type: `trust_ping/ping`
 pub fn receive_ping(message: &str) -> StepResult {
-    return get_step_output(message, "{}");
+    return generate_step_output(message, "{}");
 }
 
 /// Protocol handler for direction: `receive`, type: `trust_ping/pong`
 pub fn receive_pong(message: &str) -> StepResult {
-    return get_step_output(message, "{}");
+    return generate_step_output(message, "{}");
 }

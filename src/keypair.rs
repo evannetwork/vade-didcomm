@@ -4,7 +4,7 @@ use crate::{
     utils::SyncResult,
 };
 
-/// Saves a communication keypair within the rocks.db for two dids (from -> to). Save entry will be
+/// Saves a communication keypair within the rocks.db for two dids (from -> to). Entry key will be
 /// comm_keypair_{from}_{to}.
 ///
 /// # Arguments
@@ -32,15 +32,15 @@ pub fn save_com_keypair(
         target_service_endpoint: service_endpoint.unwrap_or(String::from("")),
     };
 
-    let _ = write_db(
+    write_db(
         &format!("comm_keypair_{}_{}", from_did, to_did),
         &serde_json::to_string(&comm_keypair)?,
-    );
+    )?;
 
     return Ok(comm_keypair);
 }
 
-/// Loads a communication keypair from the rocks db for two dids (from -> to). Save entry will be
+/// Loads a communication keypair from the rocks db for two dids (from -> to). Entry key will be
 /// comm_keypair_{from}_{to}.
 ///
 /// # Arguments

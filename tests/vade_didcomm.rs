@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{BaseMessage, EncryptedMessage, MessageWithBody, VadeDidCommPluginOutput},
-    AsyncResult, VadeDidComm,
+    datatypes::{BaseMessage, EncryptedMessage, MessageWithBody, VadeDIDCommPluginOutput},
+    AsyncResult, VadeDIDComm,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -13,7 +13,7 @@ struct PingBody {
 
 async fn get_vade() -> AsyncResult<Vade> {
     let mut vade = Vade::new();
-    let vade_didcomm = VadeDidComm::new().await?;
+    let vade_didcomm = VadeDIDComm::new().await?;
     vade.register_plugin(Box::from(vade_didcomm));
 
     Ok(vade)
@@ -59,12 +59,12 @@ async fn can_prepare_didcomm_message_for_sending() -> AsyncResult<()> {
         .as_ref()
         .ok_or("no value in result")?;
 
-    let parsed: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let parsed: VadeDIDCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
     let custom_field = parsed
         .message
         .other
         .get("custom1")
-        .ok_or("could not field custom1")?;
+        .ok_or("could not get custom field custom1")?;
 
     assert_eq!(custom_field, "ichi");
 
@@ -89,7 +89,7 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
 
     match results.get(0) {
         Some(Some(value)) => {
-            let encrypted: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(value)?;
+            let encrypted: VadeDIDCommPluginOutput<EncryptedMessage> = serde_json::from_str(value)?;
             let encrypted_message = serde_json::to_string(&encrypted.message)?;
             let options = get_didcomm_options(&sign_keypair.user2_shared);
             let results = vade.didcomm_receive(&options, &encrypted_message).await?;
@@ -98,7 +98,7 @@ async fn can_decrypt_received_messages() -> AsyncResult<()> {
                 .ok_or("no result")?
                 .as_ref()
                 .ok_or("no value in result")?;
-            let parsed: VadeDidCommPluginOutput<MessageWithBody<PingBody>> =
+            let parsed: VadeDIDCommPluginOutput<MessageWithBody<PingBody>> =
                 serde_json::from_str(result)?;
             assert_eq!(
                 "https://didcomm.org/trust_ping/1.0/ping",
@@ -143,7 +143,7 @@ async fn can_receive_unencrypted() -> AsyncResult<()> {
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let parsed: VadeDidCommPluginOutput<BaseMessage> = serde_json::from_str(result)?;
+    let parsed: VadeDIDCommPluginOutput<BaseMessage> = serde_json::from_str(result)?;
 
     assert_eq!(
         "https://didcomm.org/trust_ping/1.0/ping",

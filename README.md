@@ -2,10 +2,10 @@
 
 ## About
 
-This crate is a [didcomm V2](https://identity.foundation/didcomm-messaging/spec/) vade plugin.
+This crate is a [DIDComm V2](https://identity.foundation/didcomm-messaging/spec/) vade plugin that currently offers:
 
-- message encryption & decryption using [didcomm rs](https://github.com/decentralized-identity/didcomm-rs)
-- protocol support using didcomm message `type`
+- message encryption & decryption using [DIDComm rs](https://github.com/decentralized-identity/didcomm-rs)
+- protocol support using DIDComm message `type`
 
 It implements the following [`VadePlugin`] functions:
 
@@ -19,13 +19,13 @@ Currently supported protocols:
 
 ## Usage
 
-`didcomm_send` prepares the message for being sent to the recipient and `didcomm_receive` is used for decryption and analyzing an incoming message. Per default each sent message will be encrypted, either with the saved encryption key from a existing did exchange with the communication partner, or with the provided one. Specific protocol types can override the encryption setting of the message to just send a plain message (like did exchange).
+`didcomm_send` prepares a message for being sent to the recipient and `didcomm_receive` is used for decryption and analyzing an incoming message. Per default each sent message will be encrypted, either with the saved encryption key from an existing did exchange with the communication partner, or with the provided one. Specific protocol types can override the encryption setting of a message to just send a plain message (like did exchange).
 
 *NOTE*: When you send any message that will be encrypted, you need to have a finished did exchange or correct encryption keys, that are passed to vade_didcomm.
 
-Each function always takes 2 arguments:
+The two functions [`didcomm_send`] and [`didcomm_receive`] can be called with two parameters, `options` and `message`:
 
-1. Options: Contains specific information for passing special configuration to the vade_didcomm. Currently its just used to inject specific encryption configuration, to overwrite the default didcomm did exchange key encryption.
+1. Options: Contains specific information for passing special configuration to the vade_didcomm. Currently its just used to inject specific encryption configuration, to overwrite the default DIDComm did exchange key encryption.
 
 ```json
 {
@@ -146,7 +146,7 @@ pub struct CustomBody {
     custom: Option<bool>,
 }
 
-pub fn get_my_custom_protocol() -> Protocol {
+pub fn generate_my_custom_protocol() -> Protocol {
     let mut protocol = Protocol {
         name: String::from("my_custom_protocol"),
         steps: Vec::new(),
@@ -163,11 +163,11 @@ pub fn send_step1(message: &str) -> StepResult {
     parsed_message.body = Some(CustomBody {
         response_requested: Some(true),
     });
-    return get_step_output(&serde_json::to_string(&parsed_message)?, "{}");
+    return generate_step_output(&serde_json::to_string(&parsed_message)?, "{}");
 }
 
 pub fn receive_step1(message: &str) -> StepResult {
-    return get_step_output(message, "{}");
+    return generate_step_output(message, "{}");
 }
 ```
 
@@ -181,8 +181,8 @@ pub(crate) mod my_custom_protocol;
 
 ```rs
 let protocols: [&Protocol; 3] = [
-  &get_did_exchange_protocol(),
-  &get_ping_pong_protocol(),
+  &generate_did_exchange_protocol(),
+  &generate_ping_pong_protocol(),
   &my_custom_protocol(),
 ];
 ```

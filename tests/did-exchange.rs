@@ -2,10 +2,10 @@ use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 use vade::{ResultAsyncifier, Vade};
 use vade_didcomm::{
     datatypes::{
-        BaseMessage, CommKeyPair, DidcommObj, EncryptedMessage, MessageWithBody,
-        VadeDidCommPluginOutput, DID_EXCHANGE_PROTOCOL_URL,
+        BaseMessage, CommKeyPair, CommunicationDidDocument, EncryptedMessage, MessageWithBody,
+        VadeDIDCommPluginOutput, DID_EXCHANGE_PROTOCOL_URL,
     },
-    AsyncResult, SyncResult, VadeDidComm,
+    AsyncResult, SyncResult, VadeDIDComm,
 };
 
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
@@ -29,7 +29,7 @@ pub fn get_com_keypair(from_did: &str, to_did: &str) -> SyncResult<CommKeyPair> 
 
 async fn get_vade() -> AsyncResult<Vade> {
     let mut vade = Vade::new();
-    let vade_didcomm = VadeDidComm::new().await?;
+    let vade_didcomm = VadeDIDComm::new().await?;
     vade.register_plugin(Box::from(vade_didcomm));
 
     Ok(vade)
@@ -51,7 +51,7 @@ async fn send_request(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncRes
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<MessageWithBody<DidcommObj>> =
+    let prepared: VadeDIDCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
         serde_json::from_str(result)?;
     let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver)).asyncify()?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
@@ -91,7 +91,7 @@ async fn receive_request(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let received: VadeDidCommPluginOutput<MessageWithBody<DidcommObj>> =
+    let received: VadeDIDCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
         serde_json::from_str(result)?;
     let comm_keypair = get_com_keypair(receiver, sender).asyncify()?;
 
@@ -134,7 +134,7 @@ async fn send_response(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncRe
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<MessageWithBody<DidcommObj>> =
+    let prepared: VadeDIDCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
         serde_json::from_str(result)?;
 
     return Ok(serde_json::to_string(&prepared.message)?);
@@ -178,7 +178,7 @@ async fn send_complete(vade: &mut Vade, sender: &str, receiver: &str) -> AsyncRe
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDIDCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
@@ -195,7 +195,7 @@ async fn receive_complete(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let complete_message: VadeDidCommPluginOutput<BaseMessage> = serde_json::from_str(received)?;
+    let complete_message: VadeDIDCommPluginOutput<BaseMessage> = serde_json::from_str(received)?;
 
     assert_eq!(
         complete_message.message.r#type,

@@ -7,7 +7,7 @@ pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0
 /// Struct for a pub key that will be sent during did exchange with the users communication did document.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DidCommPubKey {
+pub struct DIDCommPubKey {
     pub id: String,
     pub public_key_base_58: String,
     pub r#type: Vec<String>,
@@ -16,7 +16,7 @@ pub struct DidCommPubKey {
 /// Struct for a service definition that will be sent during did exchange with the users communication did document.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DidCommService {
+pub struct DIDCommService {
     pub id: String,
     pub r#type: String,
     pub priority: u8,
@@ -27,13 +27,31 @@ pub struct DidCommService {
 /// Communication didcomm object that will be sent to the target user during did exchange.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DidcommObj {
+pub struct CommunicationDidDocument {
     #[serde(rename(serialize = "@context", deserialize = "@context"))]
     pub context: String,
     pub id: String,
     pub authentication: Vec<String>,
-    pub public_key: Vec<DidCommPubKey>,
-    pub service: Vec<DidCommService>,
+    pub public_key: Vec<DIDCommPubKey>,
+    pub service: Vec<DIDCommService>,
+}
+
+/// Basically a set of a to and a from did
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FromTo {
+    pub from: String,
+    pub to: String,
+}
+
+/// Necessary information for a valid did exchange request / response extracted from an didcomm message
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExchangeInfo {
+    pub from: String,
+    pub to: String,
+    pub pub_key_hex: String,
+    pub service_endpoint: String,
 }
 
 /// Communication keypair with the complete information to encrypt and decrypt a message from a
@@ -131,7 +149,7 @@ pub struct DidcommOptions {
 
 /// Output of didcomm_send or didcomm_receive.
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct VadeDidCommPluginOutput<T> {
+pub struct VadeDIDCommPluginOutput<T> {
     pub message: T,
     pub metadata: HashMap<String, String>,
 }

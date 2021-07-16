@@ -7,19 +7,6 @@ use uuid::Uuid;
 
 use crate::datatypes::{BaseMessage, ExtendedMessage, FromTo};
 
-pub type AsyncResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
-
-pub trait ResultAsyncifier<T> {
-    fn asyncify(self) -> AsyncResult<T>;
-}
-impl<T> ResultAsyncifier<T> for Result<T, Box<dyn std::error::Error + Send + Sync>> {
-    fn asyncify(self) -> AsyncResult<T> {
-        self.map_err(|err| err.to_string().into())
-    }
-}
-
-pub type SyncResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-
 /// Formats an vector into an array dynamically.
 ///
 /// # Arguments
@@ -27,7 +14,7 @@ pub type SyncResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 ///
 /// # Returns
 /// * `Array` - the transformed array
-pub fn vec_to_array<T, const N: usize>(v: Vec<T>) -> SyncResult<[T; N]> {
+pub fn vec_to_array<T, const N: usize>(v: Vec<T>) -> Result<[T; N], Box<dyn std::error::Error>> {
     v.try_into()
         .map_err(|_e| Box::from("could not format vec to array"))
 }
@@ -39,7 +26,9 @@ pub fn vec_to_array<T, const N: usize>(v: Vec<T>) -> SyncResult<[T; N]> {
 ///
 /// # Returns
 /// * `ExchangeInfo` - necessary information
-pub fn get_from_to_from_message(message: BaseMessage) -> SyncResult<FromTo> {
+pub fn get_from_to_from_message(
+    message: BaseMessage,
+) -> Result<FromTo, Box<dyn std::error::Error>> {
     let from_did = message.from.ok_or("from is required")?;
 
     let to_vec = message.to.ok_or("to is required")?;
@@ -63,7 +52,7 @@ pub fn get_from_to_from_message(message: BaseMessage) -> SyncResult<FromTo> {
 ///
 /// # Returns
 /// * `string` - stringified message
-pub fn fill_message_id_and_timestamps(message: &str) -> SyncResult<String> {
+pub fn fill_message_id_and_timestamps(message: &str) -> Result<String, Box<dyn std::error::Error>> {
     let mut parsed_message: ExtendedMessage = serde_json::from_str(message)?;
 
     if !parsed_message.id.is_some() {

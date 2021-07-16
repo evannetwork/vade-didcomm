@@ -1,11 +1,9 @@
 use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 
-use crate::utils::SyncResult;
-
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
 
 /// Return a new instance of the rocks db.
-fn get_db() -> SyncResult<DBWithThreadMode<SingleThreaded>> {
+fn get_db() -> Result<DBWithThreadMode<SingleThreaded>, Box<dyn std::error::Error>> {
     let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;
 
     return Ok(db);
@@ -16,7 +14,7 @@ fn get_db() -> SyncResult<DBWithThreadMode<SingleThreaded>> {
 /// # Arguments
 /// * `key` - key to save the value for
 /// * `value` - string value to store
-pub fn write_db(key: &str, value: &str) -> SyncResult<()> {
+pub fn write_db(key: &str, value: &str) -> Result<(), Box<dyn std::error::Error>> {
     let db = get_db()?;
 
     db.put(key, value)?;
@@ -31,7 +29,7 @@ pub fn write_db(key: &str, value: &str) -> SyncResult<()> {
 ///
 /// # Returns
 /// * `String` - stored value
-pub fn read_db(key: &str) -> SyncResult<String> {
+pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
     let db = get_db()?;
 
     match db.get(key) {
@@ -46,7 +44,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn can_use_rocks_db() -> SyncResult<()> {
+    fn can_use_rocks_db() -> Result<(), Box<dyn std::error::Error>> {
         write_db("test1", "helloooo")?;
         let result = read_db("test1")?;
 

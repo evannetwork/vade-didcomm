@@ -1,4 +1,4 @@
-use crate::{datatypes::ExtendedMessage, utils::SyncResult};
+use crate::datatypes::ExtendedMessage;
 use didcomm_rs::{
     crypto::{CryptoAlgorithm, SignatureAlgorithm},
     Message as DIDCommMessage,
@@ -31,7 +31,7 @@ pub fn encrypt_message(
     message_string: &str,
     encryption_key: &[u8],
     keypair: &ed25519_dalek::Keypair,
-) -> SyncResult<String> {
+) -> Result<String, Box<dyn std::error::Error>> {
     let mut d_message = DIDCommMessage::new()
         .body(message_string.to_string().as_bytes())
         .as_jwe(&CryptoAlgorithm::XC20P);
@@ -84,7 +84,7 @@ pub fn decrypt_message(
     message: &str,
     decryption_key: &[u8],
     sign_public: &[u8],
-) -> SyncResult<String> {
+) -> Result<String, Box<dyn std::error::Error>> {
     let received = DIDCommMessage::receive(&message, Some(decryption_key), Some(sign_public))
         .map_err(|err| format!("could not decrypt message: {}", &err.to_string()))?;
 
@@ -114,7 +114,7 @@ mod tests {
     }
 
     #[test]
-    fn can_encrypt_message() -> SyncResult<()> {
+    fn can_encrypt_message() -> Result<(), Box<dyn std::error::Error>> {
         let sign_keypair = get_keypair_set();
         let payload = format!(
             r#"{{
@@ -138,7 +138,7 @@ mod tests {
     }
 
     #[test]
-    fn can_decrypt_message() -> SyncResult<()> {
+    fn can_decrypt_message() -> Result<(), Box<dyn std::error::Error>> {
         let sign_keypair = get_keypair_set();
         let payload = format!(
             r#"{{

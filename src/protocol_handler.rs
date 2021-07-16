@@ -1,10 +1,10 @@
 use crate::{
     datatypes::{MessageDirection, MessageWithType, ProtocolHandleOutput},
     protocols::{
-        did_exchange::generate_did_exchange_protocol, pingpong::generate_ping_pong_protocol,
+        did_exchange::generate_did_exchange_protocol,
+        pingpong::generate_ping_pong_protocol,
         protocol::Protocol,
     },
-    utils::SyncResult,
 };
 
 pub struct ProtocolHandler {}
@@ -17,7 +17,7 @@ impl ProtocolHandler {
     ///
     /// # Returns
     /// * `ProtocolHandleOutput` - general information about the analyzed protocol step
-    pub fn before_send(message: &str) -> SyncResult<ProtocolHandleOutput> {
+    pub fn before_send(message: &str) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
         return handle_protocol(message, MessageDirection::SEND);
     }
 
@@ -30,7 +30,9 @@ impl ProtocolHandler {
     ///
     /// # Returns
     /// * `ProtocolHandleOutput` - general information about the analyzed protocol step
-    pub fn after_receive(message: &str) -> SyncResult<ProtocolHandleOutput> {
+    pub fn after_receive(
+        message: &str,
+    ) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
         return handle_protocol(message, MessageDirection::RECEIVE);
     }
 }
@@ -38,7 +40,10 @@ impl ProtocolHandler {
 /// General protocol step handler for analyzing messages with a direction (incoming / outgoing).
 /// It analyse the message type and checks if a step with a specific direction is configured.
 /// When a step is found, the logic will be executed and no other handler will be searched.
-fn handle_protocol(message: &str, direction: MessageDirection) -> SyncResult<ProtocolHandleOutput> {
+fn handle_protocol(
+    message: &str,
+    direction: MessageDirection,
+) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
     let parsed_message: MessageWithType = serde_json::from_str(message)?;
     let m_type = parsed_message.r#type.to_owned();
     // handle multiple protocols dynamically

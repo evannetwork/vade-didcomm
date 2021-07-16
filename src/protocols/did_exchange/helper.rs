@@ -84,14 +84,16 @@ pub fn get_did_exchange_message(
         DIDExchangeType::RESPONSE => "response",
     };
     let exchange_request: MessageWithBody<CommunicationDidDocument> = MessageWithBody {
-        id: Some(String::from(&thread_id)),
-        pthid: Some(format!("{}#key-1", String::from(thread_id))),
-        thid: Some(service_id),
-        from: Some(String::from(from_did)),
-        to: Some([String::from(to_did)].to_vec()),
         body: Some(did_comm_obj),
-        r#type: format!("{}/{}", DID_EXCHANGE_PROTOCOL_URL, step_name),
+        created_time: None,
+        expires_time: None,
+        from: Some(String::from(from_did)),
+        id: Some(String::from(&thread_id)),
         other: HashMap::new(),
+        pthid: Some(format!("{}#key-1", String::from(thread_id))),
+        r#type: format!("{}/{}", DID_EXCHANGE_PROTOCOL_URL, step_name),
+        thid: Some(service_id),
+        to: Some([String::from(to_did)].to_vec()),
     };
 
     return Ok(exchange_request);

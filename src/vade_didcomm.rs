@@ -1,6 +1,6 @@
 use crate::{
     datatypes::{BaseMessage, DidcommOptions, EncryptedMessage},
-    get_from_to_from_message,
+    fill_message_id_and_timestamps, get_from_to_from_message,
     keypair::get_com_keypair,
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
@@ -33,6 +33,14 @@ impl VadePlugin for VadeDIDComm {
     /// The DIDComm options can include a shared secret to encrypt the message with a specific key.
     /// If no key was given and the message should be encrypted (depends on protocol implementation),
     /// the DIDComm keypair from rocks db will be used.
+    ///
+    /// # Arguments
+    /// * `options` - of type DidcommOptions, used to apply a custom signing_key
+    /// * `message` - the plain didcomm message (should be of type datatypes.rs/BaseMessage)
+    ///
+    /// # Returns
+    /// * `VadeDIDCommPluginOutput` - stringified datatypes.rs/VadeDIDCommPluginOutput contains the
+    ///                               final message and protocol step specific metadata
     async fn didcomm_send(
         &mut self,
         options: &str,
@@ -41,7 +49,8 @@ impl VadePlugin for VadeDIDComm {
         log::debug!("preparing DIDComm message for being sent");
 
         // run protocol specific logic
-        let protocol_result = ProtocolHandler::before_send(message)?;
+        let message_with_id = fill_message_id_and_timestamps(&message)?;
+        let protocol_result = ProtocolHandler::before_send(&message_with_id)?;
 
         // message string, that will be returned
         let final_message: String;
@@ -62,7 +71,7 @@ impl VadePlugin for VadeDIDComm {
                 )?;
             } else {
                 // otherwise use keys from DID exchange
-                let parsed_message: BaseMessage = serde_json::from_str(message)?;
+                let parsed_message: BaseMessage = serde_json::from_str(&message_with_id)?;
                 let from_to = get_from_to_from_message(parsed_message)?;
                 let encoded_keypair = get_com_keypair(&from_to.from, &from_to.to)?;
                 let secret_decoded = vec_to_array(hex::decode(encoded_keypair.secret_key)?)?;
@@ -96,6 +105,15 @@ impl VadePlugin for VadeDIDComm {
     /// Receive a plain DIDComm json message, including decryption and protocol specific message parsing.
     /// The DIDComm options can include a shared secret to encrypt the message with a specific key.
     /// If no key was given and the message is encrypted the DIDComm keypair from rocks db will be used.
+    ///
+    /// # Arguments
+    /// * `options` - of type DidcommOptions, used to apply a custom signing_key
+    /// * `message` - the plain / encrypted didcomm message (should be of type
+    ///               datatypes.rs/BaseMessage / datatypes.rs/EncryptedMessage)
+    ///
+    /// # Returns
+    /// * `VadeDIDCommPluginOutput` - stringified datatypes.rs/VadeDIDCommPluginOutput contains the
+    ///                               final message and protocol step specific metadata
     async fn didcomm_receive(
         &mut self,
         options: &str,
@@ -149,7 +167,8 @@ impl VadePlugin for VadeDIDComm {
         }
 
         // run protocol specific logic
-        let protocol_result = ProtocolHandler::after_receive(&decrypted)?;
+        let message_with_id = fill_message_id_and_timestamps(&decrypted)?;
+        let protocol_result = ProtocolHandler::after_receive(&message_with_id)?;
 
         let receive_result = format!(
             r#"{{

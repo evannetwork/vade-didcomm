@@ -1,6 +1,6 @@
 use crate::{
     datatypes::{BaseMessage, DidcommOptions, EncryptedMessage},
-    get_from_to_from_message,
+    fill_message_id_and_timestamps, get_from_to_from_message,
     keypair::get_com_keypair,
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
@@ -49,7 +49,8 @@ impl VadePlugin for VadeDIDComm {
         log::debug!("preparing DIDComm message for being sent");
 
         // run protocol specific logic
-        let protocol_result = ProtocolHandler::before_send(message).asyncify()?;
+        let message_with_id = fill_message_id_and_timestamps(&message).asyncify()?;
+        let protocol_result = ProtocolHandler::before_send(&message_with_id).asyncify()?;
 
         // message string, that will be returned
         let final_message: String;
@@ -71,7 +72,7 @@ impl VadePlugin for VadeDIDComm {
                 .asyncify()?;
             } else {
                 // otherwise use keys from DID exchange
-                let parsed_message: BaseMessage = serde_json::from_str(message)?;
+                let parsed_message: BaseMessage = serde_json::from_str(&message_with_id)?;
                 let from_to = get_from_to_from_message(parsed_message).asyncify()?;
                 let encoded_keypair = get_com_keypair(&from_to.from, &from_to.to).asyncify()?;
                 let secret_decoded =
@@ -172,7 +173,8 @@ impl VadePlugin for VadeDIDComm {
         }
 
         // run protocol specific logic
-        let protocol_result = ProtocolHandler::after_receive(&decrypted).asyncify()?;
+        let message_with_id = fill_message_id_and_timestamps(&decrypted).asyncify()?;
+        let protocol_result = ProtocolHandler::after_receive(&message_with_id).asyncify()?;
 
         let receive_result = format!(
             r#"{{

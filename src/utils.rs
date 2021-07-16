@@ -1,6 +1,11 @@
-use std::convert::TryInto;
+use std::{
+    convert::TryInto,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
-use crate::datatypes::{BaseMessage, FromTo};
+use uuid::Uuid;
+
+use crate::datatypes::{BaseMessage, ExtendedMessage, FromTo};
 
 pub type AsyncResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -27,10 +32,10 @@ pub fn vec_to_array<T, const N: usize>(v: Vec<T>) -> SyncResult<[T; N]> {
         .map_err(|_e| Box::from("could not format vec to array"))
 }
 
-/// Takes an didcomm message and extracts the basic information that are required.
+/// Takes an DIDComm message and extracts the basic information that are required.
 ///
 /// # Arguments
-/// * `message` - didcomm message with communication DID document as body
+/// * `message` - DIDComm message with communication DID document as body
 ///
 /// # Returns
 /// * `ExchangeInfo` - necessary information
@@ -49,4 +54,27 @@ pub fn get_from_to_from_message(message: BaseMessage) -> SyncResult<FromTo> {
         from: String::from(from_did),
         to: String::from(to_did),
     });
+}
+
+/// Adds an id and create_time to stringified DIDComm message.
+///
+/// # Arguments
+/// * `message` - DIDComm message
+///
+/// # Returns
+/// * `string` - stringified message
+pub fn fill_message_id_and_timestamps(message: &str) -> SyncResult<String> {
+    let mut parsed_message: ExtendedMessage = serde_json::from_str(message)?;
+
+    if !parsed_message.id.is_some() {
+        parsed_message.id = Some(Uuid::to_string(&Uuid::new_v4()));
+    }
+
+    if !parsed_message.created_time.is_some() {
+        let start = SystemTime::now();
+        let since_the_epoch = start.duration_since(UNIX_EPOCH)?;
+        parsed_message.created_time = Some(since_the_epoch.as_secs());
+    }
+
+    return Ok(serde_json::to_string(&parsed_message)?);
 }

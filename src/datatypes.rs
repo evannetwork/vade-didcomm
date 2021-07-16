@@ -101,6 +101,8 @@ pub struct BaseMessage {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExtendedMessage {
     pub body: Option<HashMap<String, Value>>,
+    pub created_time: Option<u64>,
+    pub expires_time: Option<u64>,
     pub from: Option<String>,
     pub id: Option<String>,
     pub pthid: Option<String>,
@@ -115,6 +117,8 @@ pub struct ExtendedMessage {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MessageWithBody<T> {
     pub body: Option<T>,
+    pub created_time: Option<u64>,
+    pub expires_time: Option<u64>,
     pub from: Option<String>,
     pub id: Option<String>,
     pub pthid: Option<String>,

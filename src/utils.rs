@@ -22,9 +22,9 @@ pub type SyncResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 ///
 /// # Returns
 /// * `Array` - the transformed array
-pub fn vec_to_array<T, const N: usize>(v: Vec<T>) -> [T; N] {
+pub fn vec_to_array<T, const N: usize>(v: Vec<T>) -> SyncResult<[T; N]> {
     v.try_into()
-        .unwrap_or_else(|v: Vec<T>| panic!("Expected a Vec of length {} but it was {}", N, v.len()))
+        .map_err(|_e| Box::from("could not format vec to array"))
 }
 
 /// Takes an didcomm message and extracts the basic information that are required.

@@ -10,13 +10,12 @@ use crate::{
     utils::SyncResult,
 };
 
-// /// Specifies all possible message directions.
-// #[derive(PartialEq)]
-// pub enum DidExchangeType {
-//     REQUEST = "request",
-//     RESPONSE = "response",
-//     COMPLETE = "complete",
-// }
+/// Specifies all possible message directions.
+#[derive(PartialEq)]
+pub enum DIDExchangeType {
+    REQUEST,
+    RESPONSE,
+}
 
 /// Creates a new communication DIDComm object for a specific DID, a communication pub key and the
 /// service url, where the user can be reached.
@@ -70,7 +69,7 @@ pub fn get_communication_did_doc(
 /// # Returns
 /// * `MessageWithBody<CommunicationDidDocument>` - constructed DIDComm object, ready to be sent
 pub fn get_did_exchange_message(
-    step_type: &str,
+    step_type: DIDExchangeType,
     from_did: &str,
     to_did: &str,
     from_service_endpoint: &str,
@@ -79,6 +78,10 @@ pub fn get_did_exchange_message(
     let did_comm_obj = get_communication_did_doc(from_did, pub_key, from_service_endpoint);
     let thread_id = Uuid::new_v4().to_simple().to_string();
     let service_id = format!("{0}#key-1", from_did);
+    let step_name = match step_type {
+        DIDExchangeType::REQUEST => "request",
+        DIDExchangeType::RESPONSE => "response",
+    };
     let exchange_request: MessageWithBody<CommunicationDidDocument> = MessageWithBody {
         id: Some(String::from(&thread_id)),
         pthid: Some(format!("{}#key-1", String::from(thread_id))),
@@ -86,7 +89,7 @@ pub fn get_did_exchange_message(
         from: Some(String::from(from_did)),
         to: Some([String::from(to_did)].to_vec()),
         body: Some(did_comm_obj),
-        r#type: format!("{}/{}", DID_EXCHANGE_PROTOCOL_URL, step_type),
+        r#type: format!("{}/{}", DID_EXCHANGE_PROTOCOL_URL, step_name),
         other: HashMap::new(),
     };
 

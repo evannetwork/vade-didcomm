@@ -66,8 +66,10 @@ impl VadePlugin for VadeDIDComm {
                 let parsed_message: BaseMessage = serde_json::from_str(message)?;
                 let from_to = get_from_to_from_message(parsed_message).asyncify()?;
                 let encoded_keypair = get_com_keypair(&from_to.from, &from_to.to).asyncify()?;
-                let secret_decoded = vec_to_array(hex::decode(encoded_keypair.secret_key)?);
-                let target_pub_decoded = vec_to_array(hex::decode(encoded_keypair.target_pub_key)?);
+                let secret_decoded =
+                    vec_to_array(hex::decode(encoded_keypair.secret_key)?).asyncify()?;
+                let target_pub_decoded =
+                    vec_to_array(hex::decode(encoded_keypair.target_pub_key)?).asyncify()?;
                 let secret = StaticSecret::from(secret_decoded);
                 let target_pub_key = PublicKey::from(target_pub_decoded);
                 let shared_secret = secret.diffie_hellman(&target_pub_key);
@@ -133,8 +135,10 @@ impl VadePlugin for VadeDIDComm {
                 let from_to = get_from_to_from_message(base_message).asyncify()?;
 
                 let encoded_keypair = get_com_keypair(&from_to.to, &from_to.from).asyncify()?;
-                let secret_decoded = vec_to_array(hex::decode(encoded_keypair.secret_key)?);
-                let target_pub_decoded = vec_to_array(hex::decode(encoded_keypair.target_pub_key)?);
+                let secret_decoded =
+                    vec_to_array(hex::decode(encoded_keypair.secret_key)?).asyncify()?;
+                let target_pub_decoded =
+                    vec_to_array(hex::decode(encoded_keypair.target_pub_key)?).asyncify()?;
                 let secret = StaticSecret::from(secret_decoded);
                 let target_pub_key = PublicKey::from(target_pub_decoded);
                 let shared_secret = secret.diffie_hellman(&target_pub_key);

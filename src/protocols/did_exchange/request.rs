@@ -8,7 +8,7 @@ use crate::{
     protocols::protocol::{generate_step_output, generate_step_output_decrypted, StepResult},
 };
 
-use super::helper::{get_did_exchange_message, get_exchange_info_from_message};
+use super::helper::{get_did_exchange_message, get_exchange_info_from_message, DIDExchangeType};
 
 /// protocol handler for direction: `send`, type: `DID_EXCHANGE_PROTOCOL_URL/request`
 /// Uses the protocols/did_exchange/helper.rs/get_did_exchange_message to construct the request message,
@@ -31,7 +31,7 @@ pub fn send_request(message: &str) -> StepResult {
     )?;
     let metadata = serde_json::to_string(&encoded_keypair)?;
     let request_message = get_did_exchange_message(
-        "request",
+        DIDExchangeType::REQUEST,
         &exchange_info.from,
         &exchange_info.to,
         "",

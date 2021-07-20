@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{BaseMessage, EncryptedMessage, MessageWithBody, VadeDIDCommPluginOutput},
+    datatypes::{
+        BaseMessage, EncryptedMessage, ExtendedMessage, MessageWithBody, VadeDIDCommPluginOutput,
+    },
     VadeDIDComm,
 };
 
@@ -149,6 +151,39 @@ async fn can_receive_unencrypted() -> Result<(), Box<dyn std::error::Error>> {
         "https://didcomm.org/trust_ping/1.0/ping",
         parsed.message.r#type,
     );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn should_fill_empty_id_and_created_time() -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+
+    let sign_keypair = get_keypair_set();
+
+    let payload = format!(
+        r#"{{
+            "type": "https://didcomm.org/trust_ping/1.0/ping",
+            "to": [ "did::xyz:34r3cu403hnth03r49g03" ]
+        }}"#,
+    );
+
+    let options = get_didcomm_options(&sign_keypair.user2_shared);
+    let results = vade.didcomm_receive(&options, &payload).await?;
+    let result = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+    let parsed: VadeDIDCommPluginOutput<ExtendedMessage> = serde_json::from_str(result)?;
+
+    if parsed.message.id.is_none() {
+        return Err(Box::from("Default id was not generated!"));
+    }
+
+    if parsed.message.created_time.is_none() {
+        return Err(Box::from("Default created_time was not generated!"));
+    }
 
     Ok(())
 }

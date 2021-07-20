@@ -1,9 +1,9 @@
 use crate::{
     datatypes::CommKeyPair,
-    rocks_db::{read_db, write_db},
+    db::{read_db, write_db},
 };
 
-/// Saves a communication keypair within the rocks.db for two DIDs (from -> to). Entry key will be
+/// Saves a communication keypair within db for two DIDs (from -> to). Entry key will be
 /// comm_keypair_{from}_{to}.
 ///
 /// # Arguments
@@ -39,7 +39,7 @@ pub fn save_com_keypair(
     return Ok(comm_keypair);
 }
 
-/// Loads a communication keypair from the rocks db for two DIDs (from -> to). Entry key will be
+/// Loads a communication keypair from the db for two DIDs (from -> to). Entry key will be
 /// comm_keypair_{from}_{to}.
 ///
 /// # Arguments

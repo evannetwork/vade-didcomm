@@ -16,7 +16,7 @@ big_array! { BigArray; }
 pub struct VadeDIDComm {}
 impl VadeDIDComm {
     /// Creates new instance of `VadeDIDComm`.
-    pub async fn new() -> Result<VadeDIDComm, Box<dyn std::error::Error>> {
+    pub fn new() -> Result<VadeDIDComm, Box<dyn std::error::Error>> {
         match env_logger::try_init() {
             Ok(_) | Err(_) => (),
         };
@@ -32,7 +32,7 @@ impl VadePlugin for VadeDIDComm {
     /// message enhancement.
     /// The DIDComm options can include a shared secret to encrypt the message with a specific key.
     /// If no key was given and the message should be encrypted (depends on protocol implementation),
-    /// the DIDComm keypair from rocks db will be used.
+    /// the DIDComm keypair from a db will be used.
     async fn didcomm_send(
         &mut self,
         options: &str,
@@ -95,7 +95,7 @@ impl VadePlugin for VadeDIDComm {
 
     /// Receive a plain DIDComm json message, including decryption and protocol specific message parsing.
     /// The DIDComm options can include a shared secret to encrypt the message with a specific key.
-    /// If no key was given and the message is encrypted the DIDComm keypair from rocks db will be used.
+    /// If no key was given and the message is encrypted the DIDComm keypair from a db will be used.
     async fn didcomm_receive(
         &mut self,
         options: &str,

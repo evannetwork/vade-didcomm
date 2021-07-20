@@ -43,7 +43,7 @@ pub fn send_request(message: &str) -> StepResult {
 
 /// protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/request`
 /// Receives the partners DID and communication pub key and generates new communication keypairs,
-/// stores it within the rocks.db.
+/// stores it within the db.
 pub fn receive_request(message: &str) -> StepResult {
     let parsed_message: MessageWithBody<CommunicationDidDocument> = serde_json::from_str(message)?;
     let exchange_info = get_exchange_info_from_message(parsed_message)?;

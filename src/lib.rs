@@ -10,11 +10,11 @@ extern crate serde_derive;
 extern crate serde_json;
 
 pub mod datatypes;
+mod db;
 mod keypair;
 mod message;
 mod protocol_handler;
 mod protocols;
-mod rocks_db;
 mod utils;
 mod vade_didcomm;
 

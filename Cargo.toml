@@ -15,12 +15,19 @@ name = "vade_didcomm"
 path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
+[features]
+wasm = [
+    "getrandom/js",
+    "uuid/wasm-bindgen",
+]
+
 [dependencies]
 async-trait = "0.1.50"
 didcomm-rs = "0.4.0"
 ed25519-dalek = "1.0.1"
 env_logger = "0.7.1"
 futures = "0.3.13"
+getrandom = { version = "0.2.3" }
 k256 = "0.7.2"
 log = "0.4.8"
 rand = "0.8.3"
@@ -29,15 +36,18 @@ serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.124"
 serde_json = { version = "1.0.53", features = ["preserve_order", "raw_value"] }
 serde-big-array = "0.3.2"
-tokio = { version = "1.5.0", features = ["macros", "rt-multi-thread", "time"] }
 uuid = { version = "0.8.2", features = ["v4"] }
 vade = { path = "../vade", version = "0.0.8" }
 hex = "0.4.3"
-rocksdb = "0.16.0"
 x25519-dalek = "1.1.1"
-# vade-evan-bbs = { path = "../vade-evan-bbs", version = "0.0.1" }
-# vade-evan-cl = { path = "../vade-evan-cl", version = "0.0.1" }
-# vade-evan-substrate = { path = "../vade-evan-substrate", version = "0.0.1" }
 
 [dev-dependencies]
+tokio = { version = "1.5.0", features = ["macros", "rt-multi-thread", "time"] }
 utilities = { path = "utilities" }
+
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rocksdb = "0.16.0"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3.39", features = [ 'Storage', 'Window' ] }

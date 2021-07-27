@@ -15,7 +15,7 @@ struct PingBody {
 
 async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
     let mut vade = Vade::new();
-    let vade_didcomm = VadeDIDComm::new().await?;
+    let vade_didcomm = VadeDIDComm::new()?;
     vade.register_plugin(Box::from(vade_didcomm));
 
     Ok(vade)

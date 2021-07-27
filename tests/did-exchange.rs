@@ -2,8 +2,13 @@ use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
-        BaseMessage, CommKeyPair, CommunicationDidDocument, EncryptedMessage, MessageWithBody,
-        VadeDIDCommPluginOutput, DID_EXCHANGE_PROTOCOL_URL,
+        BaseMessage,
+        CommKeyPair,
+        CommunicationDidDocument,
+        EncryptedMessage,
+        MessageWithBody,
+        VadeDIDCommPluginOutput,
+        DID_EXCHANGE_PROTOCOL_URL,
     },
     VadeDIDComm,
 };
@@ -20,7 +25,10 @@ pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
     }
 }
 
-pub fn get_com_keypair(from_did: &str, to_did: &str) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
+pub fn get_com_keypair(
+    from_did: &str,
+    to_did: &str,
+) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
     let db_result = read_db(&format!("comm_keypair_{}_{}", from_did, to_did))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
@@ -29,13 +37,17 @@ pub fn get_com_keypair(from_did: &str, to_did: &str) -> Result<CommKeyPair, Box<
 
 async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
     let mut vade = Vade::new();
-    let vade_didcomm = VadeDIDComm::new().await?;
+    let vade_didcomm = VadeDIDComm::new()?;
     vade.register_plugin(Box::from(vade_didcomm));
 
     Ok(vade)
 }
 
-async fn send_request(vade: &mut Vade, sender: &str, receiver: &str) -> Result<String, Box<dyn std::error::Error>> {
+async fn send_request(
+    vade: &mut Vade,
+    sender: &str,
+    receiver: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_request = format!(
         r#"{{
             "type": "{}/request",
@@ -118,7 +130,11 @@ async fn receive_request(
     return Ok(());
 }
 
-async fn send_response(vade: &mut Vade, sender: &str, receiver: &str) -> Result<String, Box<dyn std::error::Error>> {
+async fn send_response(
+    vade: &mut Vade,
+    sender: &str,
+    receiver: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_response = format!(
         r#"{{
             "type": "{}/response",
@@ -163,7 +179,11 @@ async fn receive_response(
     return Ok(());
 }
 
-async fn send_complete(vade: &mut Vade, sender: &str, receiver: &str) -> Result<String, Box<dyn std::error::Error>> {
+async fn send_complete(
+    vade: &mut Vade,
+    sender: &str,
+    receiver: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_complete = format!(
         r#"{{
             "type": "{}/complete",

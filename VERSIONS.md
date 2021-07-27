@@ -2,4 +2,12 @@
 
 ## Next Version
 
-- initial version
+### Features
+
+### Fixes
+
+### Deprecations
+
+## Initial Version
+
+- add initial project setup

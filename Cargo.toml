@@ -1,0 +1,53 @@
+[package]
+name = "vade-didcomm"
+version = "0.0.1"
+authors = ["BlockchainsInc"]
+edition = "2018"
+description = "DIDComm communication helper for vade"
+homepage = "tbd"
+documentation = "tbd"
+repository = "tbd"
+readme = "README.md"
+keywords = ["didcomm"]
+
+[lib]
+name = "vade_didcomm"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+wasm = [
+    "getrandom/js",
+    "uuid/wasm-bindgen",
+]
+
+[dependencies]
+async-trait = "0.1.50"
+didcomm-rs = "0.4.0"
+ed25519-dalek = "1.0.1"
+env_logger = "0.7.1"
+futures = "0.3.13"
+getrandom = { version = "0.2.3" }
+k256 = "0.7.2"
+log = "0.4.8"
+rand = "0.8.3"
+redis = "0.20.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_derive = "1.0.124"
+serde_json = { version = "1.0.53", features = ["preserve_order", "raw_value"] }
+serde-big-array = "0.3.2"
+uuid = { version = "0.8.2", features = ["v4"] }
+vade = { path = "../vade", version = "0.1.0" }
+hex = "0.4.3"
+x25519-dalek = "1.1.1"
+
+[dev-dependencies]
+tokio = { version = "1.5.0", features = ["macros", "rt-multi-thread", "time"] }
+utilities = { path = "utilities" }
+
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rocksdb = "0.16.0"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3.39", features = [ 'Storage', 'Window' ] }

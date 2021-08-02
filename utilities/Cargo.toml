@@ -1,0 +1,14 @@
+[package]
+name = "utilities"
+version = "0.0.1"
+authors = ["evan GmbH"]
+edition = "2018"
+license = "Apache-2.0"
+
+[dependencies]
+k256 = "0.7.2"
+x25519-dalek = "1.1.1"
+ed25519-dalek = "1.0.1"
+vade = { path = "../../vade", version = "0.1.0" }
+vade-didcomm = { path = "..", version = "0.0.1" }
+

@@ -149,10 +149,15 @@ pub struct EncryptedMessage {
 #[serde(rename_all = "camelCase", untagged)]
 pub enum KeyInformation {
     #[serde(rename_all = "camelCase")]
-    SharedSecret { shared_secret: [u8; 32] },
+    SharedSecret {
+        #[serde(with = "hex")]
+        shared_secret: [u8; 32],
+    },
     #[serde(rename_all = "camelCase")]
     SecretPublic {
+        #[serde(with = "hex")]
         my_secret: [u8; 32],
+        #[serde(with = "hex")]
         others_public: [u8; 32],
     },
 }

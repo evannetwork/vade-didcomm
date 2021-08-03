@@ -51,7 +51,7 @@ fn get_didcomm_options(use_shared_key: bool) -> Result<String, Box<dyn std::erro
         }
     } else {
         options = DidcommOptions {
-            key_information: Some(KeyInformation::PrivatePublic {
+            key_information: Some(KeyInformation::SecretPublic {
                 my_secret: sign_keypair.user1_secret.to_bytes(),
                 others_public: sign_keypair.user2_pub.to_bytes(),
             }),

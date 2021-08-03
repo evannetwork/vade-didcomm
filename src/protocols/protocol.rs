@@ -91,6 +91,7 @@ pub fn generate_step_output(message: &str, metadata: &str) -> StepResult {
 ///
 /// # Returns
 /// * `StepResult` - Result that will be populated to the vade_didcomm
+#[allow(dead_code)]
 pub fn generate_step_output_decrypted(message: &str, metadata: &str) -> StepResult {
     return Ok(StepOutput {
         encrypt: false,

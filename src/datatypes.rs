@@ -144,11 +144,24 @@ pub struct EncryptedMessage {
     pub other: HashMap<String, String>,
 }
 
+/// Either a computed shared secret or a (local) private key plus a contacts public key
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", untagged)]
+pub enum KeyInformation {
+    #[serde(rename_all = "camelCase")]
+    SharedSecret { shared_secret: [u8; 32] },
+    #[serde(rename_all = "camelCase")]
+    SecretPublic {
+        my_secret: [u8; 32],
+        others_public: [u8; 32],
+    },
+}
+
 /// Optional parameter that can be passed to vade DIDComm functions to enforce a specific encryption key
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DidcommOptions {
-    pub shared_secret: [u8; 32],
+    pub key_information: Option<KeyInformation>,
 }
 
 /// Output of didcomm_send or didcomm_receive.

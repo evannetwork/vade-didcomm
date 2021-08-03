@@ -1,11 +1,15 @@
 use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
+use serial_test::serial;
+use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
         BaseMessage,
         CommKeyPair,
         CommunicationDidDocument,
+        DidcommOptions,
         EncryptedMessage,
+        KeyInformation,
         MessageWithBody,
         VadeDIDCommPluginOutput,
         DID_EXCHANGE_PROTOCOL_URL,
@@ -35,6 +39,28 @@ pub fn get_com_keypair(
     return Ok(comm_keypair);
 }
 
+fn get_didcomm_options(use_shared_key: bool) -> Result<String, Box<dyn std::error::Error>> {
+    let sign_keypair = get_keypair_set();
+
+    let options: DidcommOptions;
+    if use_shared_key {
+        options = DidcommOptions {
+            key_information: Some(KeyInformation::SharedSecret {
+                shared_secret: sign_keypair.user1_shared.to_bytes(),
+            }),
+        }
+    } else {
+        options = DidcommOptions {
+            key_information: Some(KeyInformation::PrivatePublic {
+                my_secret: sign_keypair.user1_secret.to_bytes(),
+                others_public: sign_keypair.user2_pub.to_bytes(),
+            }),
+        };
+    }
+
+    Ok(serde_json::to_string(&options)?)
+}
+
 async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
     let mut vade = Vade::new();
     let vade_didcomm = VadeDIDComm::new()?;
@@ -47,6 +73,7 @@ async fn send_request(
     vade: &mut Vade,
     sender: &str,
     receiver: &str,
+    options: &String,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_request = format!(
         r#"{{
@@ -57,14 +84,13 @@ async fn send_request(
         }}"#,
         DID_EXCHANGE_PROTOCOL_URL, sender, receiver
     );
-    let results = vade.didcomm_send("{}", &exchange_request).await?;
+    let results = vade.didcomm_send(options, &exchange_request).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDIDCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
-        serde_json::from_str(result)?;
+    let prepared: VadeDIDCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
     let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
@@ -96,8 +122,9 @@ async fn receive_request(
     sender: &str,
     receiver: &str,
     message: String,
+    options: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive("{}", &message).await?;
+    let results = vade.didcomm_receive(&options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -134,6 +161,7 @@ async fn send_response(
     vade: &mut Vade,
     sender: &str,
     receiver: &str,
+    options: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_response = format!(
         r#"{{
@@ -144,14 +172,13 @@ async fn send_response(
         }}"#,
         DID_EXCHANGE_PROTOCOL_URL, sender, receiver
     );
-    let results = vade.didcomm_send("{}", &exchange_response).await?;
+    let results = vade.didcomm_send(&options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDIDCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
-        serde_json::from_str(result)?;
+    let prepared: VadeDIDCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
@@ -161,8 +188,9 @@ async fn receive_response(
     sender: &str,
     receiver: &str,
     message: String,
+    options: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive("{}", &message).await?;
+    let results = vade.didcomm_receive(&options, &message).await?;
     let _ = results
         .get(0)
         .ok_or("no result")?
@@ -226,16 +254,68 @@ async fn receive_complete(
 }
 
 #[tokio::test]
-async fn can_do_key_exchange() -> Result<(), Box<dyn std::error::Error>> {
+#[serial]
+async fn can_do_key_exchange_and_use_shared_secret_for_initial_encryption(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let user_1_did = String::from("did:uknow:d34db33d");
     let user_2_did = String::from("did:uknow:d34db33f");
+    let options = get_didcomm_options(true)?;
 
-    let request_message = send_request(&mut vade, &user_1_did, &user_2_did).await?;
-    receive_request(&mut vade, &user_1_did, &user_2_did, request_message).await?;
+    let request_message = send_request(&mut vade, &user_1_did, &user_2_did, &options).await?;
+    receive_request(
+        &mut vade,
+        &user_1_did,
+        &user_2_did,
+        request_message,
+        &options,
+    )
+    .await?;
 
-    let response_message = send_response(&mut vade, &user_2_did, &user_1_did).await?;
-    receive_response(&mut vade, &user_2_did, &user_1_did, response_message).await?;
+    let response_message = send_response(&mut vade, &user_2_did, &user_1_did, &options).await?;
+    receive_response(
+        &mut vade,
+        &user_2_did,
+        &user_1_did,
+        response_message,
+        &options,
+    )
+    .await?;
+
+    let complete_message = send_complete(&mut vade, &user_1_did, &user_2_did).await?;
+    receive_complete(&mut vade, &user_1_did, &user_2_did, complete_message).await?;
+
+    return Ok(());
+}
+
+#[tokio::test]
+#[serial]
+async fn can_do_key_exchange_and_use_secret_and_public_for_initial_encryption(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+    let user_1_did = String::from("did:uknow:d34db33d");
+    let user_2_did = String::from("did:uknow:d34db33f");
+    let options = get_didcomm_options(false)?;
+
+    let request_message = send_request(&mut vade, &user_1_did, &user_2_did, &options).await?;
+    receive_request(
+        &mut vade,
+        &user_1_did,
+        &user_2_did,
+        request_message,
+        &options,
+    )
+    .await?;
+
+    let response_message = send_response(&mut vade, &user_2_did, &user_1_did, &options).await?;
+    receive_response(
+        &mut vade,
+        &user_2_did,
+        &user_1_did,
+        response_message,
+        &options,
+    )
+    .await?;
 
     let complete_message = send_complete(&mut vade, &user_1_did, &user_2_did).await?;
     receive_complete(&mut vade, &user_1_did, &user_2_did, complete_message).await?;

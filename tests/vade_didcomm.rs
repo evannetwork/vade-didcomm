@@ -3,7 +3,13 @@ use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
-        BaseMessage, EncryptedMessage, ExtendedMessage, MessageWithBody, VadeDIDCommPluginOutput,
+        BaseMessage,
+        DidcommOptions,
+        EncryptedMessage,
+        ExtendedMessage,
+        KeyInformation,
+        MessageWithBody,
+        VadeDIDCommPluginOutput,
     },
     VadeDIDComm,
 };
@@ -21,15 +27,16 @@ async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
     Ok(vade)
 }
 
-fn get_didcomm_options(shared_secret: &x25519_dalek::SharedSecret) -> String {
-    let options = format!(
-        r#"{{
-            "sharedSecret": {:?}
-        }}"#,
-        &shared_secret.as_bytes(),
-    );
+fn get_didcomm_options(
+    shared_secret: &x25519_dalek::SharedSecret,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let options = DidcommOptions {
+        key_information: Some(KeyInformation::SharedSecret {
+            shared_secret: shared_secret.to_bytes(),
+        }),
+    };
 
-    return options;
+    Ok(serde_json::to_string(&options)?)
 }
 
 #[tokio::test]
@@ -44,7 +51,7 @@ async fn can_prepare_didcomm_message_for_sending() -> Result<(), Box<dyn std::er
     let mut vade = get_vade().await?;
 
     let sign_keypair = get_keypair_set();
-    let options = get_didcomm_options(&sign_keypair.user1_shared);
+    let options = get_didcomm_options(&sign_keypair.user1_shared)?;
     let payload = format!(
         r#"{{
             "type": "https://didcomm.org/trust_ping/1.0/ping",
@@ -78,7 +85,7 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
     let mut vade = get_vade().await?;
 
     let sign_keypair = get_keypair_set();
-    let options = get_didcomm_options(&sign_keypair.user1_shared);
+    let options = get_didcomm_options(&sign_keypair.user1_shared)?;
 
     let payload = format!(
         r#"{{
@@ -93,7 +100,7 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
         Some(Some(value)) => {
             let encrypted: VadeDIDCommPluginOutput<EncryptedMessage> = serde_json::from_str(value)?;
             let encrypted_message = serde_json::to_string(&encrypted.message)?;
-            let options = get_didcomm_options(&sign_keypair.user2_shared);
+            let options = get_didcomm_options(&sign_keypair.user2_shared)?;
             let results = vade.didcomm_receive(&options, &encrypted_message).await?;
             let result = results
                 .get(0)
@@ -138,7 +145,7 @@ async fn can_receive_unencrypted() -> Result<(), Box<dyn std::error::Error>> {
         }}"#,
     );
 
-    let options = get_didcomm_options(&sign_keypair.user2_shared);
+    let options = get_didcomm_options(&sign_keypair.user2_shared)?;
     let results = vade.didcomm_receive(&options, &payload).await?;
     let result = results
         .get(0)
@@ -168,7 +175,7 @@ async fn should_fill_empty_id_and_created_time() -> Result<(), Box<dyn std::erro
         }}"#,
     );
 
-    let options = get_didcomm_options(&sign_keypair.user2_shared);
+    let options = get_didcomm_options(&sign_keypair.user2_shared)?;
     let results = vade.didcomm_receive(&options, &payload).await?;
     let result = results
         .get(0)

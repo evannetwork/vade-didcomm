@@ -27,8 +27,8 @@ pub fn save_com_keypair(
     let comm_keypair = CommKeyPair {
         pub_key: String::from(pub_key),
         secret_key: String::from(secret_key),
-        target_pub_key: target_pub_key.unwrap_or(String::from("")),
-        target_service_endpoint: service_endpoint.unwrap_or(String::from("")),
+        target_pub_key: target_pub_key.unwrap_or_else(|| String::from("")),
+        target_service_endpoint: service_endpoint.unwrap_or_else(|| String::from("")),
     };
 
     write_db(

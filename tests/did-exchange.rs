@@ -73,7 +73,7 @@ async fn send_request(
     vade: &mut Vade,
     sender: &str,
     receiver: &str,
-    options: &String,
+    options: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_request = format!(
         r#"{{

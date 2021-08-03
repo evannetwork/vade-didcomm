@@ -68,8 +68,8 @@ pub struct CommKeyPair {
 /// Specifies all possible message directions.
 #[derive(PartialEq)]
 pub enum MessageDirection {
-    SEND,
-    RECEIVE,
+    Send,
+    Receive,
 }
 
 /// Output of a protocol step. Specifies, if a message should be encrypted. Metadata is generic stringified

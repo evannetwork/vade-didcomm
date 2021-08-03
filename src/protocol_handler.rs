@@ -18,7 +18,7 @@ impl ProtocolHandler {
     /// # Returns
     /// * `ProtocolHandleOutput` - general information about the analyzed protocol step
     pub fn before_send(message: &str) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
-        handle_protocol(message, MessageDirection::SEND)
+        handle_protocol(message, MessageDirection::Send)
     }
 
     /// Runs all protocol handlers for a message, to analyze it after receiving and decryption.
@@ -33,7 +33,7 @@ impl ProtocolHandler {
     pub fn after_receive(
         message: &str,
     ) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
-        handle_protocol(message, MessageDirection::RECEIVE)
+        handle_protocol(message, MessageDirection::Receive)
     }
 }
 
@@ -58,9 +58,7 @@ fn handle_protocol(
     let mut metadata: String = String::from("{}");
     let mut message_output: String = String::from(message);
 
-    for i in 0..protocols.len() {
-        let protocol = &protocols[i];
-
+    for protocol in &protocols {
         // check if the type includes the protocol name
         if m_type.contains(&protocol.name) {
             protocol_name = String::from(&protocol.name);

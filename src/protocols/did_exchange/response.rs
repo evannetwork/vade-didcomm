@@ -18,7 +18,7 @@ pub fn send_response(message: &str) -> StepResult {
     let encoded_keypair = get_com_keypair(&exchange_info.from, &exchange_info.to)?;
     let metadata = serde_json::to_string(&encoded_keypair)?;
     let request_message = get_did_exchange_message(
-        DIDExchangeType::RESPONSE,
+        DIDExchangeType::Response,
         &exchange_info.from,
         &exchange_info.to,
         "",

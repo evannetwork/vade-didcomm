@@ -31,7 +31,7 @@ pub fn send_request(message: &str) -> StepResult {
     )?;
     let metadata = serde_json::to_string(&encoded_keypair)?;
     let request_message = get_did_exchange_message(
-        DIDExchangeType::REQUEST,
+        DIDExchangeType::Request,
         &exchange_info.from,
         &exchange_info.to,
         "",

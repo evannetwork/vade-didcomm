@@ -44,7 +44,7 @@ pub type StepResult = Result<StepOutput, Box<dyn std::error::Error>>;
 /// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
 pub fn generate_send_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
     ProtocolStep {
-        direction: MessageDirection::SEND,
+        direction: MessageDirection::Send,
         name: String::from(name),
         handler,
     }
@@ -61,7 +61,7 @@ pub fn generate_send_step(name: &str, handler: fn(message: &str) -> StepResult) 
 /// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
 pub fn generate_receive_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
     ProtocolStep {
-        direction: MessageDirection::RECEIVE,
+        direction: MessageDirection::Receive,
         name: String::from(name),
         handler,
     }

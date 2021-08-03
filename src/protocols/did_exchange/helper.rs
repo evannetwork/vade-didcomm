@@ -14,8 +14,8 @@ use crate::datatypes::{
 /// Specifies all possible message directions.
 #[derive(PartialEq)]
 pub enum DIDExchangeType {
-    REQUEST,
-    RESPONSE,
+    Request,
+    Response,
 }
 
 /// Creates a new communication DIDComm object for a specific DID, a communication pub key and the
@@ -80,8 +80,8 @@ pub fn get_did_exchange_message(
     let thread_id = Uuid::new_v4().to_simple().to_string();
     let service_id = format!("{0}#key-1", from_did);
     let step_name = match step_type {
-        DIDExchangeType::REQUEST => "request",
-        DIDExchangeType::RESPONSE => "response",
+        DIDExchangeType::Request => "request",
+        DIDExchangeType::Response => "response",
     };
     let exchange_request: MessageWithBody<CommunicationDidDocument> = MessageWithBody {
         body: Some(did_comm_obj),

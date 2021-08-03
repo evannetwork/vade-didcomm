@@ -20,7 +20,7 @@ use crate::{
 /// # Returns
 /// * `Protocol` - the new DID exchange protocol handler
 pub fn generate_did_exchange_protocol() -> Protocol {
-    let protocol = Protocol {
+    Protocol {
         name: String::from(DID_EXCHANGE_PROTOCOL_URL),
         steps: vec![
             generate_send_step("request", send_request),
@@ -30,7 +30,5 @@ pub fn generate_did_exchange_protocol() -> Protocol {
             generate_send_step("complete", send_complete),
             generate_receive_step("complete", receive_complete),
         ],
-    };
-
-    protocol
+    }
 }

@@ -25,7 +25,7 @@ pub fn send_response(message: &str) -> StepResult {
         &encoded_keypair.pub_key,
     )?;
 
-    return generate_step_output(&serde_json::to_string(&request_message)?, &metadata);
+    generate_step_output(&serde_json::to_string(&request_message)?, &metadata)
 }
 
 /// protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/response`
@@ -41,11 +41,11 @@ pub fn receive_response(message: &str) -> StepResult {
         &exchange_info.from,
         &encoded_keypair.pub_key,
         &encoded_keypair.secret_key,
-        Some(String::from(exchange_info.pub_key_hex)),
-        Some(String::from(exchange_info.service_endpoint)),
+        Some(exchange_info.pub_key_hex),
+        Some(exchange_info.service_endpoint),
     )?;
 
     let metadata = serde_json::to_string(&enhanced_encoded_keypair)?;
 
-    return generate_step_output(message, &metadata);
+    generate_step_output(message, &metadata)
 }

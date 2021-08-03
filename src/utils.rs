@@ -39,10 +39,10 @@ pub fn get_from_to_from_message(
     }
     let to_did = &to_vec[0];
 
-    return Ok(FromTo {
-        from: String::from(from_did),
+    Ok(FromTo {
+        from: from_did,
         to: String::from(to_did),
-    });
+    })
 }
 
 /// Adds an id and create_time to stringified DIDComm message.
@@ -55,15 +55,15 @@ pub fn get_from_to_from_message(
 pub fn fill_message_id_and_timestamps(message: &str) -> Result<String, Box<dyn std::error::Error>> {
     let mut parsed_message: ExtendedMessage = serde_json::from_str(message)?;
 
-    if !parsed_message.id.is_some() {
+    if parsed_message.id.is_none() {
         parsed_message.id = Some(Uuid::to_string(&Uuid::new_v4()));
     }
 
-    if !parsed_message.created_time.is_some() {
+    if parsed_message.created_time.is_none() {
         let start = SystemTime::now();
         let since_the_epoch = start.duration_since(UNIX_EPOCH)?;
         parsed_message.created_time = Some(since_the_epoch.as_secs());
     }
 
-    return Ok(serde_json::to_string(&parsed_message)?);
+    Ok(serde_json::to_string(&parsed_message)?)
 }

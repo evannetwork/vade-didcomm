@@ -43,11 +43,11 @@ pub type StepResult = Result<StepOutput, Box<dyn std::error::Error>>;
 /// # Returns
 /// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
 pub fn generate_send_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
-    return ProtocolStep {
+    ProtocolStep {
         direction: MessageDirection::SEND,
         name: String::from(name),
         handler,
-    };
+    }
 }
 
 /// Shorthand generator for a protocol step, with direction receive.
@@ -60,11 +60,11 @@ pub fn generate_send_step(name: &str, handler: fn(message: &str) -> StepResult) 
 /// # Returns
 /// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
 pub fn generate_receive_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
-    return ProtocolStep {
+    ProtocolStep {
         direction: MessageDirection::RECEIVE,
         name: String::from(name),
         handler,
-    };
+    }
 }
 
 /// Shorthand generator for a protocol step output, with encrypt flag set to true.
@@ -76,11 +76,11 @@ pub fn generate_receive_step(name: &str, handler: fn(message: &str) -> StepResul
 /// # Returns
 /// * `StepResult` - Result that will be populated to the vade_didcomm
 pub fn generate_step_output(message: &str, metadata: &str) -> StepResult {
-    return Ok(StepOutput {
+    Ok(StepOutput {
         encrypt: true,
         message: String::from(message),
         metadata: String::from(metadata),
-    });
+    })
 }
 
 /// Shorthand generator for a protocol step output, with encrypt flag set to false.
@@ -93,9 +93,9 @@ pub fn generate_step_output(message: &str, metadata: &str) -> StepResult {
 /// * `StepResult` - Result that will be populated to the vade_didcomm
 #[allow(dead_code)]
 pub fn generate_step_output_decrypted(message: &str, metadata: &str) -> StepResult {
-    return Ok(StepOutput {
+    Ok(StepOutput {
         encrypt: false,
         message: String::from(message),
         metadata: String::from(metadata),
-    });
+    })
 }

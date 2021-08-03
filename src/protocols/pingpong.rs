@@ -26,7 +26,7 @@ pub fn generate_ping_pong_protocol() -> Protocol {
         ],
     };
 
-    return protocol;
+    protocol
 }
 
 /// Protocol handler for direction: `send`, type: `trust_ping/ping`
@@ -35,20 +35,20 @@ pub fn send_ping(message: &str) -> StepResult {
     parsed_message.body = Some(PingBody {
         response_requested: Some(true),
     });
-    return generate_step_output(&serde_json::to_string(&parsed_message)?, "{}");
+    generate_step_output(&serde_json::to_string(&parsed_message)?, "{}")
 }
 
 /// Protocol handler for direction: `send`, type: `trust_ping/pong`
 pub fn send_pong(message: &str) -> StepResult {
-    return generate_step_output(message, "{}");
+    generate_step_output(message, "{}")
 }
 
 /// Protocol handler for direction: `receive`, type: `trust_ping/ping`
 pub fn receive_ping(message: &str) -> StepResult {
-    return generate_step_output(message, "{}");
+    generate_step_output(message, "{}")
 }
 
 /// Protocol handler for direction: `receive`, type: `trust_ping/pong`
 pub fn receive_pong(message: &str) -> StepResult {
-    return generate_step_output(message, "{}");
+    generate_step_output(message, "{}")
 }

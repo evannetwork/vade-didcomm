@@ -18,7 +18,7 @@ impl ProtocolHandler {
     /// # Returns
     /// * `ProtocolHandleOutput` - general information about the analyzed protocol step
     pub fn before_send(message: &str) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
-        return handle_protocol(message, MessageDirection::SEND);
+        handle_protocol(message, MessageDirection::SEND)
     }
 
     /// Runs all protocol handlers for a message, to analyze it after receiving and decryption.
@@ -33,7 +33,7 @@ impl ProtocolHandler {
     pub fn after_receive(
         message: &str,
     ) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
-        return handle_protocol(message, MessageDirection::RECEIVE);
+        handle_protocol(message, MessageDirection::RECEIVE)
     }
 }
 
@@ -45,7 +45,7 @@ fn handle_protocol(
     direction: MessageDirection,
 ) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
     let parsed_message: MessageWithType = serde_json::from_str(message)?;
-    let m_type = parsed_message.r#type.to_owned();
+    let m_type = parsed_message.r#type;
     // handle multiple protocols dynamically
     let protocols: [&Protocol; 2] = [
         &generate_did_exchange_protocol(),
@@ -85,12 +85,12 @@ fn handle_protocol(
         }
     }
 
-    return Ok(ProtocolHandleOutput {
+    Ok(ProtocolHandleOutput {
         direction,
         encrypt,
         protocol: protocol_name,
         metadata,
         message: message_output,
-        step: step_name.to_owned(),
-    });
+        step: step_name,
+    })
 }

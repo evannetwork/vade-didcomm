@@ -36,7 +36,7 @@ pub fn get_com_keypair(
     let db_result = read_db(&format!("comm_keypair_{}_{}", from_did, to_did))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
-    return Ok(comm_keypair);
+    Ok(comm_keypair)
 }
 
 fn get_didcomm_options(use_shared_key: bool) -> Result<String, Box<dyn std::error::Error>> {
@@ -285,7 +285,7 @@ async fn can_do_key_exchange_and_use_shared_secret_for_initial_encryption(
     let complete_message = send_complete(&mut vade, &user_1_did, &user_2_did).await?;
     receive_complete(&mut vade, &user_1_did, &user_2_did, complete_message).await?;
 
-    return Ok(());
+    Ok(())
 }
 
 #[tokio::test]
@@ -320,5 +320,5 @@ async fn can_do_key_exchange_and_use_secret_and_public_for_initial_encryption(
     let complete_message = send_complete(&mut vade, &user_1_did, &user_2_did).await?;
     receive_complete(&mut vade, &user_1_did, &user_2_did, complete_message).await?;
 
-    return Ok(());
+    Ok(())
 }

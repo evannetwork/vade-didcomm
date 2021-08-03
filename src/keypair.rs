@@ -36,7 +36,7 @@ pub fn save_com_keypair(
         &serde_json::to_string(&comm_keypair)?,
     )?;
 
-    return Ok(comm_keypair);
+    Ok(comm_keypair)
 }
 
 /// Loads a communication keypair from the db for two DIDs (from -> to). Entry key will be
@@ -55,5 +55,5 @@ pub fn get_com_keypair(
     let db_result = read_db(&format!("comm_keypair_{}_{}", from_did, to_did))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
-    return Ok(comm_keypair);
+    Ok(comm_keypair)
 }

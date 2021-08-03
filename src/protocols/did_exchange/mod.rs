@@ -32,5 +32,5 @@ pub fn generate_did_exchange_protocol() -> Protocol {
         ],
     };
 
-    return protocol;
+    protocol
 }

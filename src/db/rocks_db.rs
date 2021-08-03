@@ -6,7 +6,7 @@ const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
 fn get_db() -> Result<DBWithThreadMode<SingleThreaded>, Box<dyn std::error::Error>> {
     let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;
 
-    return Ok(db);
+    Ok(db)
 }
 
 /// Write a value into the rocks db.
@@ -19,7 +19,7 @@ pub fn write_db(key: &str, value: &str) -> Result<(), Box<dyn std::error::Error>
 
     db.put(key, value)?;
 
-    return Ok(());
+    Ok(())
 }
 
 /// Gets a value from the rocks db.
@@ -50,6 +50,6 @@ mod tests {
 
         assert_eq!(result, "helloooo");
 
-        return Ok(());
+        Ok(())
     }
 }

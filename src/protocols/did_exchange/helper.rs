@@ -37,7 +37,7 @@ pub fn get_communication_did_doc(
     pub_key_vec.push(DIDCommPubKey {
         id: format!("{}#key-1", from_did),
         r#type: [String::from("Ed25519VerificationKey2018")].to_vec(),
-        public_key_base_58: format!("{}", public_key_encoded),
+        public_key_base_58: public_key_encoded.to_string(),
     });
 
     let mut service_vec = Vec::new();
@@ -45,17 +45,17 @@ pub fn get_communication_did_doc(
         id: format!("{}#didcomm", from_did),
         r#type: String::from("did-communication"),
         priority: 0,
-        service_endpoint: format!("{}", service_endpoint),
-        recipient_keys: [format!("{}", public_key_encoded)].to_vec(),
+        service_endpoint: service_endpoint.to_string(),
+        recipient_keys: [public_key_encoded.to_string()].to_vec(),
     });
 
-    return CommunicationDidDocument {
+    CommunicationDidDocument {
         context: String::from("https://w3id.org/did/v1"),
-        id: format!("{}", from_did),
+        id: from_did.to_string(),
         public_key: pub_key_vec,
         authentication: [String::from("{0}#key-1")].to_vec(),
         service: service_vec,
-    };
+    }
 }
 
 /// Constructs a new DID exchange message, including the DIDComm object as message body.
@@ -90,13 +90,13 @@ pub fn get_did_exchange_message(
         from: Some(String::from(from_did)),
         id: Some(String::from(&thread_id)),
         other: HashMap::new(),
-        pthid: Some(format!("{}#key-1", String::from(thread_id))),
+        pthid: Some(format!("{}#key-1", thread_id)),
         r#type: format!("{}/{}", DID_EXCHANGE_PROTOCOL_URL, step_name),
         thid: Some(service_id),
         to: Some([String::from(to_did)].to_vec()),
     };
 
-    return Ok(exchange_request);
+    Ok(exchange_request)
 }
 
 /// Takes an DIDComm message and extracts all necessary information to process it during request /
@@ -133,10 +133,10 @@ pub fn get_exchange_info_from_message(
     }
     let service_endpoint = &didcomm_obj.service[0].service_endpoint;
 
-    return Ok(ExchangeInfo {
-        from: String::from(from_did),
+    Ok(ExchangeInfo {
+        from: from_did,
         to: String::from(to_did),
         pub_key_hex: String::from(pub_key_hex),
         service_endpoint: String::from(service_endpoint),
-    });
+    })
 }

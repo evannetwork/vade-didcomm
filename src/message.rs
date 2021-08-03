@@ -67,7 +67,7 @@ pub fn encrypt_message(
             )
         })?;
 
-    return Ok(encrypted);
+    Ok(encrypted)
 }
 
 /// Decrypt a stringified encrypted message, with a given decryption_key and signing key using
@@ -88,14 +88,14 @@ pub fn decrypt_message(
     let received = DIDCommMessage::receive(&message, Some(decryption_key), Some(sign_public))
         .map_err(|err| format!("could not decrypt message: {}", &err.to_string()))?;
 
-    let decrypted = String::from_utf8(received.body.clone()).map_err(|err| {
+    let decrypted = String::from_utf8(received.body).map_err(|err| {
         format!(
             "could not get body from message while decrypting message: {}",
             &err.to_string()
         )
     })?;
 
-    return Ok(decrypted);
+    Ok(decrypted)
 }
 
 #[cfg(test)]
@@ -116,16 +116,14 @@ mod tests {
     #[test]
     fn can_encrypt_message() -> Result<(), Box<dyn std::error::Error>> {
         let sign_keypair = get_keypair_set();
-        let payload = format!(
-            r#"{{
-                "body": {{"test": true}},
+        let payload = r#"{
+                "body": {"test": true},
                 "custom1": "ichi",
                 "custom2": "ni",
                 "custom3": "san",
                 "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
                 "type": "test"
-            }}"#,
-        );
+            }"#.to_string();
 
         let encrypted = encrypt_message(
             &payload,
@@ -140,16 +138,14 @@ mod tests {
     #[test]
     fn can_decrypt_message() -> Result<(), Box<dyn std::error::Error>> {
         let sign_keypair = get_keypair_set();
-        let payload = format!(
-            r#"{{
-                "body": {{"test": true}},
+        let payload = r#"{
+                "body": {"test": true},
                 "custom1": "ichi",
                 "custom2": "ni",
                 "custom3": "san",
                 "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
                 "type": "test"
-            }}"#,
-        );
+            }"#.to_string();
 
         let encrypted = encrypt_message(
             &payload,

@@ -7,14 +7,14 @@ use vade_didcomm::{
         BaseMessage,
         CommKeyPair,
         CommunicationDidDocument,
-        DidcommOptions,
+        DidCommOptions,
         EncryptedMessage,
         KeyInformation,
         MessageWithBody,
-        VadeDIDCommPluginOutput,
+        VadeDidCommPluginOutput,
         DID_EXCHANGE_PROTOCOL_URL,
     },
-    VadeDIDComm,
+    VadeDidComm,
 };
 
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
@@ -42,15 +42,15 @@ pub fn get_com_keypair(
 fn get_didcomm_options(use_shared_key: bool) -> Result<String, Box<dyn std::error::Error>> {
     let sign_keypair = get_keypair_set();
 
-    let options: DidcommOptions;
+    let options: DidCommOptions;
     if use_shared_key {
-        options = DidcommOptions {
+        options = DidCommOptions {
             key_information: Some(KeyInformation::SharedSecret {
                 shared_secret: sign_keypair.user1_shared.to_bytes(),
             }),
         }
     } else {
-        options = DidcommOptions {
+        options = DidCommOptions {
             key_information: Some(KeyInformation::SecretPublic {
                 my_secret: sign_keypair.user1_secret.to_bytes(),
                 others_public: sign_keypair.user2_pub.to_bytes(),
@@ -63,7 +63,7 @@ fn get_didcomm_options(use_shared_key: bool) -> Result<String, Box<dyn std::erro
 
 async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
     let mut vade = Vade::new();
-    let vade_didcomm = VadeDIDComm::new()?;
+    let vade_didcomm = VadeDidComm::new()?;
     vade.register_plugin(Box::from(vade_didcomm));
 
     Ok(vade)
@@ -90,7 +90,7 @@ async fn send_request(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDIDCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
     let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
@@ -130,7 +130,8 @@ async fn receive_request(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let received: VadeDIDCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
+    println!("got results: {}", &result);
+    let received: VadeDidCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
         serde_json::from_str(result)?;
     let comm_keypair = get_com_keypair(receiver, sender)?;
 
@@ -178,7 +179,7 @@ async fn send_response(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDIDCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
@@ -226,7 +227,7 @@ async fn send_complete(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDIDCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
@@ -243,7 +244,7 @@ async fn receive_complete(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let complete_message: VadeDIDCommPluginOutput<BaseMessage> = serde_json::from_str(received)?;
+    let complete_message: VadeDidCommPluginOutput<BaseMessage> = serde_json::from_str(received)?;
 
     assert_eq!(
         complete_message.message.r#type,

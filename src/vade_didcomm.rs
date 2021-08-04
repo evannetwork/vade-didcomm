@@ -1,5 +1,5 @@
 use crate::{
-    datatypes::{BaseMessage, DidcommOptions, EncryptedMessage},
+    datatypes::{BaseMessage, DidCommOptions, EncryptedMessage},
     fill_message_id_and_timestamps,
     get_from_to_from_message,
     keypair::get_com_keypair,
@@ -14,21 +14,21 @@ use x25519_dalek::{PublicKey, StaticSecret};
 
 big_array! { BigArray; }
 
-pub struct VadeDIDComm {}
-impl VadeDIDComm {
-    /// Creates new instance of `VadeDIDComm`.
-    pub fn new() -> Result<VadeDIDComm, Box<dyn std::error::Error>> {
+pub struct VadeDidComm {}
+impl VadeDidComm {
+    /// Creates new instance of `VadeDidComm`.
+    pub fn new() -> Result<VadeDidComm, Box<dyn std::error::Error>> {
         match env_logger::try_init() {
             Ok(_) | Err(_) => (),
         };
-        let vade_didcomm = VadeDIDComm {};
+        let vade_didcomm = VadeDidComm {};
 
         Ok(vade_didcomm)
     }
 }
 
 #[async_trait(?Send)]
-impl VadePlugin for VadeDIDComm {
+impl VadePlugin for VadeDidComm {
     /// Prepare a plain DIDComm json message to be sent, including encryption and protocol specific
     /// message enhancement.
     /// The DIDComm options can include a shared secret to encrypt the message with a specific key.
@@ -40,7 +40,7 @@ impl VadePlugin for VadeDIDComm {
     /// * `message` - the plain didcomm message (should be of type datatypes.rs/BaseMessage)
     ///
     /// # Returns
-    /// * `VadeDIDCommPluginOutput` - stringified datatypes.rs/VadeDIDCommPluginOutput contains the
+    /// * `VadeDidCommPluginOutput` - stringified datatypes.rs/VadeDidCommPluginOutput contains the
     ///                               final message and protocol step specific metadata
     async fn didcomm_send(
         &mut self,
@@ -62,7 +62,7 @@ impl VadePlugin for VadeDIDComm {
             let sign_keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
 
             // if shared secret was passed to the options, use this one
-            let options = serde_json::from_str::<DidcommOptions>(&options)?;
+            let options = serde_json::from_str::<DidCommOptions>(&options)?;
             let encryption_key: [u8; 32] = match options.key_information {
                 Some(crate::datatypes::KeyInformation::SharedSecret { shared_secret }) => {
                     shared_secret
@@ -117,7 +117,7 @@ impl VadePlugin for VadeDIDComm {
     ///               datatypes.rs/BaseMessage / datatypes.rs/EncryptedMessage)
     ///
     /// # Returns
-    /// * `VadeDIDCommPluginOutput` - stringified datatypes.rs/VadeDIDCommPluginOutput contains the
+    /// * `VadeDidCommPluginOutput` - stringified datatypes.rs/VadeDidCommPluginOutput contains the
     ///                               final message and protocol step specific metadata
     async fn didcomm_receive(
         &mut self,
@@ -140,7 +140,7 @@ impl VadePlugin for VadeDIDComm {
                 .ok_or("kid not set in encrypted message")?;
 
             // if shared secret was passed to the options, use this one
-            let options = serde_json::from_str::<DidcommOptions>(&options)?;
+            let options = serde_json::from_str::<DidCommOptions>(&options)?;
             let decryption_key: [u8; 32] = match options.key_information {
                 Some(crate::datatypes::KeyInformation::SharedSecret { shared_secret }) => {
                     shared_secret

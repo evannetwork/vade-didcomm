@@ -52,15 +52,13 @@ async fn can_prepare_didcomm_message_for_sending() -> Result<(), Box<dyn std::er
 
     let sign_keypair = get_keypair_set();
     let options = get_didcomm_options(&sign_keypair.user1_shared)?;
-    let payload = format!(
-        r#"{{
-            "type": "https://didcomm.org/trust_ping/1.0/ping",
-            "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
-            "custom1": "ichi",
-            "custom2": "ni",
-            "custom3": "san"
-        }}"#,
-    );
+    let payload = r#"{
+        "type": "https://didcomm.org/trust_ping/1.0/ping",
+        "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+        "custom1": "ichi",
+        "custom2": "ni",
+        "custom3": "san"
+    }"#;
     let results = vade.didcomm_send(&options, &payload).await?;
     let result = results
         .get(0)
@@ -87,13 +85,11 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
     let sign_keypair = get_keypair_set();
     let options = get_didcomm_options(&sign_keypair.user1_shared)?;
 
-    let payload = format!(
-        r#"{{
-            "type": "https://didcomm.org/trust_ping/1.0/ping",
-            "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
-            "custom1": "nyuu"
-        }}"#,
-    );
+    let payload = r#"{
+        "type": "https://didcomm.org/trust_ping/1.0/ping",
+        "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+        "custom1": "nyuu"
+    }"#;
     let results = vade.didcomm_send(&options, &payload).await?;
 
     match results.get(0) {
@@ -137,13 +133,11 @@ async fn can_receive_unencrypted() -> Result<(), Box<dyn std::error::Error>> {
 
     let sign_keypair = get_keypair_set();
 
-    let payload = format!(
-        r#"{{
-            "type": "https://didcomm.org/trust_ping/1.0/ping",
-            "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
-            "custom1": "nyuu"
-        }}"#,
-    );
+    let payload = r#"{
+        "type": "https://didcomm.org/trust_ping/1.0/ping",
+        "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+        "custom1": "nyuu"
+    }"#;
 
     let options = get_didcomm_options(&sign_keypair.user2_shared)?;
     let results = vade.didcomm_receive(&options, &payload).await?;
@@ -168,12 +162,10 @@ async fn should_fill_empty_id_and_created_time() -> Result<(), Box<dyn std::erro
 
     let sign_keypair = get_keypair_set();
 
-    let payload = format!(
-        r#"{{
-            "type": "https://didcomm.org/trust_ping/1.0/ping",
-            "to": [ "did::xyz:34r3cu403hnth03r49g03" ]
-        }}"#,
-    );
+    let payload = r#"{
+        "type": "https://didcomm.org/trust_ping/1.0/ping",
+        "to": [ "did::xyz:34r3cu403hnth03r49g03" ]
+    }"#;
 
     let options = get_didcomm_options(&sign_keypair.user2_shared)?;
     let results = vade.didcomm_receive(&options, &payload).await?;

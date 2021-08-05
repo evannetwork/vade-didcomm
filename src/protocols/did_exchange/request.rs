@@ -31,14 +31,14 @@ pub fn send_request(message: &str) -> StepResult {
     )?;
     let metadata = serde_json::to_string(&encoded_keypair)?;
     let request_message = get_did_exchange_message(
-        DIDExchangeType::REQUEST,
+        DIDExchangeType::Request,
         &exchange_info.from,
         &exchange_info.to,
         "",
         &encoded_keypair.pub_key,
     )?;
 
-    return generate_step_output(&serde_json::to_string(&request_message)?, &metadata);
+    generate_step_output(&serde_json::to_string(&request_message)?, &metadata)
 }
 
 /// protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/request`
@@ -55,10 +55,10 @@ pub fn receive_request(message: &str) -> StepResult {
         &exchange_info.from,
         &hex::encode(pub_key.to_bytes()),
         &hex::encode(secret_key.to_bytes()),
-        Some(String::from(exchange_info.pub_key_hex)),
-        Some(String::from(exchange_info.service_endpoint)),
+        Some(exchange_info.pub_key_hex),
+        Some(exchange_info.service_endpoint),
     )?;
     let metadata = serde_json::to_string(&encoded_keypair)?;
 
-    return generate_step_output(message, &metadata);
+    generate_step_output(message, &metadata)
 }

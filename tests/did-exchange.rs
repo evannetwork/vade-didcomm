@@ -130,7 +130,6 @@ async fn receive_request(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    println!("got results: {}", &result);
     let received: VadeDidCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
         serde_json::from_str(result)?;
     let comm_keypair = get_com_keypair(receiver, sender)?;

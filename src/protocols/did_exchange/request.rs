@@ -2,13 +2,19 @@ use k256::elliptic_curve::rand_core::OsRng;
 use x25519_dalek::{PublicKey, StaticSecret};
 
 use crate::{
-    datatypes::{BaseMessage, CommunicationDidDocument, MessageWithBody},
+    datatypes::BaseMessage,
     get_from_to_from_message,
     keypair::save_com_keypair,
     protocols::protocol::{generate_step_output, StepResult},
 };
 
-use super::helper::{get_did_exchange_message, get_exchange_info_from_message, DIDExchangeType};
+use super::helper::{
+    get_did_document_from_body,
+    get_did_exchange_message,
+    get_exchange_info_from_message,
+    DidExchangeOptions,
+    DidExchangeType,
+};
 
 /// protocol handler for direction: `send`, type: `DID_EXCHANGE_PROTOCOL_URL/request`
 /// Uses the protocols/did_exchange/helper.rs/get_did_exchange_message to construct the request message,
@@ -16,8 +22,9 @@ use super::helper::{get_did_exchange_message, get_exchange_info_from_message, DI
 /// to decrypt the message)
 /// Creates and stores a new communication keypair, that will be used for further communication with
 /// the target DID.
-pub fn send_request(message: &str) -> StepResult {
+pub fn send_request(options: &str, message: &str) -> StepResult {
     let parsed_message: BaseMessage = serde_json::from_str(message)?;
+    let options: DidExchangeOptions = serde_json::from_str(options)?;
     let exchange_info = get_from_to_from_message(parsed_message)?;
     let secret_key = StaticSecret::new(OsRng);
     let pub_key = PublicKey::from(&secret_key);
@@ -30,12 +37,14 @@ pub fn send_request(message: &str) -> StepResult {
         None,
     )?;
     let metadata = serde_json::to_string(&encoded_keypair)?;
+    let pub_key_bytes = hex::decode(encoded_keypair.pub_key)?;
+    let pub_key_base58_string = &bs58::encode(pub_key_bytes).into_string();
     let request_message = get_did_exchange_message(
-        DIDExchangeType::Request,
+        DidExchangeType::Request,
         &exchange_info.from,
         &exchange_info.to,
-        "",
-        &encoded_keypair.pub_key,
+        &options.service_endpoint.unwrap_or_else(|| "".to_string()),
+        &pub_key_base58_string,
     )?;
 
     generate_step_output(&serde_json::to_string(&request_message)?, &metadata)
@@ -44,9 +53,10 @@ pub fn send_request(message: &str) -> StepResult {
 /// protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/request`
 /// Receives the partners DID and communication pub key and generates new communication keypairs,
 /// stores it within the db.
-pub fn receive_request(message: &str) -> StepResult {
-    let parsed_message: MessageWithBody<CommunicationDidDocument> = serde_json::from_str(message)?;
-    let exchange_info = get_exchange_info_from_message(parsed_message)?;
+pub fn receive_request(_options: &str, message: &str) -> StepResult {
+    let did_document = get_did_document_from_body(message)?;
+    let parsed_message: BaseMessage = serde_json::from_str(message)?;
+    let exchange_info = get_exchange_info_from_message(parsed_message, did_document)?;
     let secret_key = StaticSecret::new(OsRng);
     let pub_key = PublicKey::from(&secret_key);
 

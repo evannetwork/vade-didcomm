@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
+pub use crate::protocols::did_exchange::helper::DidExchangeOptions;
+
 pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
 
 /// Struct for a pub key that will be sent during DID exchange with the users communication DID document.
@@ -113,6 +115,19 @@ pub struct ExtendedMessage {
     pub other: HashMap<String, String>,
 }
 
+/// Object with base64 encoded value
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Base64Container {
+    pub base64: String,
+}
+
+/// `did_doc~attach` attachment for body field
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DidDocumentBodyAttachment<T> {
+    #[serde(rename(serialize = "did_doc~attach", deserialize = "did_doc~attach"))]
+    pub did_doc_attach: T,
+}
+
 /// Decrypted messaged with dynamic body struct
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MessageWithBody<T> {
@@ -166,6 +181,7 @@ pub enum KeyInformation {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DidCommOptions {
+    #[serde(flatten)]
     pub key_information: Option<KeyInformation>,
 }
 

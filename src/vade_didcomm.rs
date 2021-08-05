@@ -51,7 +51,7 @@ impl VadePlugin for VadeDidComm {
 
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(&message)?;
-        let protocol_result = ProtocolHandler::before_send(&message_with_id)?;
+        let protocol_result = ProtocolHandler::before_send(&options, &message_with_id)?;
 
         // message string, that will be returned
         let final_message: String;
@@ -176,7 +176,7 @@ impl VadePlugin for VadeDidComm {
 
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(&decrypted)?;
-        let protocol_result = ProtocolHandler::after_receive(&message_with_id)?;
+        let protocol_result = ProtocolHandler::after_receive(&options, &message_with_id)?;
 
         let receive_result = format!(
             r#"{{

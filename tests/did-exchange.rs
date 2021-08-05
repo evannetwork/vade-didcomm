@@ -4,10 +4,12 @@ use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
+        Base64Container,
         BaseMessage,
         CommKeyPair,
-        CommunicationDidDocument,
         DidCommOptions,
+        DidDocumentBodyAttachment,
+        DidExchangeOptions,
         EncryptedMessage,
         KeyInformation,
         MessageWithBody,
@@ -17,6 +19,7 @@ use vade_didcomm::{
     VadeDidComm,
 };
 
+const DID_SERVICE_ENDPOINT: &str = "https://evan.network";
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
 
 pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
@@ -39,22 +42,31 @@ pub fn get_com_keypair(
     Ok(comm_keypair)
 }
 
-fn get_didcomm_options(use_shared_key: bool) -> Result<String, Box<dyn std::error::Error>> {
+fn get_didcomm_options(
+    use_shared_key: bool,
+    service_endpoint: Option<String>,
+) -> Result<String, Box<dyn std::error::Error>> {
     let sign_keypair = get_keypair_set();
 
-    let options: DidCommOptions;
+    let options: DidExchangeOptions;
     if use_shared_key {
-        options = DidCommOptions {
-            key_information: Some(KeyInformation::SharedSecret {
-                shared_secret: sign_keypair.user1_shared.to_bytes(),
-            }),
+        options = DidExchangeOptions {
+            didcomm_options: DidCommOptions {
+                key_information: Some(KeyInformation::SharedSecret {
+                    shared_secret: sign_keypair.user1_shared.to_bytes(),
+                }),
+            },
+            service_endpoint,
         }
     } else {
-        options = DidCommOptions {
-            key_information: Some(KeyInformation::SecretPublic {
-                my_secret: sign_keypair.user1_secret.to_bytes(),
-                others_public: sign_keypair.user2_pub.to_bytes(),
-            }),
+        options = DidExchangeOptions {
+            didcomm_options: DidCommOptions {
+                key_information: Some(KeyInformation::SecretPublic {
+                    my_secret: sign_keypair.user1_secret.to_bytes(),
+                    others_public: sign_keypair.user2_pub.to_bytes(),
+                }),
+            },
+            service_endpoint,
         };
     }
 
@@ -78,7 +90,7 @@ async fn send_request(
     let exchange_request = format!(
         r#"{{
             "type": "{}/request",
-            "service_endpoint": "https://evan.network",
+            "serviceEndpoint": "https://evan.network",
             "from": "{}",
             "to": ["{}"]
         }}"#,
@@ -130,9 +142,9 @@ async fn receive_request(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    println!("got results: {}", &result);
-    let received: VadeDidCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
-        serde_json::from_str(result)?;
+    let received: VadeDidCommPluginOutput<
+        MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
+    > = serde_json::from_str(result)?;
     let comm_keypair = get_com_keypair(receiver, sender)?;
 
     let pub_key = received
@@ -167,11 +179,11 @@ async fn send_response(
     let exchange_response = format!(
         r#"{{
             "type": "{}/response",
-            "service_endpoint": "https://evan.network",
+            "serviceEndpoint": "{}",
             "from": "{}",
             "to": ["{}"]
         }}"#,
-        DID_EXCHANGE_PROTOCOL_URL, sender, receiver
+        DID_EXCHANGE_PROTOCOL_URL, DID_SERVICE_ENDPOINT, sender, receiver
     );
     let results = vade.didcomm_send(&options, &exchange_response).await?;
     let result = results
@@ -198,12 +210,12 @@ async fn receive_response(
         .as_ref()
         .ok_or("no value in result")?;
     let comm_keypair_sender = get_com_keypair(sender, receiver)?;
-    let comm_keypair_receiver = get_com_keypair(receiver, sender)?;
+    let sender_target_pub_key_hex = comm_keypair_sender.target_pub_key;
 
-    assert_eq!(
-        comm_keypair_sender.target_pub_key,
-        comm_keypair_receiver.pub_key
-    );
+    let comm_keypair_receiver = get_com_keypair(receiver, sender)?;
+    let receiver_pub_key_hex = comm_keypair_receiver.pub_key;
+
+    assert_eq!(sender_target_pub_key_hex, receiver_pub_key_hex,);
 
     return Ok(());
 }
@@ -261,7 +273,7 @@ async fn can_do_key_exchange_and_use_shared_secret_for_initial_encryption(
     let mut vade = get_vade().await?;
     let user_1_did = String::from("did:uknow:d34db33d");
     let user_2_did = String::from("did:uknow:d34db33f");
-    let options = get_didcomm_options(true)?;
+    let options = get_didcomm_options(true, Some(DID_SERVICE_ENDPOINT.to_string()))?;
 
     let request_message = send_request(&mut vade, &user_1_did, &user_2_did, &options).await?;
     receive_request(
@@ -296,7 +308,7 @@ async fn can_do_key_exchange_and_use_secret_and_public_for_initial_encryption(
     let mut vade = get_vade().await?;
     let user_1_did = String::from("did:uknow:d34db33d");
     let user_2_did = String::from("did:uknow:d34db33f");
-    let options = get_didcomm_options(false)?;
+    let options = get_didcomm_options(false, Some(DID_SERVICE_ENDPOINT.to_string()))?;
 
     let request_message = send_request(&mut vade, &user_1_did, &user_2_did, &options).await?;
     receive_request(

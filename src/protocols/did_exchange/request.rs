@@ -5,7 +5,7 @@ use crate::{
     datatypes::{BaseMessage, CommunicationDidDocument, MessageWithBody},
     get_from_to_from_message,
     keypair::save_com_keypair,
-    protocols::protocol::{generate_step_output, generate_step_output_decrypted, StepResult},
+    protocols::protocol::{generate_step_output, StepResult},
 };
 
 use super::helper::{get_did_exchange_message, get_exchange_info_from_message, DIDExchangeType};
@@ -38,7 +38,7 @@ pub fn send_request(message: &str) -> StepResult {
         &encoded_keypair.pub_key,
     )?;
 
-    return generate_step_output_decrypted(&serde_json::to_string(&request_message)?, &metadata);
+    return generate_step_output(&serde_json::to_string(&request_message)?, &metadata);
 }
 
 /// protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/request`

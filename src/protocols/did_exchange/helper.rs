@@ -4,8 +4,8 @@ use uuid::Uuid;
 
 use crate::datatypes::{
     CommunicationDidDocument,
-    DIDCommPubKey,
-    DIDCommService,
+    DidCommPubKey,
+    DidCommService,
     ExchangeInfo,
     MessageWithBody,
     DID_EXCHANGE_PROTOCOL_URL,
@@ -34,14 +34,14 @@ pub fn get_communication_did_doc(
     service_endpoint: &str,
 ) -> CommunicationDidDocument {
     let mut pub_key_vec = Vec::new();
-    pub_key_vec.push(DIDCommPubKey {
+    pub_key_vec.push(DidCommPubKey {
         id: format!("{}#key-1", from_did),
         r#type: [String::from("Ed25519VerificationKey2018")].to_vec(),
         public_key_base_58: format!("{}", public_key_encoded),
     });
 
     let mut service_vec = Vec::new();
-    service_vec.push(DIDCommService {
+    service_vec.push(DidCommService {
         id: format!("{}#didcomm", from_did),
         r#type: String::from("did-communication"),
         priority: 0,

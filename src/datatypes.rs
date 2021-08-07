@@ -3,6 +3,8 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
+pub const PRESENT_PROOF_PROTOCOL_URL: &str = "https://didcomm.org/present-proof/1.0";
+
 
 /// Struct for a pub key that will be sent during DID exchange with the users communication DID document.
 #[derive(Serialize, Deserialize)]
@@ -156,4 +158,22 @@ pub struct DidcommOptions {
 pub struct VadeDIDCommPluginOutput<T> {
     pub message: T,
     pub metadata: HashMap<String, String>,
+}
+
+/// Struct for Present Proof req initiation.
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PresentProofReq {
+    pub baseMessage: BaseMessage,
+    pub requestPresentation: String,
+    pub servicePoint: String,
+}
+
+/// Necessary information for proof exchange. 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PresentProofInfo {
+    pub from: String,
+    pub to: String,
+    pub presentation_data: String,
 }

@@ -1,0 +1,70 @@
+use crate::{
+    datatypes::{PresentProofReq, MessageWithBody},
+    get_from_to_from_message,
+    keypair::{get_com_keypair, save_com_keypair},
+    protocols::protocol::{generate_step_output, StepResult},
+};
+
+use super::helper::{get_present_proof_message, get_present_proof_info_from_message, PresentProofType};
+
+/// protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/response`
+/// Uses the protocols/did_exchange/helper.rs/get_did_exchange_message to construct the request message,
+/// that should be sent. Message will be sent NOT encrypted. (the other party does not have the
+/// comm pub key to decrypt the message)
+/// Constructs a message including the communication pub key, that was generated during receive_request.
+pub fn send_presentation(message: &str) -> StepResult {
+    let parsed_message: PresentProofReq = serde_json::from_str(message)?;
+    let exchange_info = get_from_to_from_message(parsed_message.baseMessage)?; 
+
+    let request_message = get_present_proof_message(
+        PresentProofType::PRESENTATION,
+        &exchange_info.from,
+        &exchange_info.to,
+        &parsed_message.servicePoint,
+        &parsed_message.requestPresentation,
+    )?;
+ 
+    return generate_step_output(&serde_json::to_string(&request_message)?, "{}");
+}
+
+/// protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/response`
+/// Receives the partners pub key and updates the existing communication key pair for this DID in
+/// the db.
+pub fn receive_request_presentation(message: &str) -> StepResult {
+    let parsed_message: MessageWithBody<String> = serde_json::from_str(message)?;
+    let exchange_info = get_present_proof_info_from_message(parsed_message)?;
+
+
+    // let enhanced_encoded_keypair = save_com_keypair(
+    //     &exchange_info.to,
+    //     &exchange_info.from,
+    //     &encoded_keypair.pub_key,
+    //     &encoded_keypair.secret_key,
+    //     Some(String::from(exchange_info.pub_key_hex)),
+    //     Some(String::from(exchange_info.service_endpoint)),
+    // )?;
+
+
+    return generate_step_output(message, "{}");
+}
+
+
+/// protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/response`
+/// Uses the protocols/did_exchange/helper.rs/get_did_exchange_message to construct the request message,
+/// that should be sent. Message will be sent NOT encrypted. (the other party does not have the
+/// comm pub key to decrypt the message)
+/// Constructs a message including the communication pub key, that was generated during receive_request.
+pub fn send_propose_presentation(message: &str) -> StepResult {
+    let parsed_message: PresentProofReq = serde_json::from_str(message)?;
+    let exchange_info = get_from_to_from_message(parsed_message.baseMessage)?; 
+
+    let request_message = get_present_proof_message(
+        PresentProofType::PROPOSE_PRESENTATION,
+        &exchange_info.from,
+        &exchange_info.to,
+        &parsed_message.servicePoint,
+        &parsed_message.requestPresentation,
+    )?;
+ 
+    return generate_step_output(&serde_json::to_string(&request_message)?, "{}");
+}

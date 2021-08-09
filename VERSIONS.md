@@ -4,6 +4,9 @@
 
 ### Features
 
+- encrypt DID exchange message by default
+- allow to pass private/public keys for encryption
+
 ### Fixes
 
 ### Deprecations

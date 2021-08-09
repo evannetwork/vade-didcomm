@@ -166,7 +166,6 @@ pub struct VadeDIDCommPluginOutput<T> {
 pub struct PresentProofReq {
     pub baseMessage: BaseMessage,
     pub requestPresentation: String,
-    pub servicePoint: String,
 }
 
 /// Necessary information for proof exchange. 

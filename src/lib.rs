@@ -15,6 +15,7 @@ mod keypair;
 mod message;
 mod protocol_handler;
 mod protocols;
+mod presentation;
 mod utils;
 mod vade_didcomm;
 

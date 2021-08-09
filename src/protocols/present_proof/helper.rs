@@ -25,7 +25,6 @@ pub enum PresentProofType {
 /// * `step_type` - step to build the message type (request, response)
 /// * `from_did` - DID that sends the message
 /// * `to_did` - DID that receives the message
-/// * `from_service_endpoint` - url where the user can be reached
 /// * `request_presentation` - request for presentation
 ///
 /// # Returns
@@ -34,7 +33,6 @@ pub fn get_present_proof_message(
     step_type: PresentProofType,
     from_did: &str,
     to_did: &str,
-    from_service_endpoint: &str,
     request_presentation: &str,
 ) -> Result<MessageWithBody<String>, Box<dyn std::error::Error>> {
     let thread_id = Uuid::new_v4().to_simple().to_string();

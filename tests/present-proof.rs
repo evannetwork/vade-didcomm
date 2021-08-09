@@ -3,12 +3,11 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{
         BaseMessage,
-        CommKeyPair,
-        CommunicationDidDocument,
-        EncryptedMessage,
+        PresentProofInfo,
+        PresentProofReq,
         MessageWithBody,
         VadeDIDCommPluginOutput,
-        DID_EXCHANGE_PROTOCOL_URL,
+        PRESENT_PROOF_PROTOCOL_URL,
     },
     VadeDIDComm,
 };

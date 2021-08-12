@@ -179,18 +179,56 @@ pub struct VadeDidCommPluginOutput<T> {
 }
 
 /// Struct for Present Proof req initiation.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PresentProofReq {
-    pub baseMessage: BaseMessage,
-    pub requestPresentation: String,
+    pub r#type: String,
+    pub from: Option<String>,
+    pub to: Option<String>,
+    pub presentation_data: Option<PresentationData>,
 }
 
 /// Necessary information for proof exchange. 
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PresentProofInfo {
-    pub from: String,
-    pub to: String,
-    pub presentation_data: String,
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct PresentationAttach {
+    pub id: String,
+    pub mime_type: String,
+    pub data: String,
+}
+
+/// Necessary information for proof exchange. 
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct PresentationPreview {
+    pub attribute: Option<Vec<Attribute>>,
+    pub predicate: Option<Vec<Predicate>>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct Attribute{
+    pub name: String,
+    pub cred_def_id: String,
+    pub mime_type: String,
+    pub value: String,
+    pub referent: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct Predicate{
+    pub name: String,
+    pub cred_def_id: String,
+    pub predicate: String,
+    pub theshold: u64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct PresentationData{
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub comment: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub presentation_attach: Option<Vec<PresentationAttach>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub presentation_proposal: Option<PresentationPreview>,
 }

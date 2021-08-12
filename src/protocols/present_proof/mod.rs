@@ -4,7 +4,7 @@ pub(crate) mod verifier;
 pub(crate) mod prover;
 
 use crate::{
-    datatypes::DID_EXCHANGE_PROTOCOL_URL,
+    datatypes::PRESENT_PROOF_PROTOCOL_URL,
     protocols::{
         present_proof::{
             done::{receive_presentation_ack, send_presentation_ack},
@@ -21,7 +21,7 @@ use crate::{
 /// * `Protocol` - the new Present proof protocol handler
 pub fn generate_present_proof_protocol() -> Protocol {
     let protocol = Protocol {
-        name: String::from(DID_EXCHANGE_PROTOCOL_URL),
+        name: String::from(PRESENT_PROOF_PROTOCOL_URL),
         steps: vec![
             generate_send_step("request-presentation", send_request_presentation),
             generate_receive_step("presentation", receive_presentation),

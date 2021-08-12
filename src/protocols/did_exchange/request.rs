@@ -17,6 +17,7 @@ use super::helper::{get_did_exchange_message, get_exchange_info_from_message, DI
 /// Creates and stores a new communication keypair, that will be used for further communication with
 /// the target DID.
 pub fn send_request(message: &str) -> StepResult {
+    println!("send_request {}",message);
     let parsed_message: BaseMessage = serde_json::from_str(message)?;
     let exchange_info = get_from_to_from_message(parsed_message)?;
     let secret_key = StaticSecret::new(OsRng);

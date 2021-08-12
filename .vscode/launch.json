@@ -1,0 +1,84 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'vade_didcomm'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=vade-didcomm"
+                ],
+                "filter": {
+                    "name": "vade_didcomm",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'vade_didcomm'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=vade_didcomm",
+                    "--package=vade-didcomm"
+                ],
+                "filter": {
+                    "name": "vade_didcomm",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'did-exchange'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=did-exchange",
+                    "--package=vade-didcomm"
+                ],
+                "filter": {
+                    "name": "did-exchange",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'present-proof'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=present-proof",
+                    "--package=vade-didcomm"
+                ],
+                "filter": {
+                    "name": "present-proof",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

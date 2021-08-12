@@ -3,18 +3,19 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::datatypes::{
-    PresentProofInfo,
+    PresentationData,
     MessageWithBody,
+    PresentProofReq,
     PRESENT_PROOF_PROTOCOL_URL,
 };
 
 /// Specifies all possible message directions.
 #[derive(PartialEq)]
 pub enum PresentProofType {
-    REQUEST_PRESENTATION,
-    PRESENTATION,
-    PROPOSE_PRESENTATION,
-    ACK,
+    RequestPresentation,
+    Presentation,
+    ProposePresentation,
+    Ack,
 }
 
 
@@ -33,18 +34,18 @@ pub fn get_present_proof_message(
     step_type: PresentProofType,
     from_did: &str,
     to_did: &str,
-    request_presentation: &str,
-) -> Result<MessageWithBody<String>, Box<dyn std::error::Error>> {
+    presentation_data: PresentationData,
+) -> Result<MessageWithBody<PresentationData>, Box<dyn std::error::Error>> {
     let thread_id = Uuid::new_v4().to_simple().to_string();
     let service_id = format!("{0}#key-1", from_did);
     let step_name = match step_type {
-        PresentProofType::REQUEST_PRESENTATION => "request-presentation",
-        PresentProofType::PROPOSE_PRESENTATION => "propose-presentation",
-        PresentProofType::PRESENTATION => "presentation",
-        PresentProofType::ACK => "ack",
+        PresentProofType::RequestPresentation => "request-presentation",
+        PresentProofType::ProposePresentation => "propose-presentation",
+        PresentProofType::Presentation => "presentation",
+        PresentProofType::Ack => "ack",
     };
-    let exchange_request: MessageWithBody<String> = MessageWithBody {
-        body: Some(request_presentation.to_string()),
+    let exchange_request: MessageWithBody<PresentationData> = MessageWithBody {
+        body: Some(presentation_data),
         created_time: None,
         expires_time: None,
         from: Some(String::from(from_did)),
@@ -68,10 +69,9 @@ pub fn get_present_proof_message(
 /// # Returns
 /// * `PresentProofInfo` - necessary information
 pub fn get_present_proof_info_from_message(
-    message: MessageWithBody<String>,
-) -> Result<PresentProofInfo, Box<dyn std::error::Error>> {
+    message: MessageWithBody<PresentationData>,
+) -> Result<PresentProofReq, Box<dyn std::error::Error>> {
     let from_did = message.from.ok_or("from is required")?;
-
     let to_vec = message.to.ok_or("to is required")?;
     if to_vec.is_empty() {
         return Err(Box::from(
@@ -79,11 +79,13 @@ pub fn get_present_proof_info_from_message(
         ));
     }
     let to_did = &to_vec[0];
-    let presentation: String = message.body.ok_or("body is required")?;
-   
-    return Ok(PresentProofInfo {
-        from: String::from(from_did),
-        to: String::from(to_did),
-        presentation_data: String::from(presentation),
+    let presentation: PresentationData = message.body.ok_or("body is required")?;
+    let msg_type = message.r#type;
+
+    return Ok(PresentProofReq  {
+        r#type: String::from(msg_type),
+        from: Some(String::from(from_did)),
+        to: Some(String::from(to_did)),
+        presentation_data: Some(presentation),
     });
 }

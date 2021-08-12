@@ -37,7 +37,7 @@ pub fn send_request_presentation(message: &str) -> StepResult {
     save_presentation(
         &exchange_info.from,
         &exchange_info.to,
-        &serde_json::to_string(&presentation_data.clone())?,
+        &serde_json::to_string(&presentation_data)?,
     )?;
 
     let presentation_request = presentation_data
@@ -46,10 +46,10 @@ pub fn send_request_presentation(message: &str) -> StepResult {
     let metadata = presentation_request
         .get(0)
         .ok_or("Request data not attached")?;
-    return generate_step_output(
+    generate_step_output(
         &serde_json::to_string(&request_message)?,
         &serde_json::to_string(metadata)?,
-    );
+    )
 }
 
 /// protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/presentation`
@@ -84,7 +84,7 @@ pub fn receive_presentation(message: &str) -> StepResult {
         .presentation_attach
         .ok_or("Presentation request not attached.")?;
     let metadata = presentation.get(0).ok_or("Request data not attached")?;
-    return generate_step_output(message, &serde_json::to_string(&metadata)?);
+    generate_step_output(message, &serde_json::to_string(&metadata)?)
 }
 
 /// protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/propose-presentation`
@@ -118,5 +118,5 @@ pub fn receive_propose_presentation(message: &str) -> StepResult {
     let presentation_proposal = saved_presentation_data
         .presentation_proposal
         .ok_or("Presentation request not attached.")?;
-    return generate_step_output(message, &serde_json::to_string(&presentation_proposal)?);
+    generate_step_output(message, &serde_json::to_string(&presentation_proposal)?)
 }

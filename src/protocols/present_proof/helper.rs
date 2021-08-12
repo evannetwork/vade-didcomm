@@ -12,7 +12,6 @@ pub enum PresentProofType {
     RequestPresentation,
     Presentation,
     ProposePresentation,
-    Ack,
 }
 
 /// Constructs a new Request Presentation message, including the Presentation req as message body.
@@ -37,7 +36,6 @@ pub fn get_present_proof_message(
         PresentProofType::RequestPresentation => "request-presentation",
         PresentProofType::ProposePresentation => "propose-presentation",
         PresentProofType::Presentation => "presentation",
-        PresentProofType::Ack => "ack",
     };
     let exchange_request: MessageWithBody<PresentationData> = MessageWithBody {
         body: Some(presentation_data),
@@ -46,13 +44,13 @@ pub fn get_present_proof_message(
         from: Some(String::from(from_did)),
         id: Some(String::from(&thread_id)),
         other: HashMap::new(),
-        pthid: Some(format!("{}#key-1", String::from(thread_id))),
+        pthid: Some(format!("{}#key-1", thread_id)),
         r#type: format!("{}/{}", PRESENT_PROOF_PROTOCOL_URL, step_name),
         thid: Some(service_id),
         to: Some([String::from(to_did)].to_vec()),
     };
 
-    return Ok(exchange_request);
+    Ok(exchange_request)
 }
 
 /// Takes an PresentProof message and extracts all necessary information to process it during request /
@@ -75,10 +73,10 @@ pub fn get_present_proof_info_from_message(
     let presentation: PresentationData = message.body.ok_or("body is required")?;
     let msg_type = message.r#type;
 
-    return Ok(PresentProofReq {
-        r#type: String::from(msg_type),
-        from: Some(String::from(from_did)),
+    Ok(PresentProofReq {
+        r#type: msg_type,
+        from: Some(from_did),
         to: Some(String::from(to_did)),
         presentation_data: Some(presentation),
-    });
+    })
 }

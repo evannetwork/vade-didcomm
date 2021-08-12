@@ -18,7 +18,7 @@ pub fn save_presentation(
         presentation,
     )?;
 
-    return Ok(());
+    Ok(())
 }
 
 /// Retrieves presentation data from the db for two DIDs (from -> to). Entry key will be
@@ -36,5 +36,5 @@ pub fn get_presentation(
 ) -> Result<PresentationData, Box<dyn std::error::Error>> {
     let presentation = read_db(&format!("present_proof_{}_{}", from_did, to_did))?;
     let presentation_data: PresentationData = serde_json::from_str(&presentation)?;
-    return Ok(presentation_data);
+    Ok(presentation_data)
 }

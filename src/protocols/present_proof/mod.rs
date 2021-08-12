@@ -22,7 +22,7 @@ use crate::{
 /// # Returns
 /// * `Protocol` - the new Present proof protocol handler
 pub fn generate_present_proof_protocol() -> Protocol {
-    let protocol = Protocol {
+    Protocol {
         name: String::from(PRESENT_PROOF_PROTOCOL_URL),
         steps: vec![
             generate_send_step("request-presentation", send_request_presentation),
@@ -34,7 +34,5 @@ pub fn generate_present_proof_protocol() -> Protocol {
             generate_send_step("ack", send_presentation_ack),
             generate_receive_step("ack", receive_presentation_ack),
         ],
-    };
-
-    return protocol;
+    }
 }

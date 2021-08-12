@@ -66,7 +66,10 @@ async fn send_request_presentation(
             "to": ["{}"],
             "body": {}
         }}"#,
-        PRESENT_PROOF_PROTOCOL_URL, sender, receiver, &serde_json::to_string(&presentation_data)?
+        PRESENT_PROOF_PROTOCOL_URL,
+        sender,
+        receiver,
+        &serde_json::to_string(&presentation_data)?
     );
 
     let results = vade.didcomm_send(options, &exchange_request).await?;
@@ -77,7 +80,7 @@ async fn send_request_presentation(
         .ok_or("no value in result")?;
 
     let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
-   
+
     // let db_result = get_presentation( sender, receiver)?;
     // let request_presentation = prepared.message.body.to_owned().unwrap_or("send DIDComm request does not return presentation request".to_owned());
 
@@ -138,7 +141,10 @@ async fn send_presentation(
             "to": ["{}"],
             "body": {}
         }}"#,
-        PRESENT_PROOF_PROTOCOL_URL, sender, receiver, &serde_json::to_string(&presentation_data)?
+        PRESENT_PROOF_PROTOCOL_URL,
+        sender,
+        receiver,
+        &serde_json::to_string(&presentation_data)?
     );
     println!("send response {}", exchange_response);
     let results = vade.didcomm_send(&options, &exchange_response).await?;
@@ -251,7 +257,6 @@ async fn can_do_presentation_exchange() -> Result<(), Box<dyn std::error::Error>
 
     Ok(())
 }
-
 
 #[tokio::test]
 #[serial]

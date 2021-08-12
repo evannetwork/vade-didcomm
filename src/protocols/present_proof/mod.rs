@@ -1,15 +1,17 @@
 pub(crate) mod done;
 pub(crate) mod helper;
-pub(crate) mod verifier;
 pub(crate) mod prover;
+pub(crate) mod verifier;
 
 use crate::{
     datatypes::PRESENT_PROOF_PROTOCOL_URL,
     protocols::{
         present_proof::{
             done::{receive_presentation_ack, send_presentation_ack},
-            verifier::{send_request_presentation, receive_presentation, receive_propose_presentation},
-            prover::{send_presentation, receive_request_presentation, send_propose_presentation},
+            prover::{receive_request_presentation, send_presentation, send_propose_presentation},
+            verifier::{
+                receive_presentation, receive_propose_presentation, send_request_presentation,
+            },
         },
         protocol::{generate_receive_step, generate_send_step, Protocol},
     },

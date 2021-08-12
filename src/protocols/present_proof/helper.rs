@@ -3,10 +3,7 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::datatypes::{
-    PresentationData,
-    MessageWithBody,
-    PresentProofReq,
-    PRESENT_PROOF_PROTOCOL_URL,
+    MessageWithBody, PresentProofReq, PresentationData, PRESENT_PROOF_PROTOCOL_URL,
 };
 
 /// Specifies all possible message directions.
@@ -17,8 +14,6 @@ pub enum PresentProofType {
     ProposePresentation,
     Ack,
 }
-
-
 
 /// Constructs a new Request Presentation message, including the Presentation req as message body.
 ///
@@ -74,15 +69,13 @@ pub fn get_present_proof_info_from_message(
     let from_did = message.from.ok_or("from is required")?;
     let to_vec = message.to.ok_or("to is required")?;
     if to_vec.is_empty() {
-        return Err(Box::from(
-            "No Presentation data was sent from Prover.",
-        ));
+        return Err(Box::from("No Presentation data was sent from Prover."));
     }
     let to_did = &to_vec[0];
     let presentation: PresentationData = message.body.ok_or("body is required")?;
     let msg_type = message.r#type;
 
-    return Ok(PresentProofReq  {
+    return Ok(PresentProofReq {
         r#type: String::from(msg_type),
         from: Some(String::from(from_did)),
         to: Some(String::from(to_did)),

@@ -122,7 +122,7 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
     save_presentation(
         &exchange_info.from,
         &exchange_info.to,
-        &serde_json::to_string(&presentation_data.clone())?,
+        &serde_json::to_string(&presentation_data)?,
     )?;
 
     let saved_presentation_data = get_presentation(&exchange_info.from, &exchange_info.to)?;

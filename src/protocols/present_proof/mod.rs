@@ -4,7 +4,6 @@ pub(crate) mod prover;
 pub(crate) mod verifier;
 
 use crate::{
-    datatypes::PRESENT_PROOF_PROTOCOL_URL,
     protocols::{
         present_proof::{
             done::{receive_presentation_ack, send_presentation_ack},
@@ -16,6 +15,7 @@ use crate::{
         protocol::{generate_receive_step, generate_send_step, Protocol},
     },
 };
+use helper::PRESENT_PROOF_PROTOCOL_URL;
 
 /// Creates a new present_proof protocol and maps the specific step handler functions.
 ///

@@ -2,10 +2,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
-pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
-pub const PRESENT_PROOF_PROTOCOL_URL: &str = "https://didcomm.org/present-proof/1.0";
-
-
 /// Struct for a pub key that will be sent during DID exchange with the users communication DID document.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

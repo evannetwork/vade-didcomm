@@ -8,8 +8,9 @@ use crate::datatypes::{
     DidCommService,
     ExchangeInfo,
     MessageWithBody,
-    DID_EXCHANGE_PROTOCOL_URL,
 };
+
+pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
 
 /// Specifies all possible message directions.
 #[derive(PartialEq)]

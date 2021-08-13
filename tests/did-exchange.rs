@@ -12,12 +12,12 @@ use vade_didcomm::{
         KeyInformation,
         MessageWithBody,
         VadeDidCommPluginOutput,
-        DID_EXCHANGE_PROTOCOL_URL,
     },
     VadeDidComm,
 };
 
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
+const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
 
 pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
     let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;

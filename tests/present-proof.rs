@@ -4,12 +4,13 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{
         Attribute, BaseMessage, EncryptedMessage, MessageWithBody, Predicate, PresentationAttach,
-        PresentationData, PresentationPreview, VadeDidCommPluginOutput, PRESENT_PROOF_PROTOCOL_URL,
+        PresentationData, PresentationPreview, VadeDidCommPluginOutput,
     },
     VadeDidComm,
 };
 
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
+const PRESENT_PROOF_PROTOCOL_URL: &str = "https://didcomm.org/present-proof/1.0";
 
 pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
     let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;

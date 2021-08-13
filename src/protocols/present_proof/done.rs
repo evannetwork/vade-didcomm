@@ -1,7 +1,8 @@
 use crate::{
-    datatypes::{BaseMessage, PRESENT_PROOF_PROTOCOL_URL},
+    datatypes::{BaseMessage},
     protocols::protocol::{generate_step_output, StepResult},
 };
+use super::helper::PRESENT_PROOF_PROTOCOL_URL;
 
 /// protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/ack`
 pub fn send_presentation_ack(message: &str) -> StepResult {

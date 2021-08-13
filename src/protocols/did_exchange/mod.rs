@@ -4,7 +4,6 @@ pub(crate) mod request;
 pub(crate) mod response;
 
 use crate::{
-    datatypes::DID_EXCHANGE_PROTOCOL_URL,
     protocols::{
         did_exchange::{
             complete::{receive_complete, send_complete},
@@ -14,6 +13,7 @@ use crate::{
         protocol::{generate_receive_step, generate_send_step, Protocol},
     },
 };
+use helper::DID_EXCHANGE_PROTOCOL_URL;
 
 /// Creates a new did_exchange protocol and maps the specific step handler functions.
 ///

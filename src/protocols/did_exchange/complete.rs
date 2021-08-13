@@ -1,7 +1,8 @@
 use crate::{
-    datatypes::{BaseMessage, DID_EXCHANGE_PROTOCOL_URL},
+    datatypes::{BaseMessage},
     protocols::protocol::{generate_step_output, StepResult},
 };
+use super::helper::DID_EXCHANGE_PROTOCOL_URL;
 
 /// protocol handler for direction: `send`, type: `DID_EXCHANGE_PROTOCOL_URL/complete`
 /// just ensures to set the correct message type, before the message will be sent (first time for

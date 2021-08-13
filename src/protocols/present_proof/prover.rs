@@ -126,12 +126,14 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
     )?;
 
     let saved_presentation_data = get_presentation(&exchange_info.from, &exchange_info.to)?;
-    let presentation_request = saved_presentation_data
+    let presentation_proposal = saved_presentation_data
         .presentation_proposal
         .ok_or("Presentation data not attached.")?;
 
+    let attribute = presentation_proposal.attribute.ok_or(" No Attributes provided")?;
+    let metadata = attribute.get(0).ok_or("Attribute data should be provided")?;
     generate_step_output(
         &serde_json::to_string(&request_message)?,
-        &serde_json::to_string(&presentation_request)?,
+        &serde_json::to_string(metadata)?,
     )
 }

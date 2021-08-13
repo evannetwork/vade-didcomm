@@ -55,7 +55,6 @@ pub fn send_request_presentation(message: &str) -> StepResult {
 /// protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/presentation`
 /// Receives the presentation from prover and updates in db
 pub fn receive_presentation(message: &str) -> StepResult {
-    println!("message {}", message);
     let parsed_message: MessageWithBody<PresentationData> = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from.clone(),
@@ -118,5 +117,7 @@ pub fn receive_propose_presentation(message: &str) -> StepResult {
     let presentation_proposal = saved_presentation_data
         .presentation_proposal
         .ok_or("Presentation request not attached.")?;
-    generate_step_output(message, &serde_json::to_string(&presentation_proposal)?)
+    let attribute = presentation_proposal.attribute.ok_or(" No Attributes provided")?;
+    let metadata = attribute.get(0).ok_or("Attribute data should be provided")?;
+    generate_step_output(message, &serde_json::to_string(metadata)?)
 }

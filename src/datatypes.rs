@@ -196,10 +196,14 @@ pub struct PresentationAttach {
     pub data: String,
 }
 
-/// Necessary information for proof exchange. 
+/// Presentation preview structure is sent by prover to propose alternate presentation. 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct PresentationPreview {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub attribute: Option<Vec<Attribute>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub predicate: Option<Vec<Predicate>>,
 }
 
@@ -217,7 +221,7 @@ pub struct Predicate{
     pub name: String,
     pub cred_def_id: String,
     pub predicate: String,
-    pub theshold: u64,
+    pub threshold: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]

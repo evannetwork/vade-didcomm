@@ -25,7 +25,7 @@ pub enum PresentProofType {
 /// * `request_presentation` - request for presentation
 ///
 /// # Returns
-/// * `MessageWithBody<String>` - constructed Presentation request Object, ready to be sent
+/// * `MessageWithBody<PresentationData>` - constructed Presentation request Object, ready to be sent
 pub fn get_present_proof_message(
     step_type: PresentProofType,
     from_did: &str,
@@ -62,7 +62,7 @@ pub fn get_present_proof_message(
 /// * `message` - PresentProof message with proover presentation response as body
 ///
 /// # Returns
-/// * `PresentProofInfo` - necessary information
+/// * `PresentProofReq` - necessary information
 pub fn get_present_proof_info_from_message(
     message: MessageWithBody<PresentationData>,
 ) -> Result<PresentProofReq, Box<dyn std::error::Error>> {

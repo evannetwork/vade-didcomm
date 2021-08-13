@@ -24,4 +24,5 @@ test_unit:
   script:
     - apt-get update
     - apt-get install -y clang
+    - cargo clean
     - cargo test --release --verbose

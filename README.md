@@ -134,6 +134,77 @@ This will return the following result:
 
 As you can see, the whole message was enriched with the data that is necessary for the DID exchange. The metadata contains the generated communication hex encoded public key and secret key. The receiver can just pass the whole json to the `didcomm_receive` function, that will analyse the message, will save the communication keys and generate new ones for himself as well. The receiver can then use the logic for sending the response, by just replacing the type of the message `https://didcomm.org/didexchange/1.0/response.`
 
+### present_proof protocol
+
+The [`Present proof protocol`] consist of 4 steps. The whole flow is implemented in the [`present-proof test`]. The general flow starts with verifier sending request-presentation message to proover and proover has option to send requested presentation or propose a new presentation to verifier. Following is the format for request-presentation:
+
+```json
+{
+    "@type": "https://didcomm.org/present-proof/1.0/request-presentation",
+    "@id": "<uuid-request>",
+    "comment": "some comment",
+    "request_presentations~attach": [
+        {
+            "@id": "libindy-request-presentation-0",
+            "mime-type": "application/json",
+            "data":  {
+                "base64": "<bytes for base64>"
+            }
+        }
+    ]
+}
+```
+
+Once proover respondes with presentation or propose-presentation message , following are the formats for the messages:
+
+Presentation response format:
+
+```json
+{
+    "@type": "https://didcomm.org/present-proof/1.0/presentation",
+    "@id": "<uuid-presentation>",
+    "comment": "some comment",
+    "presentations~attach": [
+        {
+            "@id": "libindy-presentation-0",
+            "mime-type": "application/json",
+            "data": {
+                "base64": "<bytes for base64>"
+            }
+        }
+    ]
+}
+```
+
+Presentation proposal format:
+
+
+```json
+{
+    "@type": "https://didcomm.org/present-proof/1.0/presentation-preview",
+    "attributes": [
+        {
+            "name": "<attribute_name>",
+            "cred_def_id": "<cred_def_id>",
+            "mime-type": "<type>",
+            "value": "<value>",
+            "referent": "<referent>"
+        },
+        // more attributes
+    ],
+    "predicates": [
+        {
+            "name": "<attribute_name>",
+            "cred_def_id": "<cred_def_id>",
+            "predicate": "<predicate>",
+            "threshold": <threshold>
+        },
+        // more predicates
+    ]
+}
+```
+Once the exchange of presentation is complete , verifier sends ack message to proover by confirming the receiving of and validity of Presentation data. 
+
 ## Registering a new protocol
 
 Each protocol is represented by a set of steps. To register a new protocol, just follow the following steps:
@@ -203,3 +274,5 @@ Afterwards, you can just test your protocol by passing the following message to 
 [`trust_ping`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/src/protocols/pingpong.rs
 [`DID exchange protocol`]: https://github.com/hyperledger/aries-rfcs/tree/master/features/0023-did-exchange
 [`did-exchange test`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/tests/did-exchange.rs
+[`Present proof protocol`]: https://github.com/hyperledger/aries-rfcs/tree/master/features/0037-present-proof
+[`present-proof test`]:https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/DID-46-implement-present-proof-protocol-in-vade/tests/present-proof.rs

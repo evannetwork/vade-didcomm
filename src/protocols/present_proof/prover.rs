@@ -55,7 +55,7 @@ pub fn send_presentation(message: &str) -> StepResult {
     )
 }
 
-/// protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/presentation`
+/// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/presentation`
 /// Receives the presentation and updates the existing presentation for this DID in
 /// the db.
 pub fn receive_request_presentation(message: &str) -> StepResult {

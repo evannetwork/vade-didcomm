@@ -274,5 +274,5 @@ Afterwards, you can just test your protocol by passing the following message to 
 [`trust_ping`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/src/protocols/pingpong.rs
 [`DID exchange protocol`]: https://github.com/hyperledger/aries-rfcs/tree/master/features/0023-did-exchange
 [`did-exchange test`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/tests/did-exchange.rs
-[`Present proof protocol`]: https://github.com/hyperledger/aries-rfcs/tree/master/features/0037-present-proof
+[`Present Proof Protocol`]: https://github.com/hyperledger/aries-rfcs/tree/master/features/0037-present-proof
 [`present-proof test`]:https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/DID-46-implement-present-proof-protocol-in-vade/tests/present-proof.rs

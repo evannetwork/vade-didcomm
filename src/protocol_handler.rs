@@ -67,7 +67,7 @@ fn handle_protocol(
 
             for x in 0..protocol.steps.len() {
                 let step = &protocol.steps[x];
-                let protocol_type = format!("{}/{}",protocol_name,step.name);
+                let protocol_type = format!("{}/{}", protocol_name, step.name);
                 // check for configured step names and directions
                 if step.direction == direction && m_type.contains(&protocol_type) {
                     let step_outcome = (step.handler)(message)?;

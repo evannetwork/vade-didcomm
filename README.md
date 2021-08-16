@@ -136,7 +136,7 @@ As you can see, the whole message was enriched with the data that is necessary f
 
 ### present_proof protocol
 
-The [`Present proof protocol`] consist of 4 steps. The whole flow is implemented in the [`present-proof test`]. The general flow starts with verifier sending request-presentation message to proover and proover has option to send requested presentation or propose a new presentation to verifier. Following is the format for request-presentation:
+The [`Present Proof Protocol`] consists of 4 steps. The whole flow is implemented in the [`present-proof test`]. The general flow starts with a verifier sending a `request-presentation` message to a prover. The prover has the option to answer with the requested presentation or propose a new presentation to the verifier. The format for `request-presentation` is the following:
 
 ```json
 {

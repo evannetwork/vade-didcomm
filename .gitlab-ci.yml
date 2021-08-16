@@ -1,19 +1,19 @@
 image: rust:latest
 
 stages:
-  - build
+  #- build
   - test_unit
 
-build:
-  stage: build
-  script:
-    - apt-get update
-    - apt-get install -y clang
-    - cd ..
-    - rm -rf vade
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.slock.it/equs/interop/vade/vade.git --branch develop
-    - cd vade-didcomm
-    - cargo build --release --verbose
+#build:
+#  stage: build
+#  script:
+#    - apt-get update
+#    - apt-get install -y clang
+#    - cd ..
+#    - rm -rf vade
+#    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.slock.it/equs/interop/vade/vade.git --branch develop
+#    - cd vade-didcomm
+#    - cargo build --release --verbose
 
 test_unit:
   stage: test_unit
@@ -21,4 +21,5 @@ test_unit:
     - apt-get update
     - apt-get install -y clang
     - rustup component add clippy
+    - ls -la
     - cargo test --release --verbose

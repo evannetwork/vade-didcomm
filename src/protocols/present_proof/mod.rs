@@ -17,7 +17,7 @@ use crate::{
 };
 use helper::PRESENT_PROOF_PROTOCOL_URL;
 
-/// Creates a new present_proof protocol and maps the specific step handler functions.
+/// Creates the present_proof protocol, containing step handler functions mapped to their according step.
 ///
 /// # Returns
 /// * `Protocol` - the new Present proof protocol handler

@@ -174,7 +174,7 @@ pub struct VadeDidCommPluginOutput<T> {
     pub metadata: HashMap<String, String>,
 }
 
-/// Struct for Present Proof req initiation.
+/// Struct for Present Proof Request initiation.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PresentProofReq {

@@ -11,7 +11,7 @@ pub fn send_presentation_ack(message: &str) -> StepResult {
 
     generate_step_output(&serde_json::to_string(&parsed_message)?, "{}")
 }
-/// protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/ack`
+/// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/ack`
 pub fn receive_presentation_ack(message: &str) -> StepResult {
     generate_step_output(message, "{}")
 }

@@ -9,7 +9,7 @@ use super::helper::{
     get_present_proof_info_from_message, get_present_proof_message, PresentProofType,
 };
 
-/// protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/request-presentation`
+/// Protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/request-presentation`
 /// Uses the protocols/present_proof/helper.rs/get_present_proof_message to construct the message,
 /// that should be sent.
 pub fn send_presentation(message: &str) -> StepResult {

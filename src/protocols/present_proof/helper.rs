@@ -8,7 +8,7 @@ use crate::datatypes::{
 
 pub const PRESENT_PROOF_PROTOCOL_URL: &str = "https://didcomm.org/present-proof/1.0";
 
-/// Specifies all possible message directions.
+/// Possible Message types for the present proof protocol
 #[derive(PartialEq)]
 pub enum PresentProofType {
     RequestPresentation,

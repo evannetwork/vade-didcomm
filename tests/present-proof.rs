@@ -25,8 +25,9 @@ pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
 pub fn get_presentation(
     from_did: &str,
     to_did: &str,
+    thid: &str,
 ) -> Result<PresentationData, Box<dyn std::error::Error>> {
-    let presentation = read_db(&format!("present_proof_{}_{}", from_did, to_did))?;
+    let presentation = read_db(&format!("present_proof_{}_{}_{}", from_did, to_did, thid))?;
     let presentation_data: PresentationData = serde_json::from_str(&presentation)?;
     return Ok(presentation_data);
 }
@@ -109,8 +110,8 @@ async fn receive_request_presentation(
         .presentation_attach
         .ok_or("Presentation request not attached")?;
     let presentation_data = attached_req.get(0).ok_or("Request body is invalid")?;
-
-    let req_data_saved = get_presentation(sender, receiver)?;
+    let thid = received.message.id.ok_or("Thread id can't be empty")?;
+    let req_data_saved = get_presentation(sender, receiver, &thid)?;
     let attached_req_saved = req_data_saved
         .presentation_attach
         .ok_or("Presentation request not attached")?;
@@ -193,7 +194,8 @@ async fn receive_presentation(
         .get(0)
         .ok_or("Request body is invalid")?;
 
-    let req_data_saved = get_presentation(sender, receiver)?;
+    let thid = received.message.id.ok_or("Thread id can't be empty")?;
+    let req_data_saved = get_presentation(sender, receiver, &thid)?;
     let attached_presentation_saved = req_data_saved
         .presentation_attach
         .ok_or("Presentation request not attached")?;
@@ -292,8 +294,9 @@ async fn receive_presentation_proposal(
         .attribute
         .ok_or("Attributes not provided with proposal")?;
     let attribute = attribute_data.get(0).ok_or("Attribute is invalid")?;
+    let thid = received.message.id.ok_or("Thread id can't be empty")?;
 
-    let proposal_data_saved = get_presentation(sender, receiver)?.presentation_proposal;
+    let proposal_data_saved = get_presentation(sender, receiver, &thid)?.presentation_proposal;
     let proposal_data_saved_attributes =
         proposal_data_saved.ok_or("Proposal data not saved in db")?;
     let attribute_data_saved = proposal_data_saved_attributes

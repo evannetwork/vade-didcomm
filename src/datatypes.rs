@@ -174,7 +174,7 @@ pub struct VadeDidCommPluginOutput<T> {
     pub metadata: HashMap<String, String>,
 }
 
-/// Struct for Present Proof Request initiation.
+/// This structure is required to be present in all the steps of Present-Proof protocol for send and receive directions.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PresentProofReq {
@@ -184,7 +184,7 @@ pub struct PresentProofReq {
     pub presentation_data: Option<PresentationData>,
 }
 
-/// Necessary information for proof exchange. 
+/// PresentationAttach contains all the fields required for request-presentation and presentation steps.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct PresentationAttach {
     pub id: String,
@@ -203,6 +203,7 @@ pub struct PresentationPreview {
     pub predicate: Option<Vec<Predicate>>,
 }
 
+/// Attributes structure for PresentationPreview request. 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Attribute{
     pub name: String,
@@ -212,6 +213,7 @@ pub struct Attribute{
     pub referent: String,
 }
 
+/// Predicate structure for PresentationPreview request.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Predicate{
     pub name: String,
@@ -220,6 +222,7 @@ pub struct Predicate{
     pub threshold: u64,
 }
 
+/// PresentationData structure contains optional fields to be exchanged for all the steps of Present-Proof steps.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct PresentationData{
     #[serde(skip_serializing_if = "Option::is_none")]

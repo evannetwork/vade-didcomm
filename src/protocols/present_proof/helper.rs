@@ -8,7 +8,7 @@ use crate::datatypes::{
 
 pub const PRESENT_PROOF_PROTOCOL_URL: &str = "https://didcomm.org/present-proof/1.0";
 
-/// Possible Message types for the present proof protocol
+/// Specifies all possible message directions.
 #[derive(PartialEq)]
 pub enum PresentProofType {
     RequestPresentation,
@@ -16,7 +16,7 @@ pub enum PresentProofType {
     ProposePresentation,
 }
 
-/// Constructs a new `Present Proof` message, including the Presentation req as message body.
+/// Constructs a new Request Presentation message, including the Presentation req as message body.
 ///
 /// # Arguments
 /// * `step_type` - step to build the message type (request, response)
@@ -62,7 +62,7 @@ pub fn get_present_proof_message(
 /// * `message` - PresentProof message with proover presentation response as body
 ///
 /// # Returns
-/// * `PresentProofReq` - necessary information
+/// * `PresentProofInfo` - necessary information
 pub fn get_present_proof_info_from_message(
     message: MessageWithBody<PresentationData>,
 ) -> Result<PresentProofReq, Box<dyn std::error::Error>> {

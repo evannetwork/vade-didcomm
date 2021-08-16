@@ -155,7 +155,7 @@ The [`Present proof protocol`] consist of 4 steps. The whole flow is implemented
 }
 ```
 
-Once proover respondes with presentation or propose-presentation message , following are the formats for the messages:
+The prover then responds with either a `presentation` or `propose-presentation` message. The following are the formats for the messages:
 
 Presentation response format:
 

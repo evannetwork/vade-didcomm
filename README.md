@@ -203,7 +203,7 @@ Presentation proposal format:
     ]
 }
 ```
-Once the exchange of presentation is complete , verifier sends ack message to proover by confirming the receiving of and validity of Presentation data. 
+Once the presentation exchange is complete, the verifier sends an ack message to the prover to confirm the receival and validity of the received Presentation data. 
 
 ## Registering a new protocol
 

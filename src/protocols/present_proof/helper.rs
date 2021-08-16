@@ -16,7 +16,7 @@ pub enum PresentProofType {
     ProposePresentation,
 }
 
-/// Constructs a new Request Presentation message, including the Presentation req as message body.
+/// Constructs a new `Present Proof` message, including the Presentation req as message body.
 ///
 /// # Arguments
 /// * `step_type` - step to build the message type (request, response)

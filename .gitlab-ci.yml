@@ -22,4 +22,4 @@ test_unit:
     - apt-get install -y clang
     - rustup component add clippy
     - ls -la
-    - cargo test --release --verbose
+    - RUST_LOG=debug cargo test --release --verbose

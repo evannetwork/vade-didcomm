@@ -10,7 +10,6 @@ use super::helper::{
 };
 
 /// Protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/request-presentation`
-/// Uses the protocols/present_proof/helper.rs/get_present_proof_message to construct the request message,
 pub fn send_request_presentation(message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
@@ -59,7 +58,6 @@ pub fn send_request_presentation(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/presentation`
-/// Receives the presentation from prover and updates in db
 pub fn receive_presentation(message: &str) -> StepResult {
     let parsed_message: MessageWithBody<PresentationData> = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
@@ -105,7 +103,6 @@ pub fn receive_presentation(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/propose-presentation`
-/// Receives the proposal for new presentation request from prover
 pub fn receive_propose_presentation(message: &str) -> StepResult {
     let parsed_message: MessageWithBody<PresentationData> = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {

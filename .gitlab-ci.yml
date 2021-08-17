@@ -25,7 +25,7 @@ test_unit:
     - apt-get update
     - apt-get install -y clang
     - cargo install cargo2junit
-    - mkdir .git/hooks
+    - mkdir -p .git/hooks
     - cargo test --release -- -Z unstable-options --format json --report-time | cargo2junit > results.xml
     - cat results.xml
     - 'export AUTHTOKEN=$(curl -X POST -H "Content-Type: application/json" -d "{ \"client_id\": \"${id_client}\", \"client_secret\": \"${id_secret}\" }" "https://xray.cloud.xpand-it.com/api/v2/authenticate" | sed -e "s/\"//g")'

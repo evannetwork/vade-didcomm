@@ -3,15 +3,13 @@ pub(crate) mod helper;
 pub(crate) mod request;
 pub(crate) mod response;
 
-use crate::{
-    protocols::{
-        did_exchange::{
-            complete::{receive_complete, send_complete},
-            request::{receive_request, send_request},
-            response::{receive_response, send_response},
-        },
-        protocol::{generate_receive_step, generate_send_step, Protocol},
+use crate::protocols::{
+    did_exchange::{
+        complete::{receive_complete, send_complete},
+        request::{receive_request, send_request},
+        response::{receive_response, send_response},
     },
+    protocol::{generate_receive_step, generate_send_step, Protocol},
 };
 use helper::DID_EXCHANGE_PROTOCOL_URL;
 

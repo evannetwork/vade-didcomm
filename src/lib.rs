@@ -13,9 +13,9 @@ pub mod datatypes;
 mod db;
 mod keypair;
 mod message;
+mod presentation;
 mod protocol_handler;
 mod protocols;
-mod presentation;
 mod utils;
 mod vade_didcomm;
 

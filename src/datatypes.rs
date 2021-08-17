@@ -193,7 +193,7 @@ pub struct PresentationAttach {
     pub data: String,
 }
 
-/// Presentation preview structure is sent by prover to propose alternate presentation. 
+/// Presentation preview structure is sent by prover to propose alternate presentation.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct PresentationPreview {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -204,9 +204,9 @@ pub struct PresentationPreview {
     pub predicate: Option<Vec<Predicate>>,
 }
 
-/// Attributes structure for PresentationPreview request. 
+/// Attributes structure for PresentationPreview request.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct Attribute{
+pub struct Attribute {
     pub name: String,
     pub cred_def_id: String,
     pub mime_type: String,
@@ -216,7 +216,7 @@ pub struct Attribute{
 
 /// Predicate structure for PresentationPreview request.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct Predicate{
+pub struct Predicate {
     pub name: String,
     pub cred_def_id: String,
     pub predicate: String,
@@ -225,7 +225,7 @@ pub struct Predicate{
 
 /// PresentationData structure contains optional fields to be exchanged for all the steps of Present-Proof steps.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct PresentationData{
+pub struct PresentationData {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub comment: Option<String>,
@@ -237,10 +237,9 @@ pub struct PresentationData{
     pub presentation_proposal: Option<PresentationPreview>,
 }
 
-
 /// Problem report structure contains fields which are required for reporting problem
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct ProblemReport{
+pub struct ProblemReport {
     pub r#type: String,
     pub from: Option<String>,
     pub to: Option<Vec<String>>,
@@ -266,9 +265,9 @@ pub struct ProblemReport{
     pub excalation_uri: Option<String>,
 }
 
-/// Ack structure contains fields which are sent to 
+/// Ack structure contains fields which are sent to
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct Ack{
+pub struct Ack {
     pub from: Option<String>,
     pub to: Option<Vec<String>>,
     pub r#type: String,

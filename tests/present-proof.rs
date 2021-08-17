@@ -4,9 +4,8 @@ use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
-        Ack, Attribute, EncryptedMessage, MessageWithBody, Predicate,
-        PresentationAttach, PresentationData, PresentationPreview, ProblemReport,
-        VadeDidCommPluginOutput,
+        Ack, Attribute, EncryptedMessage, MessageWithBody, Predicate, PresentationAttach,
+        PresentationData, PresentationPreview, ProblemReport, VadeDidCommPluginOutput,
     },
     VadeDidComm,
 };

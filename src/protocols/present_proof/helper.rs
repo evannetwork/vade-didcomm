@@ -2,9 +2,7 @@ use std::collections::HashMap;
 
 use uuid::Uuid;
 
-use crate::datatypes::{
-    MessageWithBody, PresentProofReq, PresentationData,
-};
+use crate::datatypes::{MessageWithBody, PresentProofReq, PresentationData};
 
 pub const PRESENT_PROOF_PROTOCOL_URL: &str = "https://didcomm.org/present-proof/1.0";
 

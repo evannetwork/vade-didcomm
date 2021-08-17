@@ -38,7 +38,7 @@ pub fn send_presentation_ack(message: &str) -> StepResult {
     let presentation_data = presentation_attach
         .get(0)
         .ok_or("No data found for attached Presentation")?;
-    
+
     if !presentation_data.r#type.contains("presentation") {
         panic!("Cant send ack without receiving presentation.");
     }

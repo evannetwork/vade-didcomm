@@ -123,7 +123,8 @@ mod tests {
                 "custom3": "san",
                 "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
                 "type": "test"
-            }"#.to_string();
+            }"#
+        .to_string();
 
         let encrypted = encrypt_message(
             &payload,
@@ -145,7 +146,8 @@ mod tests {
                 "custom3": "san",
                 "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
                 "type": "test"
-            }"#.to_string();
+            }"#
+        .to_string();
 
         let encrypted = encrypt_message(
             &payload,

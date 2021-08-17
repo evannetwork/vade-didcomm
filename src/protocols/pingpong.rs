@@ -2,11 +2,7 @@ use crate::datatypes::MessageWithBody;
 use serde::{Deserialize, Serialize};
 
 use super::protocol::{
-    generate_receive_step,
-    generate_send_step,
-    generate_step_output,
-    Protocol,
-    StepResult,
+    generate_receive_step, generate_send_step, generate_step_output, Protocol, StepResult,
 };
 
 pub const PING_PONG_PROTOCOL_URL: &str = "https://didcomm.org/trust_ping/1.0";

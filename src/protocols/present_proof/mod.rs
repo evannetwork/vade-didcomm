@@ -1,21 +1,17 @@
 pub(crate) mod done;
 pub(crate) mod helper;
+pub(crate) mod problem_report;
 pub(crate) mod prover;
 pub(crate) mod verifier;
-pub(crate) mod problem_report;
 
-use crate::{
-    protocols::{
-        present_proof::{
-            done::{receive_presentation_ack, send_presentation_ack},
-            prover::{receive_request_presentation, send_presentation, send_propose_presentation},
-            problem_report::{send_problem_report,receive_problem_report},
-            verifier::{
-                receive_presentation, receive_propose_presentation, send_request_presentation,
-            },
-        },
-        protocol::{generate_receive_step, generate_send_step, Protocol},
+use crate::protocols::{
+    present_proof::{
+        done::{receive_presentation_ack, send_presentation_ack},
+        problem_report::{receive_problem_report, send_problem_report},
+        prover::{receive_request_presentation, send_presentation, send_propose_presentation},
+        verifier::{receive_presentation, receive_propose_presentation, send_request_presentation},
     },
+    protocol::{generate_receive_step, generate_send_step, Protocol},
 };
 use helper::PRESENT_PROOF_PROTOCOL_URL;
 

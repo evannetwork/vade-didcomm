@@ -1,10 +1,8 @@
 use crate::{
     datatypes::{MessageDirection, MessageWithType, ProtocolHandleOutput},
     protocols::{
-        did_exchange::generate_did_exchange_protocol,
-        pingpong::generate_ping_pong_protocol,
-        present_proof::generate_present_proof_protocol,
-        protocol::Protocol,
+        did_exchange::generate_did_exchange_protocol, pingpong::generate_ping_pong_protocol,
+        present_proof::generate_present_proof_protocol, protocol::Protocol,
     },
 };
 

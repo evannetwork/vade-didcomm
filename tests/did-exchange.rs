@@ -4,14 +4,8 @@ use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
-        BaseMessage,
-        CommKeyPair,
-        CommunicationDidDocument,
-        DidCommOptions,
-        EncryptedMessage,
-        KeyInformation,
-        MessageWithBody,
-        VadeDidCommPluginOutput,
+        BaseMessage, CommKeyPair, CommunicationDidDocument, DidCommOptions, EncryptedMessage,
+        KeyInformation, MessageWithBody, VadeDidCommPluginOutput,
     },
     VadeDidComm,
 };

@@ -28,7 +28,6 @@ pub fn send_presentation(message: &str) -> StepResult {
 
     let thid = parsed_message
         .thid
-        .to_owned()
         .ok_or("Thread id can't be empty")?;
 
     let saved_presentation = get_presentation(&exchange_info.from, &exchange_info.to, &thid)?;
@@ -123,7 +122,6 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
     let presentation_data: PresentationData = serde_json::from_str(&data)?;
     let thid = parsed_message
         .thid
-        .to_owned()
         .ok_or("Thread id can't be empty")?;
 
     let saved_presentation = get_presentation(&exchange_info.from, &exchange_info.to, &thid)?;

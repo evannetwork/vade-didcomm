@@ -27,7 +27,6 @@ pub fn send_request_presentation(message: &str) -> StepResult {
     let presentation_data: PresentationData = serde_json::from_str(&data)?;
     let thid = parsed_message
         .thid
-        .to_owned()
         .ok_or("Thread id can't be empty")?;
 
     let request_message = get_present_proof_message(

@@ -23,7 +23,6 @@ pub fn send_presentation_ack(message: &str) -> StepResult {
     let exchange_info = get_from_to_from_message(base_message)?;
     let thid = parsed_message
         .thid
-        .to_owned()
         .ok_or("Thread id can't be empty")?;
 
     let saved_presentation = get_presentation(&exchange_info.from, &exchange_info.to, &thid)?;

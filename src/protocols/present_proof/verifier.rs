@@ -77,9 +77,14 @@ pub fn receive_presentation(message: &str) -> StepResult {
         .thid
         .to_owned()
         .ok_or("Thread id can't be empty")?;
+    let base_info = get_from_to_from_message(base_message)?;
+
+    let saved_presentation = get_presentation(&base_info.from, &base_info.to, &thid)?;
+    if saved_presentation.presentation_attach.is_none() {
+        panic!("No request for presentation found.");
+    }
 
     let exchange_info = get_present_proof_info_from_message(parsed_message)?;
-    let base_info = get_from_to_from_message(base_message)?;
 
     let presentation_data = exchange_info
         .presentation_data
@@ -115,13 +120,13 @@ pub fn receive_propose_presentation(message: &str) -> StepResult {
         ),
     };
 
+    let base_info = get_from_to_from_message(base_message)?;
     let thid = parsed_message
         .thid
         .to_owned()
         .ok_or("Thread id can't be empty")?;
 
     let exchange_info = get_present_proof_info_from_message(parsed_message)?;
-    let base_info = get_from_to_from_message(base_message)?;
 
     let presentation_data = exchange_info
         .presentation_data

@@ -1,7 +1,7 @@
 use crate::{
     datatypes::{BaseMessage, ExtendedMessage, MessageWithBody, PresentationData},
     get_from_to_from_message,
-    presentation::save_presentation,
+    presentation::{get_presentation, save_presentation},
     protocols::protocol::{generate_step_output, StepResult},
 };
 
@@ -32,7 +32,12 @@ pub fn send_presentation(message: &str) -> StepResult {
         .thid
         .to_owned()
         .ok_or("Thread id can't be empty")?;
-    // let saved_presentation_data = get_presentation(&exchange_info.from, &exchange_info.to, &thid)?;
+
+    let saved_presentation = get_presentation(&exchange_info.from, &exchange_info.to, &thid)?;
+    if saved_presentation.presentation_attach.is_none() {
+        panic!("No request for presentation found.");
+    }
+    
     let request_message = get_present_proof_message(
         PresentProofType::Presentation,
         &exchange_info.from,
@@ -127,6 +132,11 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
         .thid
         .to_owned()
         .ok_or("Thread id can't be empty")?;
+
+    let saved_presentation = get_presentation(&exchange_info.from, &exchange_info.to, &thid)?;
+    if saved_presentation.presentation_attach.is_none() {
+        panic!("No request for presentation found.");
+    }
 
     let request_message = get_present_proof_message(
         PresentProofType::ProposePresentation,

@@ -52,6 +52,7 @@ async fn send_request_presentation(
     let presentation_data = PresentationData {
         presentation_attach: Some(
             [PresentationAttach {
+                r#type: String::from("https://didcomm.org/present-proof/1.0/request-presentation"),
                 id: id.to_string(),
                 mime_type: String::from("application/json"),
                 data: String::from("base 64 data string"),
@@ -137,6 +138,7 @@ async fn send_presentation(
     let presentation_data = PresentationData {
         presentation_attach: Some(
             [PresentationAttach {
+                r#type: String::from("https://didcomm.org/present-proof/1.0/presentation"),
                 id: id.to_string(),
                 mime_type: String::from("application/json"),
                 data: String::from("base 64 data string"),

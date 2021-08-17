@@ -187,6 +187,7 @@ pub struct PresentProofReq {
 /// PresentationAttach contains all the fields required for request-presentation and presentation steps.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct PresentationAttach {
+    pub r#type: String,
     pub id: String,
     pub mime_type: String,
     pub data: String,

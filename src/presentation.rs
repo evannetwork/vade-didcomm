@@ -34,8 +34,8 @@ pub fn save_presentation(
 /// * `Presentation` - presetation data stored in db.
 pub fn get_presentation(
     from_did: &str,
-    thid: &str,
     to_did: &str,
+    thid: &str,
 ) -> Result<PresentationData, Box<dyn std::error::Error>> {
     let presentation = read_db(&format!("present_proof_{}_{}_{}", from_did, to_did, thid))?;
     let presentation_data: PresentationData = serde_json::from_str(&presentation)?;

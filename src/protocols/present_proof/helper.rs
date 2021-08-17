@@ -35,7 +35,6 @@ pub fn get_present_proof_message(
     thid: &str,
 ) -> Result<MessageWithBody<PresentationData>, Box<dyn std::error::Error>> {
     let thread_id = Uuid::new_v4().to_simple().to_string();
-    let service_id = format!("{0}#key-1", from_did);
     let step_name = match step_type {
         PresentProofType::RequestPresentation => "request-presentation",
         PresentProofType::ProposePresentation => "propose-presentation",

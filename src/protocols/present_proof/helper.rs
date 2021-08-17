@@ -23,6 +23,7 @@ pub enum PresentProofType {
 /// * `from_did` - DID that sends the message
 /// * `to_did` - DID that receives the message
 /// * `request_presentation` - request for presentation
+/// * `thid` - thid for Present-Proof exchange
 ///
 /// # Returns
 /// * `MessageWithBody<PresentationData>` - constructed Presentation request Object, ready to be sent
@@ -31,6 +32,7 @@ pub fn get_present_proof_message(
     from_did: &str,
     to_did: &str,
     presentation_data: PresentationData,
+    thid: &str,
 ) -> Result<MessageWithBody<PresentationData>, Box<dyn std::error::Error>> {
     let thread_id = Uuid::new_v4().to_simple().to_string();
     let service_id = format!("{0}#key-1", from_did);
@@ -46,9 +48,9 @@ pub fn get_present_proof_message(
         from: Some(String::from(from_did)),
         id: Some(String::from(&thread_id)),
         other: HashMap::new(),
-        pthid: Some(format!("{}#key-1", thread_id)),
+        pthid: Some(format!("{}#present-proof", thread_id)),
         r#type: format!("{}/{}", PRESENT_PROOF_PROTOCOL_URL, step_name),
-        thid: Some(service_id),
+        thid: Some(thid.to_string()),
         to: Some([String::from(to_did)].to_vec()),
     };
 

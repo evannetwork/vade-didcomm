@@ -1,7 +1,7 @@
 use crate::{
     datatypes::{BaseMessage, ExtendedMessage, MessageWithBody, PresentationData},
     get_from_to_from_message,
-    presentation::{save_presentation},
+    presentation::save_presentation,
     protocols::protocol::{generate_step_output, StepResult},
 };
 
@@ -28,16 +28,19 @@ pub fn send_presentation(message: &str) -> StepResult {
     )?;
     let presentation_data: PresentationData = serde_json::from_str(&data)?;
 
-    
+    let thid = parsed_message
+        .thid
+        .to_owned()
+        .ok_or("Thread id can't be empty")?;
     // let saved_presentation_data = get_presentation(&exchange_info.from, &exchange_info.to, &thid)?;
     let request_message = get_present_proof_message(
         PresentProofType::Presentation,
         &exchange_info.from,
         &exchange_info.to,
         presentation_data.clone(),
+        &thid,
     )?;
 
-    let thid = request_message.id.to_owned().ok_or("Thread id can't be empty")?;
     save_presentation(
         &exchange_info.from,
         &exchange_info.to,
@@ -76,7 +79,7 @@ pub fn receive_request_presentation(message: &str) -> StepResult {
         ),
     };
     let thid = parsed_message
-        .id
+        .thid
         .to_owned()
         .ok_or("Thread id can't be empty")?;
 
@@ -120,15 +123,18 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
             .ok_or("Presentation data not provided.")?,
     )?;
     let presentation_data: PresentationData = serde_json::from_str(&data)?;
+    let thid = parsed_message
+        .thid
+        .to_owned()
+        .ok_or("Thread id can't be empty")?;
 
     let request_message = get_present_proof_message(
         PresentProofType::ProposePresentation,
         &exchange_info.from,
         &exchange_info.to,
         presentation_data.clone(),
+        &thid,
     )?;
-
-    let thid = request_message.id.to_owned().ok_or("Thread id can't be empty")?;
 
     save_presentation(
         &exchange_info.from,

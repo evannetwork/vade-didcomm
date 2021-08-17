@@ -2,12 +2,14 @@ pub(crate) mod done;
 pub(crate) mod helper;
 pub(crate) mod prover;
 pub(crate) mod verifier;
+pub(crate) mod problem_report;
 
 use crate::{
     protocols::{
         present_proof::{
             done::{receive_presentation_ack, send_presentation_ack},
             prover::{receive_request_presentation, send_presentation, send_propose_presentation},
+            problem_report::{send_problem_report,receive_problem_report},
             verifier::{
                 receive_presentation, receive_propose_presentation, send_request_presentation,
             },
@@ -33,6 +35,8 @@ pub fn generate_present_proof_protocol() -> Protocol {
             generate_send_step("propose-presentation", send_propose_presentation),
             generate_send_step("ack", send_presentation_ack),
             generate_receive_step("ack", receive_presentation_ack),
+            generate_send_step("problem-report", send_problem_report),
+            generate_receive_step("problem-report", receive_problem_report),
         ],
     }
 }

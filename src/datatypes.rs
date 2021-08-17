@@ -235,3 +235,43 @@ pub struct PresentationData{
     #[serde(default)]
     pub presentation_proposal: Option<PresentationPreview>,
 }
+
+
+/// Problem report structure contains fields which are required for reporting problem
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct ProblemReport{
+    pub r#type: String,
+    pub from: Option<String>,
+    pub to: Option<Vec<String>>,
+    pub id: String,
+    pub thid: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub problem_items: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub who_retries: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fix_hint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub impact: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub r#where: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub noticed_time: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tracking_uri: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excalation_uri: Option<String>,
+}
+
+/// Ack structure contains fields which are sent to 
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct Ack{
+    pub from: Option<String>,
+    pub to: Option<Vec<String>>,
+    pub r#type: String,
+    pub id: String,
+    pub status: String,
+    pub thid: Option<String>,
+}

@@ -87,7 +87,6 @@ pub fn receive_presentation(message: &str) -> StepResult {
         .presentation_data
         .ok_or("Presentation data not provided.")?;
 
-    // let saved_presentation_data = get_presentation(&base_info.from, &base_info.to, &thid)?;
     save_presentation(
         &base_info.from,
         &base_info.to,

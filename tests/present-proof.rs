@@ -54,7 +54,7 @@ async fn send_request_presentation(
                 r#type: String::from("https://didcomm.org/present-proof/1.0/request-presentation"),
                 id: id.to_string(),
                 mime_type: String::from("application/json"),
-                data: String::from("base 64 data string"),
+                data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
             }]
             .to_vec(),
         ),
@@ -140,7 +140,7 @@ async fn send_presentation(
                 r#type: String::from("https://didcomm.org/present-proof/1.0/presentation"),
                 id: id.to_string(),
                 mime_type: String::from("application/json"),
-                data: String::from("base 64 data string"),
+                data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
             }]
             .to_vec(),
         ),
@@ -231,7 +231,7 @@ async fn send_presentation_proposal(
                     name: id.to_string(),
                     cred_def_id: String::from("cred_def_id"),
                     mime_type: String::from("application/json"),
-                    value: String::from("base 64 data string"),
+                    value: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
                     referent: String::from("referent"),
                 }]
                 .to_vec(),

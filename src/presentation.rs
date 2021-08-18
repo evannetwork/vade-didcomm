@@ -1,5 +1,5 @@
 use crate::{
-    datatypes::{PresentationData, State},
+    datatypes::{PresentationData, State, UserType},
     db::{read_db, write_db},
 };
 
@@ -11,6 +11,7 @@ use crate::{
 /// * `to_did` - to DID as string
 /// * `thid` - thread id
 /// * `presentation` - presentation data
+/// * `state` - State
 pub fn save_presentation(
     from_did: &str,
     to_did: &str,
@@ -54,12 +55,14 @@ pub fn _get_presentation(
 /// # Arguments
 /// * `state` - State
 /// * `thid` - thread id
+/// * `user_type` - UserType
 pub fn save_state(
     thid: &str,
     state: &State,
+    user_type: &UserType
 ) -> Result<(), Box<dyn std::error::Error>> {
     write_db(
-        &format!("present_proof_state_{}", thid),
+        &format!("present_proof_state_{}_{}", user_type, thid),
         &state.to_string(),
     )?;
 
@@ -70,11 +73,17 @@ pub fn save_state(
 ///
 /// # Arguments
 /// * `thid` - thread id
+/// * `user_type` - UserType
 /// # Returns
 /// * `state` - State stored in db.
 pub fn get_current_state(
     thid: &str,
+    user_type: &UserType,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let state = read_db(&format!("present_proof_state_{}", thid))?;
+    let result = read_db(&format!("present_proof_state_{}_{}", user_type, thid));
+    let state = match result {
+        Ok(value)=> value,
+        Err(_)=> "Unknown".to_string()
+    };
     Ok(state)
 }

@@ -1,5 +1,5 @@
 use crate::{
-    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody, PresentationData, State},
+    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody, PresentationData, State, UserType},
     get_from_to_from_message,
     presentation::{get_current_state, save_presentation, save_state},
     protocols::protocol::{generate_step_output, StepResult},
@@ -28,10 +28,12 @@ pub fn send_presentation(message: &str) -> StepResult {
 
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid)?.parse()?;
+    let current_state: State = get_current_state(&thid, &UserType::Prover)?.parse()?;
 
     let result = match current_state {
-        State::PresentationRequestReceived => save_state(&thid, &State::PresentationSent),
+        State::PresentationRequestReceived => {
+            save_state(&thid, &State::PresentationSent, &UserType::Prover)
+        }
         _ => Err(Box::from(format!(
             "State from {} to {} not allowed",
             current_state,
@@ -99,13 +101,31 @@ pub fn receive_request_presentation(message: &str) -> StepResult {
         .presentation_data
         .ok_or("Presentation data not provided.")?;
 
-    let result = save_state(&thid, &State::PresentationRequestReceived);
+    let current_state: State = get_current_state(&thid, &UserType::Prover)?.parse()?;
+
+    let result = match current_state {
+        State::PresentationProposed => save_state(
+            &thid,
+            &State::PresentationRequestReceived,
+            &UserType::Prover,
+        ),
+        State::Unknown => save_state(
+            &thid,
+            &State::PresentationRequestReceived,
+            &UserType::Prover,
+        ),
+        _ => Err(Box::from(format!(
+            "State from {} to {} not allowed",
+            current_state,
+            State::PresentationRequestReceived
+        ))),
+    };
 
     match result {
         Ok(_) => {}
         Err(err) => panic!("Error while processing step: {:?}", err),
     }
-    
+
     save_presentation(
         &base_info.to,
         &base_info.from,
@@ -141,10 +161,13 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
     let presentation_data: PresentationData = serde_json::from_str(&data)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid)?.parse()?;
+    let current_state: State = get_current_state(&thid, &UserType::Prover)?.parse()?;
 
     let result = match current_state {
-        State::PresentationRequestReceived => save_state(&thid, &State::PresentationProposed),
+        State::PresentationRequestReceived => {
+            save_state(&thid, &State::PresentationProposed, &UserType::Prover)
+        }
+        State::Unknown => save_state(&thid, &State::PresentationProposed, &UserType::Prover),
         _ => Err(Box::from(format!(
             "State from {} to {} not allowed",
             current_state,

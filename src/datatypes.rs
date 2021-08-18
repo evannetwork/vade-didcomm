@@ -239,13 +239,14 @@ pub struct PresentationData {
 }
 
 /// Problem report structure contains fields which are required for reporting problem
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ProblemReport {
     pub r#type: String,
     pub from: Option<String>,
     pub to: Option<Vec<String>>,
     pub id: String,
     pub thid: Option<String>,
+    pub user_type: UserType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -267,7 +268,7 @@ pub struct ProblemReport {
 }
 
 /// Ack structure contains fields which are sent to
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Ack {
     pub from: Option<String>,
     pub to: Option<Vec<String>>,
@@ -275,6 +276,7 @@ pub struct Ack {
     pub id: String,
     pub status: String,
     pub thid: Option<String>,
+    pub user_type: UserType,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -287,6 +289,7 @@ pub enum State {
     PresentationProposalReceived,
     ProblemReported,
     Acknowledged,
+    Unknown,
 }
 
 impl fmt::Display for State {
@@ -308,7 +311,20 @@ impl std::str::FromStr for State {
             "PresentationProposalReceived" => Ok(State::PresentationProposalReceived),
             "ProblemReported" => Ok(State::ProblemReported),
             "Acknowledged" => Ok(State::Acknowledged),
-            _ => Err(format!("'{}' is not a valid value for State", s)),
+            _ => Ok(State::Unknown),
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum UserType {
+    Prover,
+    Verifier,
+    None,
+}
+
+impl fmt::Display for UserType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }

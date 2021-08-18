@@ -16,10 +16,10 @@ pub fn send_presentation_ack(message: &str) -> StepResult {
 
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid)?.parse()?;
+    let current_state: State = get_current_state(&thid, &ack.user_type)?.parse()?;
 
     let result = match current_state {
-        State::PresentationReceived => save_state(&thid, &State::Acknowledged),
+        State::PresentationReceived => save_state(&thid, &State::Acknowledged, &ack.user_type),
         _ => Err(Box::from(format!(
             "State from {} to {} not allowed",
             current_state,
@@ -39,10 +39,12 @@ pub fn receive_presentation_ack(message: &str) -> StepResult {
     let parsed_message: Ack = serde_json::from_str(&message)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid)?.parse()?;
+    let current_state: State = get_current_state(&thid, &parsed_message.user_type)?.parse()?;
 
     let result = match current_state {
-        State::PresentationSent => save_state(&thid, &State::Acknowledged),
+        State::PresentationSent => {
+            save_state(&thid, &State::Acknowledged, &parsed_message.user_type)
+        }
         State::Acknowledged => Ok(()),
         _ => Err(Box::from(format!(
             "State from {} to {} not allowed",

@@ -1,5 +1,5 @@
 use crate::{
-    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody, PresentationData, State},
+    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody, PresentationData, State, UserType},
     get_from_to_from_message,
     presentation::{get_current_state, save_presentation, save_state},
     protocols::protocol::{generate_step_output, StepResult},
@@ -35,7 +35,18 @@ pub fn send_request_presentation(message: &str) -> StepResult {
         &thid,
     )?;
 
-    let result = save_state(&thid, &State::PresentationRequested);
+    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
+    let result = match current_state {
+        State::PresentationProposalReceived => {
+            save_state(&thid, &State::PresentationRequested, &UserType::Verifier)
+        }
+        State::Unknown => save_state(&thid, &State::PresentationRequested, &UserType::Verifier),
+        _ => Err(Box::from(format!(
+            "State from {} to {} not allowed",
+            current_state,
+            State::PresentationRequested
+        ))),
+    };
     match result {
         Ok(_) => {}
         Err(err) => panic!("Error while processing step: {:?}", err),
@@ -80,14 +91,11 @@ pub fn receive_presentation(message: &str) -> StepResult {
         .ok_or("Thread id can't be empty")?;
     let base_info = get_from_to_from_message(base_message)?;
 
-    let current_state: State = get_current_state(&thid)?.parse()?;
+    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
 
     let result = match current_state {
         State::PresentationRequested => {
-            save_state(&thid, &State::PresentationReceived)
-        }
-        State::PresentationSent => {
-            save_state(&thid, &State::PresentationReceived)
+            save_state(&thid, &State::PresentationReceived, &UserType::Verifier)
         }
         _ => Err(Box::from(format!(
             "State from {} to {} not allowed",
@@ -148,10 +156,18 @@ pub fn receive_propose_presentation(message: &str) -> StepResult {
         .presentation_data
         .ok_or("Presentation data not provided.")?;
 
-    let current_state: State = get_current_state(&thid)?.parse()?;
+    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
     let result = match current_state {
-        State::PresentationRequested => save_state(&thid, &State::PresentationProposalReceived),
-        State::PresentationProposed => save_state(&thid, &State::PresentationProposalReceived),
+        State::PresentationRequested => save_state(
+            &thid,
+            &State::PresentationProposalReceived,
+            &UserType::Verifier,
+        ),
+        State::Unknown => save_state(
+            &thid,
+            &State::PresentationProposalReceived,
+            &UserType::Verifier,
+        ),
         _ => Err(Box::from(format!(
             "State from {} to {} not allowed",
             current_state,

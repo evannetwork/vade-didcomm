@@ -5,7 +5,8 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{
         Ack, Attribute, EncryptedMessage, MessageWithBody, Predicate, PresentationAttach,
-        PresentationData, PresentationPreview, ProblemReport, State, VadeDidCommPluginOutput,
+        PresentationData, PresentationPreview, ProblemReport, State, UserType,
+        VadeDidCommPluginOutput,
     },
     VadeDidComm,
 };
@@ -344,6 +345,7 @@ async fn send_ack(
         id: id.to_string(),
         thid: Some(id.to_string()),
         status: String::from("Success"),
+        user_type: UserType::Verifier,
     };
 
     let exchange_complete = format!(
@@ -415,6 +417,7 @@ async fn send_problem_report(
         noticed_time: None,
         tracking_uri: None,
         excalation_uri: None,
+        user_type: UserType::Prover,
     };
 
     let exchange_message = format!(

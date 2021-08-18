@@ -1,7 +1,6 @@
 use crate::{
-    datatypes::{Ack, BaseMessage, ExtendedMessage},
-    get_from_to_from_message,
-    presentation::get_presentation,
+    datatypes::{Ack, ExtendedMessage, State},
+    presentation::{get_current_state, save_state},
     protocols::protocol::{generate_step_output, StepResult},
 };
 
@@ -15,31 +14,20 @@ pub fn send_presentation_ack(message: &str) -> StepResult {
     )?;
     let ack: Ack = serde_json::from_str(&data)?;
 
-    let base_message: BaseMessage = BaseMessage {
-        from: parsed_message.from,
-        r#type: parsed_message.r#type,
-        to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),
+    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
+
+    let current_state: State = get_current_state(&thid)?.parse()?;
+
+    let result = match current_state {
+        State::PresentationReceived => {
+            save_state(&thid, &State::Acknowledged)
+        }
+        _ => Err(Box::from(format!("State from {} to ACK not allowed", current_state))),
     };
-    let exchange_info = get_from_to_from_message(base_message)?;
-    let thid = parsed_message
-        .thid
-        .ok_or("Thread id can't be empty")?;
 
-    let saved_presentation = get_presentation(&exchange_info.from, &exchange_info.to, &thid)?;
-    if saved_presentation.presentation_attach.is_none() {
-        panic!("No request for presentation found.");
-    }
-
-    let presentation_attach = saved_presentation
-        .presentation_attach
-        .ok_or("No attached presentation")?;
-
-    let presentation_data = presentation_attach
-        .get(0)
-        .ok_or("No data found for attached Presentation")?;
-
-    if !presentation_data.r#type.contains("presentation") {
-        panic!("Cant send ack without receiving presentation.");
+    match result {
+        Ok(_) => {}
+        Err(err) =>  panic!("Error while processing step: {:?}", err),
     }
 
     generate_step_output(&serde_json::to_string(&ack)?, "{}")

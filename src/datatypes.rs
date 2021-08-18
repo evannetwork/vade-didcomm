@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt};
 
 /// Struct for a pub key that will be sent during DID exchange with the users communication DID document.
 #[derive(Serialize, Deserialize)]
@@ -224,8 +224,9 @@ pub struct Predicate {
 }
 
 /// PresentationData structure contains optional fields to be exchanged for all the steps of Present-Proof steps.
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PresentationData {
+    pub state: State,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub comment: Option<String>,
@@ -274,4 +275,40 @@ pub struct Ack {
     pub id: String,
     pub status: String,
     pub thid: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum State {
+    PresentationRequested,
+    PresentationRequestReceived,
+    PresentationReceived,
+    PresentationSent,
+    PresentationProposed,
+    PresentationProposalReceived,
+    ProblemReported,
+    Acknowledged,
+}
+
+impl fmt::Display for State {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl std::str::FromStr for State {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "PresentationRequested" => Ok(State::PresentationRequested),
+            "PresentationRequestReceived" => Ok(State::PresentationRequestReceived),
+            "PresentationReceived" => Ok(State::PresentationReceived),
+            "PresentationSent" => Ok(State::PresentationSent),
+            "PresentationProposed" => Ok(State::PresentationProposed),
+            "PresentationProposalReceived" => Ok(State::PresentationProposalReceived),
+            "ProblemReported" => Ok(State::ProblemReported),
+            "Acknowledged" => Ok(State::Acknowledged),
+            _ => Err(format!("'{}' is not a valid value for WSType", s)),
+        }
+    }
 }

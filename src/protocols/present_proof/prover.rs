@@ -1,7 +1,7 @@
 use crate::{
-    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody, PresentationData},
+    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody, PresentationData, State},
     get_from_to_from_message,
-    presentation::{get_presentation, save_presentation},
+    presentation::{get_current_state, save_presentation, save_state},
     protocols::protocol::{generate_step_output, StepResult},
 };
 
@@ -26,13 +26,22 @@ pub fn send_presentation(message: &str) -> StepResult {
     )?;
     let presentation_data: PresentationData = serde_json::from_str(&data)?;
 
-    let thid = parsed_message
-        .thid
-        .ok_or("Thread id can't be empty")?;
+    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
-    let saved_presentation = get_presentation(&exchange_info.from, &exchange_info.to, &thid)?;
-    if saved_presentation.presentation_attach.is_none() {
-        panic!("No request for presentation found.");
+    let current_state: State = get_current_state(&thid)?.parse()?;
+
+    let result = match current_state {
+        State::PresentationRequestReceived => save_state(&thid, &State::PresentationSent),
+        _ => Err(Box::from(format!(
+            "State from {} to {} not allowed",
+            current_state,
+            State::PresentationSent
+        ))),
+    };
+
+    match result {
+        Ok(_) => {}
+        Err(err) => panic!("Error while processing step: {:?}", err),
     }
 
     let request_message = get_present_proof_message(
@@ -48,6 +57,7 @@ pub fn send_presentation(message: &str) -> StepResult {
         &exchange_info.to,
         &thid,
         &serde_json::to_string(&presentation_data)?,
+        &State::PresentationSent,
     )?;
 
     let presentation_request = presentation_data
@@ -89,12 +99,21 @@ pub fn receive_request_presentation(message: &str) -> StepResult {
         .presentation_data
         .ok_or("Presentation data not provided.")?;
 
+    let result = save_state(&thid, &State::PresentationRequestReceived);
+
+    match result {
+        Ok(_) => {}
+        Err(err) => panic!("Error while processing step: {:?}", err),
+    }
+    
     save_presentation(
         &base_info.to,
         &base_info.from,
         &thid,
         &serde_json::to_string(&presentation_data)?,
+        &State::PresentationRequestReceived,
     )?;
+
     let presentation_request = presentation_data
         .presentation_attach
         .ok_or("Presentation request not attached.")?;
@@ -120,15 +139,23 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
             .ok_or("Presentation data not provided.")?,
     )?;
     let presentation_data: PresentationData = serde_json::from_str(&data)?;
-    let thid = parsed_message
-        .thid
-        .ok_or("Thread id can't be empty")?;
+    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
-    let saved_presentation = get_presentation(&exchange_info.from, &exchange_info.to, &thid)?;
-    if saved_presentation.presentation_attach.is_none() {
-        panic!("No request for presentation found.");
+    let current_state: State = get_current_state(&thid)?.parse()?;
+
+    let result = match current_state {
+        State::PresentationRequestReceived => save_state(&thid, &State::PresentationProposed),
+        _ => Err(Box::from(format!(
+            "State from {} to {} not allowed",
+            current_state,
+            State::PresentationProposed
+        ))),
+    };
+
+    match result {
+        Ok(_) => {}
+        Err(err) => panic!("Error while processing step: {:?}", err),
     }
-
     let request_message = get_present_proof_message(
         PresentProofType::ProposePresentation,
         &exchange_info.from,
@@ -142,6 +169,7 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
         &exchange_info.to,
         &thid,
         &serde_json::to_string(&presentation_data)?,
+        &State::PresentationProposed,
     )?;
 
     let presentation_proposal = presentation_data

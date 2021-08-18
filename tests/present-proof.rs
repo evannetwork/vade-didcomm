@@ -5,7 +5,7 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{
         Ack, Attribute, EncryptedMessage, MessageWithBody, Predicate, PresentationAttach,
-        PresentationData, PresentationPreview, ProblemReport, VadeDidCommPluginOutput,
+        PresentationData, PresentationPreview, ProblemReport, State, VadeDidCommPluginOutput,
     },
     VadeDidComm,
 };
@@ -27,8 +27,12 @@ pub fn get_presentation(
     from_did: &str,
     to_did: &str,
     thid: &str,
+    state: State,
 ) -> Result<PresentationData, Box<dyn std::error::Error>> {
-    let presentation = read_db(&format!("present_proof_{}_{}_{}", from_did, to_did, thid))?;
+    let presentation = read_db(&format!(
+        "present_proof_{}_{}_{}_{}",
+        from_did, to_did, state, thid
+    ))?;
     let presentation_data: PresentationData = serde_json::from_str(&presentation)?;
     return Ok(presentation_data);
 }
@@ -49,6 +53,7 @@ async fn send_request_presentation(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let presentation_data = PresentationData {
+        state: State::PresentationRequested,
         presentation_attach: Some(
             [PresentationAttach {
                 r#type: String::from("https://didcomm.org/present-proof/1.0/request-presentation"),
@@ -116,7 +121,7 @@ async fn receive_request_presentation(
         .presentation_attach
         .ok_or("Presentation request not attached")?;
     let presentation_data = attached_req.get(0).ok_or("Request body is invalid")?;
-    let req_data_saved = get_presentation(sender, receiver, id)?;
+    let req_data_saved = get_presentation(sender, receiver, id, request_presentation.state)?;
     let attached_req_saved = req_data_saved
         .presentation_attach
         .ok_or("Presentation request not attached")?;
@@ -135,6 +140,7 @@ async fn send_presentation(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let presentation_data = PresentationData {
+        state: State::PresentationSent,
         presentation_attach: Some(
             [PresentationAttach {
                 r#type: String::from("https://didcomm.org/present-proof/1.0/presentation"),
@@ -197,6 +203,7 @@ async fn receive_presentation(
         .body
         .ok_or("send DIDComm request does not return presentation request".to_owned())?;
 
+    let state = received_presentation.state;
     let attached_presentation = received_presentation
         .presentation_attach
         .ok_or("Presentation request not attached")?;
@@ -204,7 +211,7 @@ async fn receive_presentation(
         .get(0)
         .ok_or("Request body is invalid")?;
 
-    let req_data_saved = get_presentation(sender, receiver, id)?;
+    let req_data_saved = get_presentation(sender, receiver, id, state)?;
     let attached_presentation_saved = req_data_saved
         .presentation_attach
         .ok_or("Presentation request not attached")?;
@@ -225,6 +232,7 @@ async fn send_presentation_proposal(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let presentation_data = PresentationData {
+        state: State::PresentationProposed,
         presentation_proposal: Some(PresentationPreview {
             attribute: Some(
                 [Attribute {
@@ -300,6 +308,8 @@ async fn receive_presentation_proposal(
         .body
         .ok_or("send DIDComm request does not return presentation request".to_owned())?;
 
+    let state = received_proposal.state;
+
     let proposal_data = received_proposal
         .presentation_proposal
         .ok_or("Proposal data not attached")?;
@@ -308,7 +318,7 @@ async fn receive_presentation_proposal(
         .ok_or("Attributes not provided with proposal")?;
     let attribute = attribute_data.get(0).ok_or("Attribute is invalid")?;
 
-    let proposal_data_saved = get_presentation(sender, receiver, id)?.presentation_proposal;
+    let proposal_data_saved = get_presentation(sender, receiver, id, state)?.presentation_proposal;
     let proposal_data_saved_attributes =
         proposal_data_saved.ok_or("Proposal data not saved in db")?;
     let attribute_data_saved = proposal_data_saved_attributes

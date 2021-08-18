@@ -308,7 +308,7 @@ impl std::str::FromStr for State {
             "PresentationProposalReceived" => Ok(State::PresentationProposalReceived),
             "ProblemReported" => Ok(State::ProblemReported),
             "Acknowledged" => Ok(State::Acknowledged),
-            _ => Err(format!("'{}' is not a valid value for WSType", s)),
+            _ => Err(format!("'{}' is not a valid value for State", s)),
         }
     }
 }

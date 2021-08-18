@@ -19,20 +19,41 @@ pub fn send_presentation_ack(message: &str) -> StepResult {
     let current_state: State = get_current_state(&thid)?.parse()?;
 
     let result = match current_state {
-        State::PresentationReceived => {
-            save_state(&thid, &State::Acknowledged)
-        }
-        _ => Err(Box::from(format!("State from {} to ACK not allowed", current_state))),
+        State::PresentationReceived => save_state(&thid, &State::Acknowledged),
+        _ => Err(Box::from(format!(
+            "State from {} to {} not allowed",
+            current_state,
+            State::Acknowledged
+        ))),
     };
 
     match result {
         Ok(_) => {}
-        Err(err) =>  panic!("Error while processing step: {:?}", err),
+        Err(err) => panic!("Error while processing step: {:?}", err),
     }
 
     generate_step_output(&serde_json::to_string(&ack)?, "{}")
 }
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/ack`
 pub fn receive_presentation_ack(message: &str) -> StepResult {
+    let parsed_message: Ack = serde_json::from_str(&message)?;
+    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
+
+    let current_state: State = get_current_state(&thid)?.parse()?;
+
+    let result = match current_state {
+        State::PresentationSent => save_state(&thid, &State::Acknowledged),
+        State::Acknowledged => Ok(()),
+        _ => Err(Box::from(format!(
+            "State from {} to {} not allowed",
+            current_state,
+            State::Acknowledged
+        ))),
+    };
+
+    match result {
+        Ok(_) => {}
+        Err(err) => panic!("Error while processing step: {:?}", err),
+    }
     generate_step_output(message, "{}")
 }

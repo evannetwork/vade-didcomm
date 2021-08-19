@@ -44,7 +44,7 @@ pub fn send_problem_report(message: &str) -> StepResult {
 
     match result {
         Ok(_) => {}
-        Err(err) => panic!("Error while processing step: {:?}", err),
+        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
     }
 
     generate_step_output(&serde_json::to_string(&problem_report)?, "{}")
@@ -84,7 +84,7 @@ pub fn receive_problem_report(message: &str) -> StepResult {
 
     match result {
         Ok(_) => {}
-        Err(err) => panic!("Error while processing step: {:?}", err),
+        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
     }
     generate_step_output(message, "{}")
 }

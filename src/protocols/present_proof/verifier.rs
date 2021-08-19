@@ -49,7 +49,7 @@ pub fn send_request_presentation(message: &str) -> StepResult {
     };
     match result {
         Ok(_) => {}
-        Err(err) => panic!("Error while processing step: {:?}", err),
+        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
     }
     save_presentation(
         &exchange_info.from,
@@ -106,7 +106,7 @@ pub fn receive_presentation(message: &str) -> StepResult {
 
     match result {
         Ok(_) => {}
-        Err(err) => panic!("Error while processing step: {:?}", err),
+        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
     }
 
     let exchange_info = get_present_proof_info_from_message(parsed_message)?;
@@ -177,7 +177,7 @@ pub fn receive_propose_presentation(message: &str) -> StepResult {
 
     match result {
         Ok(_) => {}
-        Err(err) => panic!("Error while processing step: {:?}", err),
+        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
     }
 
     save_presentation(

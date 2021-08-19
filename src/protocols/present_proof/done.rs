@@ -29,7 +29,7 @@ pub fn send_presentation_ack(message: &str) -> StepResult {
 
     match result {
         Ok(_) => {}
-        Err(err) => panic!("Error while processing step: {:?}", err),
+        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
     }
 
     generate_step_output(&serde_json::to_string(&ack)?, "{}")
@@ -55,7 +55,7 @@ pub fn receive_presentation_ack(message: &str) -> StepResult {
 
     match result {
         Ok(_) => {}
-        Err(err) => panic!("Error while processing step: {:?}", err),
+        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
     }
     generate_step_output(message, "{}")
 }

@@ -569,3 +569,27 @@ async fn can_do_problem_report() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+    let user_1_did = String::from("did:uknow:d34db33d");
+    let user_2_did = String::from("did:uknow:d34db33f");
+    let options = String::from("{}");
+    let id = Uuid::new_v4().to_simple().to_string();
+
+    let _request_message =
+        send_request_presentation(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+
+    let complete_message = send_ack(&mut vade, &user_1_did, &user_2_did, &id).await?;
+    Ok(complete_message)
+}
+
+#[test]
+#[should_panic]
+fn will_panic_and_fail_to_process_wrong_state() -> () {
+    let result = futures::executor::block_on(send_wrong_ack_state());
+    match result {
+        Err(e) => panic!("Error : {:?}", e),
+        _ => {}
+    }
+}

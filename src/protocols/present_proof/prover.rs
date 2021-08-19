@@ -201,7 +201,7 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
 
     let attribute = presentation_proposal
         .attribute
-        .ok_or(" No Attributes provided")?;
+        .ok_or("No Attributes provided")?;
     let metadata = attribute
         .get(0)
         .ok_or("Attribute data should be provided")?;

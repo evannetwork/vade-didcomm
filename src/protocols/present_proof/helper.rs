@@ -1,10 +1,9 @@
+use crate::datatypes::MessageWithBody;
+use crate::protocols::present_proof::datatypes::{
+    PresentProofReq, PresentationData, PRESENT_PROOF_PROTOCOL_URL,
+};
 use std::collections::HashMap;
-
 use uuid::Uuid;
-
-use crate::datatypes::{MessageWithBody, PresentProofReq, PresentationData};
-
-pub const PRESENT_PROOF_PROTOCOL_URL: &str = "https://didcomm.org/present-proof/1.0";
 
 /// Specifies all possible message directions.
 #[derive(PartialEq)]

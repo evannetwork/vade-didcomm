@@ -1,7 +1,8 @@
 use crate::{
-    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody, PresentationData, State, UserType},
+    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
     get_from_to_from_message,
-    presentation::{get_current_state, save_presentation, save_state},
+    protocols::present_proof::datatypes::{PresentationData, State, UserType},
+    protocols::present_proof::presentation::{get_current_state, save_presentation, save_state},
     protocols::protocol::{generate_step_output, StepResult},
 };
 
@@ -41,10 +42,7 @@ pub fn send_presentation(message: &str) -> StepResult {
         ))),
     };
 
-    match result {
-        Ok(_) => {}
-        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
-    }
+    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     let request_message = get_present_proof_message(
         PresentProofType::Presentation,
@@ -104,12 +102,7 @@ pub fn receive_request_presentation(message: &str) -> StepResult {
     let current_state: State = get_current_state(&thid, &UserType::Prover)?.parse()?;
 
     let result = match current_state {
-        State::PresentationProposed => save_state(
-            &thid,
-            &State::PresentationRequestReceived,
-            &UserType::Prover,
-        ),
-        State::Unknown => save_state(
+        State::PresentationProposed | State::Unknown => save_state(
             &thid,
             &State::PresentationRequestReceived,
             &UserType::Prover,
@@ -121,10 +114,7 @@ pub fn receive_request_presentation(message: &str) -> StepResult {
         ))),
     };
 
-    match result {
-        Ok(_) => {}
-        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
-    }
+    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     save_presentation(
         &base_info.to,
@@ -164,10 +154,9 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
     let current_state: State = get_current_state(&thid, &UserType::Prover)?.parse()?;
 
     let result = match current_state {
-        State::PresentationRequestReceived => {
+        State::PresentationRequestReceived | State::Unknown => {
             save_state(&thid, &State::PresentationProposed, &UserType::Prover)
         }
-        State::Unknown => save_state(&thid, &State::PresentationProposed, &UserType::Prover),
         _ => Err(Box::from(format!(
             "State from {} to {} not allowed",
             current_state,
@@ -175,10 +164,8 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
         ))),
     };
 
-    match result {
-        Ok(_) => {}
-        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
-    }
+    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
+
     let request_message = get_present_proof_message(
         PresentProofType::ProposePresentation,
         &exchange_info.from,

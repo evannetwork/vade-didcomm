@@ -1,11 +1,14 @@
-pub(crate) mod done;
-pub(crate) mod helper;
-pub(crate) mod problem_report;
-pub(crate) mod prover;
-pub(crate) mod verifier;
+pub mod datatypes;
+mod done;
+mod helper;
+mod presentation;
+mod problem_report;
+mod prover;
+mod verifier;
 
 use crate::protocols::{
     present_proof::{
+        datatypes::PRESENT_PROOF_PROTOCOL_URL,
         done::{receive_presentation_ack, send_presentation_ack},
         problem_report::{receive_problem_report, send_problem_report},
         prover::{receive_request_presentation, send_presentation, send_propose_presentation},
@@ -13,7 +16,6 @@ use crate::protocols::{
     },
     protocol::{generate_receive_step, generate_send_step, Protocol},
 };
-use helper::PRESENT_PROOF_PROTOCOL_URL;
 
 /// Creates the present_proof protocol, containing step handler functions mapped to their according step.
 ///

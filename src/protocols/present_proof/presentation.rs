@@ -1,6 +1,6 @@
 use crate::{
-    datatypes::{PresentationData, State, UserType},
     db::{read_db, write_db},
+    protocols::present_proof::datatypes::{PresentationData, State, UserType},
 };
 
 /// Saves a request-presentation/presentation in db for two DIDs (from -> to). Entry key will be
@@ -37,17 +37,20 @@ pub fn save_presentation(
 /// * `state` - state
 /// # Returns
 /// * `Presentation` - presetation data stored in db.
-pub fn _get_presentation(
+#[allow(dead_code)]
+pub fn get_presentation(
     from_did: &str,
     to_did: &str,
     thid: &str,
     state: &State,
 ) -> Result<PresentationData, Box<dyn std::error::Error>> {
-    let presentation = read_db(&format!("present_proof_{}_{}_{}_{}", from_did, to_did, state, thid))?;
+    let presentation = read_db(&format!(
+        "present_proof_{}_{}_{}_{}",
+        from_did, to_did, state, thid
+    ))?;
     let presentation_data: PresentationData = serde_json::from_str(&presentation)?;
     Ok(presentation_data)
 }
-
 
 /// Saves state of Present_Proof protocol for given thid. Entry key will be
 /// present_proof_state_{thid}.
@@ -59,7 +62,7 @@ pub fn _get_presentation(
 pub fn save_state(
     thid: &str,
     state: &State,
-    user_type: &UserType
+    user_type: &UserType,
 ) -> Result<(), Box<dyn std::error::Error>> {
     write_db(
         &format!("present_proof_state_{}_{}", user_type, thid),
@@ -82,8 +85,8 @@ pub fn get_current_state(
 ) -> Result<String, Box<dyn std::error::Error>> {
     let result = read_db(&format!("present_proof_state_{}_{}", user_type, thid));
     let state = match result {
-        Ok(value)=> value,
-        Err(_)=> "Unknown".to_string()
+        Ok(value) => value,
+        Err(_) => "Unknown".to_string(),
     };
     Ok(state)
 }

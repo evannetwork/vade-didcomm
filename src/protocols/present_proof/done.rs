@@ -1,6 +1,7 @@
 use crate::{
-    datatypes::{Ack, ExtendedMessage, State},
-    presentation::{get_current_state, save_state},
+    datatypes::ExtendedMessage,
+    protocols::present_proof::datatypes::{Ack, State},
+    protocols::present_proof::presentation::{get_current_state, save_state},
     protocols::protocol::{generate_step_output, StepResult},
 };
 
@@ -27,10 +28,7 @@ pub fn send_presentation_ack(message: &str) -> StepResult {
         ))),
     };
 
-    match result {
-        Ok(_) => {}
-        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
-    }
+    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     generate_step_output(&serde_json::to_string(&ack)?, "{}")
 }
@@ -45,17 +43,16 @@ pub fn receive_presentation_ack(message: &str) -> StepResult {
         State::PresentationSent => {
             save_state(&thid, &State::Acknowledged, &parsed_message.user_type)
         }
-        State::Acknowledged => Ok(()),
-        _ => Err(Box::from(format!(
-            "State from {} to {} not allowed",
-            current_state,
-            State::Acknowledged
-        ))),
+        _ => {
+            return Err(Box::from(format!(
+                "State from {} to {} not allowed",
+                current_state,
+                State::Acknowledged
+            )))
+        }
     };
 
-    match result {
-        Ok(_) => {}
-        Err(err) => return Err(Box::from(format!("Error while processing step: {:?}", err))),
-    }
+    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
+
     generate_step_output(message, "{}")
 }

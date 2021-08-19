@@ -3,10 +3,10 @@ use serial_test::serial;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{
-        Ack, Attribute, EncryptedMessage, MessageWithBody, Predicate, PresentationAttach,
-        PresentationData, PresentationPreview, ProblemReport, State, UserType,
-        VadeDidCommPluginOutput,
+    datatypes::{EncryptedMessage, MessageWithBody, VadeDidCommPluginOutput},
+    protocols::present_proof::datatypes::{
+        Ack, Attribute, Predicate, PresentationAttach, PresentationData, PresentationPreview,
+        ProblemReport, State, UserType,
     },
     VadeDidComm,
 };

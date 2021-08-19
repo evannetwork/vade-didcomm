@@ -584,10 +584,11 @@ async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
     Ok(complete_message)
 }
 
-#[test]
+#[tokio::test]
 #[should_panic]
-fn will_panic_and_fail_to_process_wrong_state() -> () {
-    let result = futures::executor::block_on(send_wrong_ack_state());
+#[serial]
+async fn will_panic_and_fail_to_process_wrong_state() {
+    let result = send_wrong_ack_state().await;
     match result {
         Err(e) => panic!("Error : {:?}", e),
         _ => {}

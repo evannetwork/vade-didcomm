@@ -3,7 +3,6 @@ use std::fmt;
 
 pub const ISSUE_CREDENTIAL_PROTOCOL_URL: &str = "https://didcomm.org/issue-credential/1.0";
 
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct IssuerCredentialReq {
@@ -13,14 +12,12 @@ pub struct IssuerCredentialReq {
     pub credential_data: Option<CredentialData>,
 }
 
-
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct CredentialAttach {
     pub id: String,
     pub mime_type: String,
     pub data: String,
 }
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct CredentialProposal {
@@ -53,7 +50,7 @@ pub struct CredentialData {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     // credential_preview is sent only in with offer-credential, propose-credential
-    pub credential_preview: Option<CredentialPreview>,  
+    pub credential_preview: Option<CredentialPreview>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub comment: Option<String>,

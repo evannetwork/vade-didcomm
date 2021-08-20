@@ -1,6 +1,6 @@
 use crate::datatypes::MessageWithBody;
 use crate::protocols::issue_credential::datatypes::{
-    IssuerCredentialReq, CredentialData, ISSUE_CREDENTIAL_PROTOCOL_URL,
+    CredentialData, IssuerCredentialReq, ISSUE_CREDENTIAL_PROTOCOL_URL,
 };
 use std::collections::HashMap;
 use uuid::Uuid;

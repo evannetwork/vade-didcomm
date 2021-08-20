@@ -1,18 +1,15 @@
 use crate::{
     datatypes::ExtendedMessage,
-    protocols::issue_credential::datatypes::{Ack, State},
     protocols::issue_credential::credential::{get_current_state, save_state},
+    protocols::issue_credential::datatypes::{Ack, State},
     protocols::protocol::{generate_step_output, StepResult},
 };
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/ack`
 pub fn send_credential_ack(message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
-    let data = &serde_json::to_string(
-        &parsed_message
-            .body
-            .ok_or("Credential data not provided.")?,
-    )?;
+    let data =
+        &serde_json::to_string(&parsed_message.body.ok_or("Credential data not provided.")?)?;
     let ack: Ack = serde_json::from_str(&data)?;
 
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;

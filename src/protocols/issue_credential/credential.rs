@@ -20,7 +20,10 @@ pub fn save_credential(
     state: &State,
 ) -> Result<(), Box<dyn std::error::Error>> {
     write_db(
-        &format!("issue_credential_{}_{}_{}_{}", from_did, to_did, state, thid),
+        &format!(
+            "issue_credential_{}_{}_{}_{}",
+            from_did, to_did, state, thid
+        ),
         credential,
     )?;
 

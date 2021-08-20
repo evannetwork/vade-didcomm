@@ -1,18 +1,24 @@
+mod credential;
 pub mod datatypes;
 mod done;
 mod helper;
-mod credential;
-mod problem_report;
-mod issuer;
 mod holder;
+mod issuer;
+mod problem_report;
 
 use crate::protocols::{
     issue_credential::{
         datatypes::ISSUE_CREDENTIAL_PROTOCOL_URL,
         done::{receive_credential_ack, send_credential_ack},
+        holder::{
+            receive_issue_credential, receive_offer_credential, send_propose_credential,
+            send_request_credential,
+        },
+        issuer::{
+            receive_propose_credential, receive_request_credential, send_issue_credential,
+            send_offer_credential,
+        },
         problem_report::{receive_problem_report, send_problem_report},
-        issuer::{receive_propose_credential, send_offer_credential, receive_request_credential, send_issue_credential},
-        holder::{send_propose_credential, receive_offer_credential, send_request_credential, receive_issue_credential},
     },
     protocol::{generate_receive_step, generate_send_step, Protocol},
 };

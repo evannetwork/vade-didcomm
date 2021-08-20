@@ -1,8 +1,8 @@
 use crate::{
     datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
     get_from_to_from_message,
-    protocols::issue_credential::datatypes::{CredentialData, State, UserType},
     protocols::issue_credential::credential::{get_current_state, save_credential, save_state},
+    protocols::issue_credential::datatypes::{CredentialData, State, UserType},
     protocols::protocol::{generate_step_output, StepResult},
 };
 
@@ -20,11 +20,8 @@ pub fn send_offer_credential(message: &str) -> StepResult {
     };
     let exchange_info = get_from_to_from_message(base_message)?;
 
-    let data = &serde_json::to_string(
-        &parsed_message
-            .body
-            .ok_or("Credential data not provided.")?,
-    )?;
+    let data =
+        &serde_json::to_string(&parsed_message.body.ok_or("Credential data not provided.")?)?;
     let credential_data: CredentialData = serde_json::from_str(&data)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
@@ -57,10 +54,7 @@ pub fn send_offer_credential(message: &str) -> StepResult {
         &State::SendOfferCredential,
     )?;
 
-    generate_step_output(
-        &serde_json::to_string(&request_message)?,
-        "{}",
-    )
+    generate_step_output(&serde_json::to_string(&request_message)?, "{}")
 }
 
 /// Protocol handler for direction: `receive`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/request_credential`
@@ -143,11 +137,9 @@ pub fn receive_propose_credential(message: &str) -> StepResult {
 
     let current_state: State = get_current_state(&thid, &UserType::Issuer)?.parse()?;
     let result = match current_state {
-        State::SendOfferCredential | State::Unknown => save_state(
-            &thid,
-            &State::ReceiveProposeCredential,
-            &UserType::Issuer,
-        ),
+        State::SendOfferCredential | State::Unknown => {
+            save_state(&thid, &State::ReceiveProposeCredential, &UserType::Issuer)
+        }
         _ => Err(Box::from(format!(
             "State from {} to {} not allowed",
             current_state,
@@ -164,7 +156,6 @@ pub fn receive_propose_credential(message: &str) -> StepResult {
         &State::ReceiveProposeCredential,
     )?;
 
-
     generate_step_output(message, "{}")
 }
 
@@ -178,11 +169,8 @@ pub fn send_issue_credential(message: &str) -> StepResult {
     };
     let exchange_info = get_from_to_from_message(base_message)?;
 
-    let data = &serde_json::to_string(
-        &parsed_message
-            .body
-            .ok_or("Credential data not provided.")?,
-    )?;
+    let data =
+        &serde_json::to_string(&parsed_message.body.ok_or("Credential data not provided.")?)?;
     let credential_data: CredentialData = serde_json::from_str(&data)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
@@ -215,8 +203,5 @@ pub fn send_issue_credential(message: &str) -> StepResult {
         &State::SendIssueCredential,
     )?;
 
-    generate_step_output(
-        &serde_json::to_string(&request_message)?,
-        "{}",
-    )
+    generate_step_output(&serde_json::to_string(&request_message)?, "{}")
 }

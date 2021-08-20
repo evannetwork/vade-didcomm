@@ -30,7 +30,7 @@ pub fn get_credential(
     state: State,
 ) -> Result<CredentialData, Box<dyn std::error::Error>> {
     let credential = read_db(&format!(
-        "issuer_credential_{}_{}_{}_{}",
+        "issue_credential_{}_{}_{}_{}",
         from_did, to_did, state, thid
     ))?;
     let credential_data: CredentialData = serde_json::from_str(&credential)?;
@@ -54,29 +54,26 @@ async fn send_propose_credential(
 ) -> Result<String, Box<dyn std::error::Error>> {
     let credential_data = CredentialData {
         state: State::SendProposeCredential,
-        credential_proposal: Some(
-            CredentialProposal{
-                id: id.to_string(),
-                comment: String::from("No comment"),
-                schema_issuer_did: sender.to_string(),
-                schema_id: String::from("some_id"),
-                schema_name: String::from("name"),
-                schema_version: String::from("version"),
-                cred_def_id: String::from("cred_id"),
-                issuer_did: String::from("issuer_did")
-            },
-        ),
-        credential_preview: Some(CredentialPreview{
+        credential_proposal: Some(CredentialProposal {
+            id: id.to_string(),
+            comment: String::from("No comment"),
+            schema_issuer_did: sender.to_string(),
+            schema_id: String::from("some_id"),
+            schema_name: String::from("name"),
+            schema_version: String::from("version"),
+            cred_def_id: String::from("cred_id"),
+            issuer_did: String::from("issuer_did"),
+        }),
+        credential_preview: Some(CredentialPreview {
             r#type: String::from(""),
-            attributes: [Attribute{
+            attributes: [Attribute {
                 name: String::from("atr-name"),
                 mime_type: String::from("text"),
                 value: String::from("abc_123"),
-            }].to_vec()
-
-
+            }]
+            .to_vec(),
         }),
-        data_attach: None, 
+        data_attach: None,
         comment: None,
     };
 
@@ -125,21 +122,21 @@ async fn receive_propose_credential(
     let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
-    let request_presentation = received
+    let propose_credential = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or("send DIDComm request does not return propose credential".to_owned())?;
 
-    let attached_req = request_presentation
+    let attached_req = propose_credential
         .credential_proposal
-        .ok_or("Presentation request not attached")?;
+        .ok_or("Proposal not attached")?;
 
-    let req_data_saved = get_credential(sender, receiver, id, request_presentation.state)?;
+    let req_data_saved = get_credential(sender, receiver, id, propose_credential.state)?;
     let attached_req_saved = req_data_saved
         .credential_proposal
-        .ok_or("Presentation request not attached")?;
+        .ok_or("Proposal data not attached")?;
 
-    assert_eq!(attached_req.id, attached_req.id);
+    assert_eq!(attached_req.id, attached_req_saved.id);
 
     return Ok(());
 }
@@ -152,23 +149,25 @@ async fn send_offer_credential(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let credential_data = CredentialData {
-        state: State::SendProposeCredential,
+        state: State::SendOfferCredential,
         credential_proposal: None,
-        credential_preview: Some(CredentialPreview{
+        credential_preview: Some(CredentialPreview {
             r#type: String::from(""),
-            attributes: [Attribute{
+            attributes: [Attribute {
                 name: String::from("atr-name"),
                 mime_type: String::from("text"),
                 value: String::from("abc_123"),
-            }].to_vec()
-
-
+            }]
+            .to_vec(),
         }),
-        data_attach: Some([CredentialAttach{
-            id: String::from("id"),
-            mime_type: String::from("text"),
-            data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
-        }].to_vec()), 
+        data_attach: Some(
+            [CredentialAttach {
+                id: String::from("id"),
+                mime_type: String::from("text"),
+                data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
+            }]
+            .to_vec(),
+        ),
         comment: None,
     };
 
@@ -216,28 +215,26 @@ async fn receive_offer_credential(
     let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
-    let received_presentation = received
+    let received_offer = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or("send DIDComm request does not return offer credential request".to_owned())?;
 
-    let state = received_presentation.state;
-    let attached_presentation = received_presentation
+    let state = received_offer.state;
+    let attached_data = received_offer
         .data_attach
-        .ok_or("Presentation request not attached")?;
-    let presentation_data = attached_presentation
-        .get(0)
-        .ok_or("Request body is invalid")?;
+        .ok_or("Offer credential request not attached")?;
+    let credential_data = attached_data.get(0).ok_or("Request body is invalid")?;
 
     let req_data_saved = get_credential(sender, receiver, id, state)?;
-    let attached_presentation_saved = req_data_saved
+    let attached_credential_saved = req_data_saved
         .data_attach
-        .ok_or("Presentation request not attached")?;
-    let presentation_data_saved = attached_presentation_saved
+        .ok_or("Offer Credential request not saved in DB")?;
+    let attached_data_saved = attached_credential_saved
         .get(0)
         .ok_or("Request body is invalid")?;
 
-    assert_eq!(presentation_data.data, presentation_data_saved.data);
+    assert_eq!(credential_data.data, attached_data_saved.data);
 
     return Ok(());
 }
@@ -250,14 +247,17 @@ async fn send_request_credential(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let credential_data = CredentialData {
-        state: State::SendProposeCredential,
+        state: State::SendRequestCredential,
         credential_proposal: None,
         credential_preview: None,
-        data_attach: Some([CredentialAttach{
-            id: String::from("id"),
-            mime_type: String::from("text"),
-            data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
-        }].to_vec()), 
+        data_attach: Some(
+            [CredentialAttach {
+                id: String::from("id"),
+                mime_type: String::from("text"),
+                data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
+            }]
+            .to_vec(),
+        ),
         comment: None,
     };
 
@@ -308,23 +308,23 @@ async fn receive_request_credential(
     let received_proposal = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or("send DIDComm request does not return request credential request".to_owned())?;
 
     let state = received_proposal.state;
 
     let proposal_data = received_proposal
         .data_attach
-        .ok_or("Proposal data not attached")?;
+        .ok_or("Request crendential data not attached")?;
 
-    let attribute = proposal_data.get(0).ok_or("Attribute is invalid")?;
+    let attribute = proposal_data.get(0).ok_or("Attachment is invalid")?;
 
     let proposal_data_saved = get_credential(sender, receiver, id, state)?.data_attach;
     let proposal_data_saved_attributes =
-        proposal_data_saved.ok_or("Proposal data not saved in db")?;
+        proposal_data_saved.ok_or("Request crendential data not saved in db")?;
 
     let attribute_saved = proposal_data_saved_attributes
         .get(0)
-        .ok_or("Saved Attribute is invalid")?;
+        .ok_or("Saved Attachment is invalid")?;
     assert_eq!(attribute.data, attribute_saved.data);
     return Ok(());
 }
@@ -337,14 +337,17 @@ async fn send_issue_credential(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let credential_data = CredentialData {
-        state: State::SendProposeCredential,
+        state: State::SendIssueCredential,
         credential_proposal: None,
         credential_preview: None,
-        data_attach: Some([CredentialAttach{
-            id: String::from("id"),
-            mime_type: String::from("text"),
-            data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
-        }].to_vec()), 
+        data_attach: Some(
+            [CredentialAttach {
+                id: String::from("id"),
+                mime_type: String::from("text"),
+                data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
+            }]
+            .to_vec(),
+        ),
         comment: None,
     };
 
@@ -395,24 +398,24 @@ async fn receive_issue_credential(
     let received_proposal = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or("send DIDComm request does not return issue credential request".to_owned())?;
 
     let state = received_proposal.state;
 
     let proposal_data = received_proposal
         .data_attach
-        .ok_or("Proposal data not attached")?;
+        .ok_or("Issue Credential data not attached")?;
 
-    let attribute = proposal_data.get(0).ok_or("Attribute is invalid")?;
+    let attachment = proposal_data.get(0).ok_or("Attachment is invalid")?;
 
     let proposal_data_saved = get_credential(sender, receiver, id, state)?.data_attach;
     let proposal_data_saved_attributes =
-        proposal_data_saved.ok_or("Proposal data not saved in db")?;
+        proposal_data_saved.ok_or("Issue Credential not saved in db")?;
 
-    let attribute_saved = proposal_data_saved_attributes
+    let attachment_saved = proposal_data_saved_attributes
         .get(0)
-        .ok_or("Saved Attribute is invalid")?;
-    assert_eq!(attribute.data, attribute_saved.data);
+        .ok_or("Saved Attachment is invalid")?;
+    assert_eq!(attachment.data, attachment_saved.data);
     return Ok(());
 }
 
@@ -552,129 +555,117 @@ async fn receive_problem_report(
     return Ok(());
 }
 
-// #[tokio::test]
-// #[serial]
-// async fn can_do_presentation_exchange() -> Result<(), Box<dyn std::error::Error>> {
-//     let mut vade = get_vade().await?;
-//     let user_1_did = String::from("did:uknow:d34db33d");
-//     let user_2_did = String::from("did:uknow:d34db33f");
-//     let options = String::from("{}");
-//     let id = Uuid::new_v4().to_simple().to_string();
+#[tokio::test]
+#[serial]
+async fn can_issue_credential() -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+    let user_1_did = String::from("did:uknow:d34db33d");
+    let user_2_did = String::from("did:uknow:d34db33f");
+    let options = String::from("{}");
+    let id = Uuid::new_v4().to_simple().to_string();
 
-//     let request_message =
-//         send_request_presentation(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
-//     receive_request_presentation(
-//         &mut vade,
-//         &user_1_did,
-//         &user_2_did,
-//         request_message,
-//         &options,
-//         &id,
-//     )
-//     .await?;
+    let request_message =
+        send_propose_credential(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    receive_propose_credential(
+        &mut vade,
+        &user_1_did,
+        &user_2_did,
+        request_message,
+        &options,
+        &id,
+    )
+    .await?;
 
-//     let response_message =
-//         send_presentation(&mut vade, &user_2_did, &user_1_did, &options, &id).await?;
-//     receive_presentation(
-//         &mut vade,
-//         &user_2_did,
-//         &user_1_did,
-//         response_message,
-//         &options,
-//         &id,
-//     )
-//     .await?;
+    let response_message =
+        send_offer_credential(&mut vade, &user_2_did, &user_1_did, &options, &id).await?;
+    receive_offer_credential(
+        &mut vade,
+        &user_2_did,
+        &user_1_did,
+        response_message,
+        &options,
+        &id,
+    )
+    .await?;
 
-//     let complete_message = send_ack(&mut vade, &user_1_did, &user_2_did, &id).await?;
-//     receive_ack(&mut vade, &user_1_did, &user_2_did, complete_message, &id).await?;
+    let offer_credential =
+        send_request_credential(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    receive_request_credential(
+        &mut vade,
+        &user_1_did,
+        &user_2_did,
+        offer_credential,
+        &options,
+        &id,
+    )
+    .await?;
 
-//     Ok(())
-// }
+    let issue_credential =
+        send_issue_credential(&mut vade, &user_2_did, &user_1_did, &options, &id).await?;
+    receive_issue_credential(
+        &mut vade,
+        &user_2_did,
+        &user_1_did,
+        issue_credential,
+        &options,
+        &id,
+    )
+    .await?;
 
-// #[tokio::test]
-// #[serial]
-// async fn can_do_proposal_exchange() -> Result<(), Box<dyn std::error::Error>> {
-//     let mut vade = get_vade().await?;
-//     let user_1_did = String::from("did:uknow:d34db33d");
-//     let user_2_did = String::from("did:uknow:d34db33f");
-//     let options = String::from("{}");
-//     let id = Uuid::new_v4().to_simple().to_string();
+    let complete_message = send_ack(&mut vade, &user_1_did, &user_2_did, &id).await?;
+    receive_ack(&mut vade, &user_1_did, &user_2_did, complete_message, &id).await?;
 
-//     let request_message =
-//         send_request_presentation(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
-//     receive_request_presentation(
-//         &mut vade,
-//         &user_1_did,
-//         &user_2_did,
-//         request_message,
-//         &options,
-//         &id,
-//     )
-//     .await?;
+    Ok(())
+}
 
-//     let response_message =
-//         send_presentation_proposal(&mut vade, &user_2_did, &user_1_did, &options, &id).await?;
-//     receive_presentation_proposal(
-//         &mut vade,
-//         &user_2_did,
-//         &user_1_did,
-//         response_message,
-//         &options,
-//         &id,
-//     )
-//     .await?;
+#[tokio::test]
+#[serial]
+async fn can_do_problem_report() -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+    let user_1_did = String::from("did:uknow:d34db33d");
+    let user_2_did = String::from("did:uknow:d34db33f");
+    let options = String::from("{}");
+    let id = Uuid::new_v4().to_simple().to_string();
 
-//     Ok(())
-// }
+    let request_message =
+        send_propose_credential(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    receive_propose_credential(
+        &mut vade,
+        &user_1_did,
+        &user_2_did,
+        request_message,
+        &options,
+        &id,
+    )
+    .await?;
 
-// #[tokio::test]
-// #[serial]
-// async fn can_do_problem_report() -> Result<(), Box<dyn std::error::Error>> {
-//     let mut vade = get_vade().await?;
-//     let user_1_did = String::from("did:uknow:d34db33d");
-//     let user_2_did = String::from("did:uknow:d34db33f");
-//     let options = String::from("{}");
-//     let id = Uuid::new_v4().to_simple().to_string();
+    let problem_message = send_problem_report(&mut vade, &user_1_did, &user_2_did, &id).await?;
+    receive_problem_report(&mut vade, &user_1_did, &user_2_did, problem_message, &id).await?;
 
-//     let request_message =
-//         send_request_presentation(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
-//     receive_request_presentation(
-//         &mut vade,
-//         &user_1_did,
-//         &user_2_did,
-//         request_message,
-//         &options,
-//         &id,
-//     )
-//     .await?;
+    Ok(())
+}
 
-//     let problem_message = send_problem_report(&mut vade, &user_1_did, &user_2_did, &id).await?;
-//     receive_problem_report(&mut vade, &user_1_did, &user_2_did, problem_message, &id).await?;
+async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+    let user_1_did = String::from("did:uknow:d34db33d");
+    let user_2_did = String::from("did:uknow:d34db33f");
+    let options = String::from("{}");
+    let id = Uuid::new_v4().to_simple().to_string();
 
-//     Ok(())
-// }
+    let _request_message =
+        send_propose_credential(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
 
-// async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
-//     let mut vade = get_vade().await?;
-//     let user_1_did = String::from("did:uknow:d34db33d");
-//     let user_2_did = String::from("did:uknow:d34db33f");
-//     let options = String::from("{}");
-//     let id = Uuid::new_v4().to_simple().to_string();
+    let complete_message = send_ack(&mut vade, &user_1_did, &user_2_did, &id).await?;
+    Ok(complete_message)
+}
 
-//     let _request_message =
-//         send_request_presentation(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
-
-//     let complete_message = send_ack(&mut vade, &user_1_did, &user_2_did, &id).await?;
-//     Ok(complete_message)
-// }
-
-// #[tokio::test]
-// #[should_panic]
-// #[serial]
-// async fn will_panic_and_fail_to_process_wrong_state() {
-//     let result = send_wrong_ack_state().await;
-//     match result {
-//         Err(e) => panic!("Error : {:?}", e),
-//         _ => {}
-//     }
-// }
+#[tokio::test]
+#[should_panic]
+#[serial]
+async fn will_panic_and_fail_to_process_wrong_state() {
+    let result = send_wrong_ack_state().await;
+    match result {
+        Err(e) => panic!("Error : {:?}", e),
+        _ => {}
+    }
+}

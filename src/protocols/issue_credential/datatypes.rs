@@ -12,6 +12,8 @@ pub struct IssuerCredentialReq {
     pub credential_data: Option<CredentialData>,
 }
 
+// CredentialAttach struct contains common fields which are required by 
+/// offer-credential/request-credential/issue-credential messages for attachment.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct CredentialAttach {
     pub id: String,
@@ -19,6 +21,7 @@ pub struct CredentialAttach {
     pub data: String,
 }
 
+/// CredentialProposal struct contains fields required by propose-credential message.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct CredentialProposal {
     pub id: String,
@@ -31,6 +34,7 @@ pub struct CredentialProposal {
     pub issuer_did: String,
 }
 
+/// Attribute struct is required for Credential Preview. 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Attribute {
     pub name: String,
@@ -38,12 +42,15 @@ pub struct Attribute {
     pub value: String,
 }
 
+/// CredentialPreview struct contains fields required for offer-credential and propose-credential message.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct CredentialPreview {
     pub r#type: String,
     pub attributes: Vec<Attribute>,
 }
 
+/// CredentialData struct is the general structure which contains all optional fields 
+/// required for all messages of Issue Credential protocol.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CredentialData {
     pub state: State,
@@ -91,7 +98,7 @@ pub struct ProblemReport {
     pub excalation_uri: Option<String>,
 }
 
-/// Ack structure contains fields which are sent to
+/// Ack structure contains fields which are sent as acknowledgment of received credential
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Ack {
     pub from: Option<String>,

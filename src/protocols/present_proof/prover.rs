@@ -7,7 +7,9 @@ use crate::{
 };
 
 use super::helper::{
-    get_present_proof_info_from_message, get_present_proof_message, PresentProofType,
+    get_present_proof_info_from_message,
+    get_present_proof_message,
+    PresentProofType,
 };
 
 /// Protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/presentation`
@@ -31,18 +33,18 @@ pub fn send_presentation(message: &str) -> StepResult {
 
     let current_state: State = get_current_state(&thid, &UserType::Prover)?.parse()?;
 
-    let result = match current_state {
+    match current_state {
         State::PresentationRequestReceived => {
-            save_state(&thid, &State::PresentationSent, &UserType::Prover)
+            save_state(&thid, &State::PresentationSent, &UserType::Prover)?
         }
-        _ => Err(Box::from(format!(
-            "State from {} to {} not allowed",
-            current_state,
-            State::PresentationSent
-        ))),
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::PresentationSent
+            )))
+        }
     };
-
-    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     let request_message = get_present_proof_message(
         PresentProofType::Presentation,
@@ -101,20 +103,20 @@ pub fn receive_request_presentation(message: &str) -> StepResult {
 
     let current_state: State = get_current_state(&thid, &UserType::Prover)?.parse()?;
 
-    let result = match current_state {
+    match current_state {
         State::PresentationProposed | State::Unknown => save_state(
             &thid,
             &State::PresentationRequestReceived,
             &UserType::Prover,
-        ),
-        _ => Err(Box::from(format!(
-            "State from {} to {} not allowed",
-            current_state,
-            State::PresentationRequestReceived
-        ))),
+        )?,
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::PresentationRequestReceived
+            )))
+        }
     };
-
-    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     save_presentation(
         &base_info.to,
@@ -153,18 +155,18 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
 
     let current_state: State = get_current_state(&thid, &UserType::Prover)?.parse()?;
 
-    let result = match current_state {
+    match current_state {
         State::PresentationRequestReceived | State::Unknown => {
-            save_state(&thid, &State::PresentationProposed, &UserType::Prover)
+            save_state(&thid, &State::PresentationProposed, &UserType::Prover)?
         }
-        _ => Err(Box::from(format!(
-            "State from {} to {} not allowed",
-            current_state,
-            State::PresentationProposed
-        ))),
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::PresentationProposed
+            )))
+        }
     };
-
-    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     let request_message = get_present_proof_message(
         PresentProofType::ProposePresentation,

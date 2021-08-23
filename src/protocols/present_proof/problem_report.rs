@@ -17,23 +17,23 @@ pub fn send_problem_report(message: &str) -> StepResult {
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
     let current_state: State = get_current_state(&thid, &problem_report.user_type)?.parse()?;
 
-    let result = match current_state {
+    match current_state {
         State::PresentationRequested
         | State::PresentationRequestReceived
         | State::PresentationSent
         | State::PresentationReceived
         | State::PresentationProposalReceived
         | State::PresentationProposed => {
-            save_state(&thid, &State::ProblemReported, &problem_report.user_type)
+            save_state(&thid, &State::ProblemReported, &problem_report.user_type)?
         }
-        _ => Err(Box::from(format!(
-            "State from {} to {} not allowed",
-            current_state,
-            State::ProblemReported
-        ))),
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::ProblemReported
+            )))
+        }
     };
-
-    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     generate_step_output(&serde_json::to_string(&problem_report)?, "{}")
 }
@@ -44,24 +44,23 @@ pub fn receive_problem_report(message: &str) -> StepResult {
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
     let current_state: State = get_current_state(&thid, &parsed_message.user_type)?.parse()?;
 
-    let result = match current_state {
+    match current_state {
         State::PresentationRequested
         | State::PresentationRequestReceived
         | State::PresentationSent
         | State::PresentationReceived
         | State::PresentationProposalReceived
         | State::PresentationProposed => {
-            save_state(&thid, &State::ProblemReported, &parsed_message.user_type)
+            save_state(&thid, &State::ProblemReported, &parsed_message.user_type)?
         }
-
-        _ => Err(Box::from(format!(
-            "State from {} to {} not allowed",
-            current_state,
-            State::ProblemReported
-        ))),
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::ProblemReported
+            )))
+        }
     };
-
-    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     generate_step_output(message, "{}")
 }

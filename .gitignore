@@ -12,3 +12,5 @@ Cargo.lock
 ./utilities/target/
 
 .didcomm_rocks_db
+
+.vscode/

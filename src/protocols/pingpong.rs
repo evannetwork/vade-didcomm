@@ -2,12 +2,10 @@ use crate::datatypes::MessageWithBody;
 use serde::{Deserialize, Serialize};
 
 use super::protocol::{
-    generate_receive_step,
-    generate_send_step,
-    generate_step_output,
-    Protocol,
-    StepResult,
+    generate_receive_step, generate_send_step, generate_step_output, Protocol, StepResult,
 };
+
+pub const PING_PONG_PROTOCOL_URL: &str = "https://didcomm.org/trust_ping/1.0";
 
 /// Struct for parsing incoming ping messages.
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -21,7 +19,7 @@ pub struct PingBody {
 /// * `Protocol` - the new ping pong protocol handler
 pub fn generate_ping_pong_protocol() -> Protocol {
     Protocol {
-        name: String::from("trust_ping"),
+        name: String::from(PING_PONG_PROTOCOL_URL),
         steps: vec![
             generate_send_step("ping", send_ping),
             generate_send_step("ping_response", send_pong),

@@ -1,7 +1,6 @@
 use crate::{
     datatypes::{BaseMessage, DidCommOptions, EncryptedMessage},
-    fill_message_id_and_timestamps,
-    get_from_to_from_message,
+    fill_message_id_and_timestamps, get_from_to_from_message,
     keypair::get_com_keypair,
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,

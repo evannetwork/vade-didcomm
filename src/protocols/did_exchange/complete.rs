@@ -1,5 +1,6 @@
+use super::helper::DID_EXCHANGE_PROTOCOL_URL;
 use crate::{
-    datatypes::{BaseMessage, DID_EXCHANGE_PROTOCOL_URL},
+    datatypes::BaseMessage,
     protocols::protocol::{generate_step_output, StepResult},
 };
 

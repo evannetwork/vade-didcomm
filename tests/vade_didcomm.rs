@@ -3,13 +3,8 @@ use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
-        BaseMessage,
-        DidCommOptions,
-        EncryptedMessage,
-        ExtendedMessage,
-        KeyInformation,
-        MessageWithBody,
-        VadeDidCommPluginOutput,
+        BaseMessage, DidCommOptions, EncryptedMessage, ExtendedMessage, KeyInformation,
+        MessageWithBody, VadeDidCommPluginOutput,
     },
     VadeDidComm,
 };

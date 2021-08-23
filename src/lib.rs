@@ -14,7 +14,7 @@ mod db;
 mod keypair;
 mod message;
 mod protocol_handler;
-mod protocols;
+pub mod protocols;
 mod utils;
 mod vade_didcomm;
 

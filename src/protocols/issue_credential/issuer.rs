@@ -7,7 +7,9 @@ use crate::{
 };
 
 use super::helper::{
-    get_issue_credential_info_from_message, get_issue_credential_message, IssueCredentialType,
+    get_issue_credential_info_from_message,
+    get_issue_credential_message,
+    IssueCredentialType,
 };
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/offer_credential`
@@ -34,17 +36,18 @@ pub fn send_offer_credential(message: &str) -> StepResult {
     )?;
 
     let current_state: State = get_current_state(&thid, &UserType::Issuer)?.parse()?;
-    let result = match current_state {
+    match current_state {
         State::ReceiveProposeCredential | State::Unknown => {
-            save_state(&thid, &State::SendOfferCredential, &UserType::Issuer)
+            save_state(&thid, &State::SendOfferCredential, &UserType::Issuer)?
         }
-        _ => Err(Box::from(format!(
-            "State from {} to {} not allowed",
-            current_state,
-            State::SendOfferCredential
-        ))),
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::SendOfferCredential
+            )))
+        }
     };
-    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     save_credential(
         &exchange_info.from,
@@ -79,17 +82,18 @@ pub fn receive_request_credential(message: &str) -> StepResult {
 
     let current_state: State = get_current_state(&thid, &UserType::Issuer)?.parse()?;
 
-    let result = match current_state {
+    match current_state {
         State::SendOfferCredential => {
-            save_state(&thid, &State::ReceiveRequestCredential, &UserType::Issuer)
+            save_state(&thid, &State::ReceiveRequestCredential, &UserType::Issuer)?
         }
-        _ => Err(Box::from(format!(
-            "State from {} to {} not allowed",
-            current_state,
-            State::ReceiveRequestCredential,
-        ))),
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::ReceiveRequestCredential,
+            )))
+        }
     };
-    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     let exchange_info = get_issue_credential_info_from_message(parsed_message)?;
 
@@ -136,17 +140,18 @@ pub fn receive_propose_credential(message: &str) -> StepResult {
         .ok_or("Credential data not provided.")?;
 
     let current_state: State = get_current_state(&thid, &UserType::Issuer)?.parse()?;
-    let result = match current_state {
+    match current_state {
         State::SendOfferCredential | State::Unknown => {
-            save_state(&thid, &State::ReceiveProposeCredential, &UserType::Issuer)
+            save_state(&thid, &State::ReceiveProposeCredential, &UserType::Issuer)?
         }
-        _ => Err(Box::from(format!(
-            "State from {} to {} not allowed",
-            current_state,
-            State::ReceiveProposeCredential
-        ))),
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::ReceiveProposeCredential
+            )))
+        }
     };
-    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     save_credential(
         &base_info.from,
@@ -183,17 +188,18 @@ pub fn send_issue_credential(message: &str) -> StepResult {
     )?;
 
     let current_state: State = get_current_state(&thid, &UserType::Issuer)?.parse()?;
-    let result = match current_state {
+    match current_state {
         State::ReceiveRequestCredential => {
-            save_state(&thid, &State::SendIssueCredential, &UserType::Issuer)
+            save_state(&thid, &State::SendIssueCredential, &UserType::Issuer)?
         }
-        _ => Err(Box::from(format!(
-            "State from {} to {} not allowed",
-            current_state,
-            State::SendIssueCredential
-        ))),
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::SendIssueCredential
+            )))
+        }
     };
-    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     save_credential(
         &exchange_info.from,

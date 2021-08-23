@@ -16,16 +16,16 @@ pub fn send_credential_ack(message: &str) -> StepResult {
 
     let current_state: State = get_current_state(&thid, &ack.user_type)?.parse()?;
 
-    let result = match current_state {
-        State::ReceiveIssueCredential => save_state(&thid, &State::Acknowledged, &ack.user_type),
-        _ => Err(Box::from(format!(
-            "State from {} to {} not allowed",
-            current_state,
-            State::Acknowledged
-        ))),
+    match current_state {
+        State::ReceiveIssueCredential => save_state(&thid, &State::Acknowledged, &ack.user_type)?,
+        _ => {
+            return Err(Box::from(format!(
+                "State from {} to {} not allowed",
+                current_state,
+                State::Acknowledged
+            )))
+        }
     };
-
-    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     generate_step_output(&serde_json::to_string(&ack)?, "{}")
 }
@@ -36,9 +36,9 @@ pub fn receive_credential_ack(message: &str) -> StepResult {
 
     let current_state: State = get_current_state(&thid, &parsed_message.user_type)?.parse()?;
 
-    let result = match current_state {
+    match current_state {
         State::SendIssueCredential => {
-            save_state(&thid, &State::Acknowledged, &parsed_message.user_type)
+            save_state(&thid, &State::Acknowledged, &parsed_message.user_type)?
         }
         _ => {
             return Err(Box::from(format!(
@@ -48,8 +48,6 @@ pub fn receive_credential_ack(message: &str) -> StepResult {
             )))
         }
     };
-
-    result.map_err(|err| format!("Error while processing step: {:?}", err))?;
 
     generate_step_output(message, "{}")
 }

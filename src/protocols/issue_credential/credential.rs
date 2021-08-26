@@ -56,7 +56,7 @@ pub fn get_credential(
 }
 
 /// Saves state of Issue Credential protocol for given thid. Entry key will be
-/// issue_credential_state_{thid}.
+/// issue_credential_state_{user_type}_{thid}.
 ///
 /// # Arguments
 /// * `state` - State

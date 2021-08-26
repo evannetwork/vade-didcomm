@@ -75,7 +75,7 @@ pub fn save_state(
     Ok(())
 }
 /// Retrieves state of Issue Credential protocol for given thid. Entry key will be
-/// issue_credential_state_{thid}.
+/// issue_credential_state_{user_type}_{thid}.
 ///
 /// # Arguments
 /// * `thid` - thread id

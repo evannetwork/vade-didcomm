@@ -12,7 +12,7 @@ pub struct IssuerCredentialReq {
     pub credential_data: Option<CredentialData>,
 }
 
-// CredentialAttach struct contains common fields which are required by 
+/// CredentialAttach struct contains common fields which are required by 
 /// offer-credential/request-credential/issue-credential messages for attachment.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct CredentialAttach {

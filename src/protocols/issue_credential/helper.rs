@@ -59,7 +59,7 @@ pub fn get_issue_credential_message(
 /// response.
 ///
 /// # Arguments
-/// * `message` - Issue Credential message with proover CredentialData response as body
+/// * `message` - Issue Credential message with prover CredentialData response as body
 ///
 /// # Returns
 /// * `IssuerCredentialReq` - necessary information

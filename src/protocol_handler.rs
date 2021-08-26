@@ -1,8 +1,10 @@
 use crate::{
     datatypes::{MessageDirection, MessageWithType, ProtocolHandleOutput},
     protocols::{
-        did_exchange::generate_did_exchange_protocol, pingpong::generate_ping_pong_protocol,
-        present_proof::generate_present_proof_protocol, protocol::Protocol,
+        did_exchange::generate_did_exchange_protocol,
+        issue_credential::generate_issue_credential_protocol,
+        pingpong::generate_ping_pong_protocol, present_proof::generate_present_proof_protocol,
+        protocol::Protocol,
     },
 };
 
@@ -46,10 +48,11 @@ fn handle_protocol(
     let parsed_message: MessageWithType = serde_json::from_str(message)?;
     let m_type = parsed_message.r#type;
     // handle multiple protocols dynamically
-    let protocols: [&Protocol; 3] = [
+    let protocols: [&Protocol; 4] = [
         &generate_did_exchange_protocol(),
         &generate_ping_pong_protocol(),
         &generate_present_proof_protocol(),
+        &generate_issue_credential_protocol(),
     ];
     // protocol results
     let mut protocol_name: String = String::from("unknown");

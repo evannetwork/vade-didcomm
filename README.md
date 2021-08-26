@@ -205,6 +205,85 @@ Presentation proposal format:
 ```
 Once the presentation exchange is complete, the verifier sends an ack message to the prover to confirm the receival and validity of the received Presentation data. 
 
+### issue_credential protocol
+
+The [`Issue Credential Protocol`] consists of 5 steps. The whole flow is implemented in the [`issue-credential test`]. The general flow starts with a holder sending a `propose-credential` message to a issuer. The issuer has the option to answer with the `offer-credential` or terminate request with `problem-report` message. Holder receives `offer-credential` and decides to send `request-credential` message , Once issuer receives `request-credential`, he/she would respond with `issue-credential` and Holder will receive and send `ack` message to acknowledge the receipt of credential. 
+
+Propose Credential message:
+
+```json
+{
+    "@type": "https://didcomm.org/issue-credential/1.1/propose-credential",
+    "@id": "<uuid-of-propose-message>",
+    "comment": "some comment",
+    "credential_proposal": <json-ld object>,
+    "schema_issuer_did": "DID of the proposed schema issuer",
+    "schema_id": "Schema ID string",
+    "schema_name": "Schema name string",
+    "schema_version": "Schema version string",
+    "cred_def_id": "Credential Definition ID string"
+    "issuer_did": "DID of the proposed issuer"
+}
+```
+
+Offer Credential message :
+
+```json
+{
+    "@type": "https://didcomm.org/issue-credential/1.0/offer-credential",
+    "@id": "<uuid-of-offer-message>",
+    "comment": "some comment",
+    "credential_preview": <json-ld object>,
+    "offers~attach": [
+        {
+            "@id": "libindy-cred-offer-0",
+            "mime-type": "application/json",
+            "data": {
+                "base64": "<bytes for base64>"
+            }
+        }
+    ]
+}
+```
+
+Request Credential message:
+
+```json
+{
+    "@type": "https://didcomm.org/issue-credential/1.0/request-credential",
+    "@id": "<uuid-of-request-message>",
+    "comment": "some comment",
+    "requests~attach": [
+        {
+            "@id": "attachment id",
+            "mime-type": "application/json",
+            "data": {
+                "base64": "<bytes for base64>"
+            }
+        },
+    ]
+}
+```
+
+Issue Credential message:
+
+```json
+{
+    "@type": "https://didcomm.org/issue-credential/1.0/issue-credential",
+    "@id": "<uuid-of-issue-message>",
+    "comment": "some comment",
+    "credentials~attach": [
+        {
+            "@id": "libindy-cred-0",
+            "mime-type": "application/json",
+            "data": {
+                "base64": "<bytes for base64>"
+            }
+        }
+    ]
+}
+```
+
 ## Registering a new protocol
 
 Each protocol is represented by a set of steps. To register a new protocol, just follow the following steps:
@@ -276,3 +355,5 @@ Afterwards, you can just test your protocol by passing the following message to 
 [`did-exchange test`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/tests/did-exchange.rs
 [`Present Proof Protocol`]: https://github.com/hyperledger/aries-rfcs/tree/master/features/0037-present-proof
 [`present-proof test`]:https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/DID-46-implement-present-proof-protocol-in-vade/tests/present-proof.rs
+[`Issue Credential Protocol`]: https://github.com/hyperledger/aries-rfcs/tree/main/features/0036-issue-credential#preview-credential
+[`issue-credential test`]:https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/DID-54-implement-issue-credential-protocol-in-vade/tests/issue-credential.rs

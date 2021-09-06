@@ -83,7 +83,7 @@ pub fn encrypt_message(
 pub fn decrypt_message(
     message: &str,
     decryption_key: &[u8],
-    sign_public: &[u8],
+    _sign_public: &[u8],
 ) -> Result<String, Box<dyn std::error::Error>> {
     let received = DIDCommMessage::receive(&message, decryption_key)
         .map_err(|err| format!("could not decrypt message: {}", &err.to_string()))?;

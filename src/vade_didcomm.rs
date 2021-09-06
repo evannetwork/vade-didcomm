@@ -61,7 +61,7 @@ impl VadePlugin for VadeDidComm {
             let encryption_key: [u8; 32] = match options.key_information {
                 Some(crate::datatypes::KeyInformation::SecretPublic {
                     my_secret,
-                    others_public,
+                    others_public: _others_public,
                 }) => {
                     my_secret
                 }
@@ -141,7 +141,7 @@ impl VadePlugin for VadeDidComm {
             let decryption_key: [u8; 32] = match options.key_information {
                 Some(crate::datatypes::KeyInformation::SecretPublic {
                     my_secret,
-                    others_public,
+                    others_public: _others_public,
                 }) => {
                     my_secret
                 }

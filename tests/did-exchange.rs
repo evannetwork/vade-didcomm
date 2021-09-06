@@ -5,7 +5,7 @@ use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
-        BaseMessage, CommKeyPair, CommunicationDidDocument, DidCommOptions, EncryptedMessage,
+        BaseMessage, CommKeyPair, CommunicationDidDocument, DidCommOptions,
         KeyInformation, MessageWithBody, VadeDidCommPluginOutput,
     },
     VadeDidComm,
@@ -42,6 +42,7 @@ fn get_didcomm_receiver_options(use_shared_key: bool) -> Result<String, Box<dyn 
             my_secret: sign_keypair.user2_secret.to_bytes(),
             others_public: sign_keypair.user1_pub.to_bytes(),
         }),
+        sign_key: sign_keypair.sign_keypair.secret.to_bytes()
     };
 
     Ok(serde_json::to_string(&options)?)

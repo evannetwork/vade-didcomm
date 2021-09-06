@@ -1,8 +1,7 @@
 use crate::datatypes::ExtendedMessage;
 use didcomm_rs::{
     crypto::{CryptoAlgorithm, SignatureAlgorithm},
-    Message as DIDCommMessage,
-    Jwe
+    Message as DIDCommMessage
 };
 
 macro_rules! apply_optional {

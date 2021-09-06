@@ -1,9 +1,9 @@
-use crate::{datatypes::{BaseMessage, DidCommOptions, EncryptedMessage, ExtendedMessage}, fill_message_id_and_timestamps, get_from_to_from_message, keypair::{get_com_keypair, get_key_agreement_key}, message::{decrypt_message, encrypt_message}, protocol_handler::ProtocolHandler, utils::vec_to_array};
+use crate::{datatypes::{BaseMessage, DidCommOptions, ExtendedMessage}, fill_message_id_and_timestamps, get_from_to_from_message, keypair::{get_com_keypair, get_key_agreement_key}, message::{decrypt_message, encrypt_message}, protocol_handler::ProtocolHandler, utils::vec_to_array};
 use async_trait::async_trait;
 use didcomm_rs::Jwe;
 use k256::elliptic_curve::rand_core::OsRng;
 use vade::{VadePlugin, VadePluginResultValue};
-use x25519_dalek::{PublicKey, StaticSecret};
+use x25519_dalek::{StaticSecret};
 
 big_array! { BigArray; }
 
@@ -56,7 +56,7 @@ impl VadePlugin for VadeDidComm {
             let sign_keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
             // if shared secret was passed to the options, use this one
             let options = serde_json::from_str::<DidCommOptions>(&options)?;
-            let sign_secret = ed25519_dalek::SecretKey::from(options.sign_key);
+            // let sign_secret = ed25519_dalek::SecretKey::from_bytes(&options.sign_key);
 
             let encryption_key: [u8; 32] = match options.key_information {
                 Some(crate::datatypes::KeyInformation::SecretPublic {

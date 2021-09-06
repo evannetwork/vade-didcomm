@@ -16,6 +16,7 @@ use crate::{
 ///
 /// # Returns
 /// * `CommKeyPair` - new instance of the comm key pair
+#[allow(clippy::too_many_arguments)]
 pub fn save_com_keypair(
     from_did: &str,
     to_did: &str,

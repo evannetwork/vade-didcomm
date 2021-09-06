@@ -1,3 +1,4 @@
+use base58::ToBase58;
 use k256::elliptic_curve::rand_core::OsRng;
 use x25519_dalek::{PublicKey, StaticSecret};
 
@@ -21,9 +22,15 @@ pub fn send_request(message: &str) -> StepResult {
     let exchange_info = get_from_to_from_message(parsed_message)?;
     let secret_key = StaticSecret::new(OsRng);
     let pub_key = PublicKey::from(&secret_key);
+
+    let codec: &[u8] = &[0xec, 0x1];
+    let data = [codec, pub_key.as_bytes()].concat();
+    let key_did = format!("did:key:z{}", data.to_base58());
     let encoded_keypair = save_com_keypair(
         &exchange_info.from,
         &exchange_info.to,
+        &key_did,
+        &"",
         &hex::encode(pub_key.to_bytes()),
         &hex::encode(secret_key.to_bytes()),
         None,
@@ -33,6 +40,7 @@ pub fn send_request(message: &str) -> StepResult {
     let request_message = get_did_exchange_message(
         DIDExchangeType::Request,
         &exchange_info.from,
+        &key_did,
         &exchange_info.to,
         "",
         &encoded_keypair.pub_key,
@@ -50,9 +58,14 @@ pub fn receive_request(message: &str) -> StepResult {
     let secret_key = StaticSecret::new(OsRng);
     let pub_key = PublicKey::from(&secret_key);
 
+    let codec: &[u8] = &[0xec, 0x1];
+    let data = [codec, pub_key.as_bytes()].concat();
+    let key_did = format!("did:key:z{}", data.to_base58());
     let encoded_keypair = save_com_keypair(
         &exchange_info.to,
         &exchange_info.from,
+        &key_did,
+        &exchange_info.did_id,
         &hex::encode(pub_key.to_bytes()),
         &hex::encode(secret_key.to_bytes()),
         Some(exchange_info.pub_key_hex),

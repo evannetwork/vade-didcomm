@@ -1,9 +1,10 @@
+use didcomm_rs::Jwe;
 use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 use serial_test::serial;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{EncryptedMessage, MessageWithBody, VadeDidCommPluginOutput},
+    datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::present_proof::datatypes::{
         Ack, Attribute, Predicate, PresentationAttach, PresentationData, PresentationPreview,
         ProblemReport, State, UserType, PRESENT_PROOF_PROTOCOL_URL,
@@ -90,7 +91,7 @@ async fn send_request_presentation(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
@@ -175,7 +176,7 @@ async fn send_presentation(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
@@ -280,7 +281,7 @@ async fn send_presentation_proposal(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
@@ -367,7 +368,7 @@ async fn send_ack(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
@@ -439,7 +440,7 @@ async fn send_problem_report(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
@@ -471,8 +472,8 @@ async fn receive_problem_report(
 #[serial]
 async fn can_do_presentation_exchange() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:uknow:d34db33d");
-    let user_2_did = String::from("did:uknow:d34db33f");
+    let user_1_did = String::from("did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp");
+    let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
     let options = String::from("{}");
     let id = Uuid::new_v4().to_simple().to_string();
 
@@ -510,8 +511,8 @@ async fn can_do_presentation_exchange() -> Result<(), Box<dyn std::error::Error>
 #[serial]
 async fn can_do_proposal_exchange() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:uknow:d34db33d");
-    let user_2_did = String::from("did:uknow:d34db33f");
+    let user_1_did = String::from("did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp");
+    let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
     let options = String::from("{}");
     let id = Uuid::new_v4().to_simple().to_string();
 
@@ -546,8 +547,8 @@ async fn can_do_proposal_exchange() -> Result<(), Box<dyn std::error::Error>> {
 #[serial]
 async fn can_do_problem_report() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:uknow:d34db33d");
-    let user_2_did = String::from("did:uknow:d34db33f");
+    let user_1_did = String::from("did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp");
+    let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
     let options = String::from("{}");
     let id = Uuid::new_v4().to_simple().to_string();
 
@@ -571,8 +572,8 @@ async fn can_do_problem_report() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:uknow:d34db33d");
-    let user_2_did = String::from("did:uknow:d34db33f");
+    let user_1_did = String::from("did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp");
+    let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
     let options = String::from("{}");
     let id = Uuid::new_v4().to_simple().to_string();
 

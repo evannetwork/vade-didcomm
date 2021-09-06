@@ -69,13 +69,14 @@ pub fn get_communication_did_doc(
 pub fn get_did_exchange_message(
     step_type: DIDExchangeType,
     from_did: &str,
+    key_agreement_did: &str,
     to_did: &str,
     from_service_endpoint: &str,
     pub_key: &str,
 ) -> Result<MessageWithBody<CommunicationDidDocument>, Box<dyn std::error::Error>> {
-    let did_comm_obj = get_communication_did_doc(from_did, pub_key, from_service_endpoint);
+    let did_comm_obj = get_communication_did_doc(key_agreement_did, pub_key, from_service_endpoint);
     let thread_id = Uuid::new_v4().to_simple().to_string();
-    let service_id = format!("{0}#key-1", from_did);
+    let service_id = format!("{0}#key-1", key_agreement_did);
     let step_name = match step_type {
         DIDExchangeType::Request => "request",
         DIDExchangeType::Response => "response",
@@ -133,6 +134,7 @@ pub fn get_exchange_info_from_message(
     Ok(ExchangeInfo {
         from: from_did,
         to: String::from(to_did),
+        did_id: didcomm_obj.id,
         pub_key_hex: String::from(pub_key_hex),
         service_endpoint: String::from(service_endpoint),
     })

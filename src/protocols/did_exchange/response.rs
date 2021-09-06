@@ -1,9 +1,4 @@
-use crate::{
-    datatypes::{BaseMessage, CommunicationDidDocument, MessageWithBody},
-    get_from_to_from_message,
-    keypair::{get_com_keypair, save_com_keypair},
-    protocols::protocol::{generate_step_output, StepResult},
-};
+use crate::{datatypes::{BaseMessage, CommunicationDidDocument, MessageWithBody}, get_from_to_from_message, keypair::{get_com_keypair, get_key_agreement_key, save_com_keypair}, protocols::protocol::{generate_step_output, StepResult}};
 
 use super::helper::{get_did_exchange_message, get_exchange_info_from_message, DIDExchangeType};
 
@@ -19,8 +14,9 @@ pub fn send_response(message: &str) -> StepResult {
     let metadata = serde_json::to_string(&encoded_keypair)?;
     let request_message = get_did_exchange_message(
         DIDExchangeType::Response,
-        &exchange_info.from,
-        &exchange_info.to,
+        &encoded_keypair.target_key_agreement_key,
+        &encoded_keypair.key_agreement_key,
+        &encoded_keypair.key_agreement_key,
         "",
         &encoded_keypair.pub_key,
     )?;
@@ -34,11 +30,13 @@ pub fn send_response(message: &str) -> StepResult {
 pub fn receive_response(message: &str) -> StepResult {
     let parsed_message: MessageWithBody<CommunicationDidDocument> = serde_json::from_str(message)?;
     let exchange_info = get_exchange_info_from_message(parsed_message)?;
-    let encoded_keypair = get_com_keypair(&exchange_info.to, &exchange_info.from)?;
+    let encoded_keypair = get_key_agreement_key(&exchange_info.to)?;
 
     let enhanced_encoded_keypair = save_com_keypair(
         &exchange_info.to,
         &exchange_info.from,
+        &exchange_info.to,
+        &exchange_info.did_id,
         &encoded_keypair.pub_key,
         &encoded_keypair.secret_key,
         Some(exchange_info.pub_key_hex),

@@ -48,6 +48,7 @@ pub struct FromTo {
 pub struct ExchangeInfo {
     pub from: String,
     pub to: String,
+    pub did_id: String,
     pub pub_key_hex: String,
     pub service_endpoint: String,
 }
@@ -59,6 +60,8 @@ pub struct ExchangeInfo {
 pub struct CommKeyPair {
     pub pub_key: String,
     pub secret_key: String,
+    pub key_agreement_key: String,
+    pub target_key_agreement_key: String,
     pub target_pub_key: String,
     pub target_service_endpoint: String,
 }
@@ -147,11 +150,6 @@ pub struct EncryptedMessage {
 #[serde(rename_all = "camelCase", untagged)]
 pub enum KeyInformation {
     #[serde(rename_all = "camelCase")]
-    SharedSecret {
-        #[serde(with = "hex")]
-        shared_secret: [u8; 32],
-    },
-    #[serde(rename_all = "camelCase")]
     SecretPublic {
         #[serde(with = "hex")]
         my_secret: [u8; 32],
@@ -165,6 +163,8 @@ pub enum KeyInformation {
 #[serde(rename_all = "camelCase")]
 pub struct DidCommOptions {
     pub key_information: Option<KeyInformation>,
+    #[serde(with = "hex")]
+    pub sign_key: [u8; 32]
 }
 
 /// Output of didcomm_send or didcomm_receive.

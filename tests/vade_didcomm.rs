@@ -1,9 +1,10 @@
+use didcomm_rs::Jwe;
 use serde::{Deserialize, Serialize};
 use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
-        BaseMessage, DidCommOptions, EncryptedMessage, ExtendedMessage, KeyInformation,
+        BaseMessage, DidCommOptions, ExtendedMessage, KeyInformation,
         MessageWithBody, VadeDidCommPluginOutput,
     },
     VadeDidComm,
@@ -23,11 +24,12 @@ async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
 }
 
 fn get_didcomm_options(
-    shared_secret: &x25519_dalek::SharedSecret,
+    secret_key: &x25519_dalek::StaticSecret,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let options = DidCommOptions {
-        key_information: Some(KeyInformation::SharedSecret {
-            shared_secret: shared_secret.to_bytes(),
+        key_information: Some(KeyInformation::SecretPublic {
+            my_secret: secret_key.to_bytes(),
+            others_public: secret_key.to_bytes(),
         }),
     };
 
@@ -46,10 +48,10 @@ async fn can_prepare_didcomm_message_for_sending() -> Result<(), Box<dyn std::er
     let mut vade = get_vade().await?;
 
     let sign_keypair = get_keypair_set();
-    let options = get_didcomm_options(&sign_keypair.user1_shared)?;
+    let options = get_didcomm_options(&sign_keypair.user1_secret)?;
     let payload = r#"{
         "type": "https://didcomm.org/trust_ping/1.0/ping",
-        "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+        "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ],
         "custom1": "ichi",
         "custom2": "ni",
         "custom3": "san"
@@ -60,16 +62,6 @@ async fn can_prepare_didcomm_message_for_sending() -> Result<(), Box<dyn std::er
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-
-    let parsed: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
-    let custom_field = parsed
-        .message
-        .other
-        .get("custom1")
-        .ok_or("could not get custom field custom1")?;
-
-    assert_eq!(custom_field, "ichi");
-
     Ok(())
 }
 
@@ -78,20 +70,20 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
     let mut vade = get_vade().await?;
 
     let sign_keypair = get_keypair_set();
-    let options = get_didcomm_options(&sign_keypair.user1_shared)?;
-
+    let options = get_didcomm_options(&sign_keypair.user1_secret)?;
     let payload = r#"{
         "type": "https://didcomm.org/trust_ping/1.0/ping",
-        "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+        "from": "did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp",
+        "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ],
         "custom1": "nyuu"
     }"#;
     let results = vade.didcomm_send(&options, &payload).await?;
 
     match results.get(0) {
         Some(Some(value)) => {
-            let encrypted: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(value)?;
+            let encrypted: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(value)?;
             let encrypted_message = serde_json::to_string(&encrypted.message)?;
-            let options = get_didcomm_options(&sign_keypair.user2_shared)?;
+            let options = get_didcomm_options(&sign_keypair.user2_secret)?;
             let results = vade.didcomm_receive(&options, &encrypted_message).await?;
             let result = results
                 .get(0)
@@ -130,11 +122,12 @@ async fn can_receive_unencrypted() -> Result<(), Box<dyn std::error::Error>> {
 
     let payload = r#"{
         "type": "https://didcomm.org/trust_ping/1.0/ping",
-        "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
+        "from": "did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp",
+        "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ],
         "custom1": "nyuu"
     }"#;
 
-    let options = get_didcomm_options(&sign_keypair.user2_shared)?;
+    let options = get_didcomm_options(&sign_keypair.user2_secret)?;
     let results = vade.didcomm_receive(&options, &payload).await?;
     let result = results
         .get(0)
@@ -159,10 +152,11 @@ async fn should_fill_empty_id_and_created_time() -> Result<(), Box<dyn std::erro
 
     let payload = r#"{
         "type": "https://didcomm.org/trust_ping/1.0/ping",
-        "to": [ "did::xyz:34r3cu403hnth03r49g03" ]
+        "from": "did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp",
+        "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ]
     }"#;
 
-    let options = get_didcomm_options(&sign_keypair.user2_shared)?;
+    let options = get_didcomm_options(&sign_keypair.user2_secret)?;
     let results = vade.didcomm_receive(&options, &payload).await?;
     let result = results
         .get(0)

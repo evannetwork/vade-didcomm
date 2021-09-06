@@ -19,6 +19,8 @@ use crate::{
 pub fn save_com_keypair(
     from_did: &str,
     to_did: &str,
+    key_agreement_key: &str,
+    target_key_agreement_key: &str,
     pub_key: &str,
     secret_key: &str,
     target_pub_key: Option<String>,
@@ -27,12 +29,23 @@ pub fn save_com_keypair(
     let comm_keypair = CommKeyPair {
         pub_key: String::from(pub_key),
         secret_key: String::from(secret_key),
+        key_agreement_key: String::from(key_agreement_key),
+        target_key_agreement_key: String::from(target_key_agreement_key),
         target_pub_key: target_pub_key.unwrap_or_else(|| String::from("")),
         target_service_endpoint: service_endpoint.unwrap_or_else(|| String::from("")),
     };
 
+    log::debug!("storing key: {}", format!("comm_keypair_{}_{}", from_did, to_did));
+
     write_db(
         &format!("comm_keypair_{}_{}", from_did, to_did),
+        &serde_json::to_string(&comm_keypair)?,
+    )?;
+
+    log::debug!("storing key: {} with data: {}", format!("key_agreement_key_{}", key_agreement_key), serde_json::to_string(&comm_keypair)?);
+
+    write_db(
+        &format!("key_agreement_key_{}", key_agreement_key),
         &serde_json::to_string(&comm_keypair)?,
     )?;
 
@@ -52,7 +65,28 @@ pub fn get_com_keypair(
     from_did: &str,
     to_did: &str,
 ) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
+
     let db_result = read_db(&format!("comm_keypair_{}_{}", from_did, to_did))?;
+    log::debug!("receiving key: {} with data: {}", format!("comm_keypair_{}_{}", from_did, to_did), db_result);
+    let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
+
+    Ok(comm_keypair)
+}
+
+/// Loads a communication keypair from the db for two DIDs (from -> to). Entry key will be
+/// comm_keypair_{from}_{to}.
+///
+/// # Arguments
+/// * `from_did` - from DID
+/// * `to_did` - to DID as string
+///
+/// # Returns
+/// * `CommKeyPair` - new instance of the comm key pair
+pub fn get_key_agreement_key(
+    key_agreement_key: &str,
+) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
+    let db_result = read_db(&format!("key_agreement_key_{}", key_agreement_key))?;
+    log::debug!("receving key: {} with data: {}", format!("key_agreement_key_{}", key_agreement_key), db_result);
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
     Ok(comm_keypair)

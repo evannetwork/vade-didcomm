@@ -102,11 +102,10 @@ pub fn decrypt_message(
 mod tests {
     extern crate utilities;
 
-    use std::convert::TryInto;
-
-    use crate::datatypes::{EncryptedMessage, MessageWithBody};
+    use crate::datatypes::{MessageWithBody};
 
     use super::*;
+    use didcomm_rs::Jwe;
     use serde::{Deserialize, Serialize};
     use utilities::keypair::get_keypair_set;
     use base58::FromBase58;

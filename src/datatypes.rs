@@ -163,8 +163,7 @@ pub enum KeyInformation {
 #[serde(rename_all = "camelCase")]
 pub struct DidCommOptions {
     pub key_information: Option<KeyInformation>,
-    #[serde(with = "hex")]
-    pub sign_key: [u8; 32]
+    pub sign_key: Option<[u8; 32]>
 }
 
 /// Output of didcomm_send or didcomm_receive.

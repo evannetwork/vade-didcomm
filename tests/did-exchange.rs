@@ -42,7 +42,7 @@ fn get_didcomm_receiver_options(use_shared_key: bool) -> Result<String, Box<dyn 
             my_secret: sign_keypair.user2_secret.to_bytes(),
             others_public: sign_keypair.user1_pub.to_bytes(),
         }),
-        sign_key: sign_keypair.sign_keypair.secret.to_bytes()
+        sign_key: Some(sign_keypair.sign_keypair.secret.to_bytes())
     };
 
     Ok(serde_json::to_string(&options)?)
@@ -58,7 +58,7 @@ fn get_didcomm_sender_options(use_shared_key: bool) -> Result<String, Box<dyn st
             my_secret: sign_keypair.user1_secret.to_bytes(),
             others_public: sign_keypair.user2_pub.to_bytes(),
         }),
-        sign_key: sign_keypair.sign_keypair.secret.to_bytes()
+        sign_key: Some(sign_keypair.sign_keypair.secret.to_bytes())
     };
 
     Ok(serde_json::to_string(&options)?)

@@ -32,7 +32,7 @@ fn get_didcomm_options(
             my_secret: secret_key.to_bytes(),
             others_public: secret_key.to_bytes(),
         }),
-        sign_key: sign_key
+        sign_key: Some(sign_key)
     };
 
     Ok(serde_json::to_string(&options)?)

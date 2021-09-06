@@ -59,7 +59,7 @@ async fn can_prepare_didcomm_message_for_sending() -> Result<(), Box<dyn std::er
         "custom3": "san"
     }"#;
     let results = vade.didcomm_send(&options, &payload).await?;
-    let result = results
+    let _result = results
         .get(0)
         .ok_or("no result")?
         .as_ref()

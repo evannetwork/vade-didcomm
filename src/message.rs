@@ -145,7 +145,6 @@ mod tests {
 
     #[test]
     fn can_decrypt_message() -> Result<(), Box<dyn std::error::Error>> {
-        let sign_keypair = get_keypair_set();
         let payload = r#"{
                 "body": {"test": true},
                 "custom1": "ichi",

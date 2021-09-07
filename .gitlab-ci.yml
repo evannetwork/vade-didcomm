@@ -6,7 +6,7 @@ stages:
 
 before_script:
   - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@git.slock.it/".insteadOf 'ssh://git@git.slock.it/'
-
+  
 build:
   stage: build
   script:
@@ -14,6 +14,7 @@ build:
     - apt-get install -y clang
     - cd ..
     - rm -rf vade
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.slock.it/equs/interop/vade/vade.git --branch develop
     - cd vade-didcomm
     - cargo build --release --verbose
 

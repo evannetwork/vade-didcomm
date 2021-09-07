@@ -39,27 +39,25 @@ pub fn get_communication_did_doc(
     service_endpoint: &str,
 ) -> CommunicationDidDocument {
     let key_id = format!("{}#key-1", from_did);
-    let mut pub_key_vec = Vec::new();
-    pub_key_vec.push(DidCommPubKey {
+    let pub_key_vec = vec![DidCommPubKey {
         id: key_id.to_owned(),
         r#type: [String::from("Ed25519VerificationKey2018")].to_vec(),
         public_key_base_58: public_key_encoded.to_string(),
-    });
+    }];
 
-    let mut service_vec = Vec::new();
-    service_vec.push(DidCommService {
+    let service_vec = vec![DidCommService {
         id: format!("{}#didcomm", from_did),
         r#type: String::from("did-communication"),
         priority: 0,
         service_endpoint: service_endpoint.to_string(),
         recipient_keys: [public_key_encoded.to_string()].to_vec(),
-    });
+    }];
 
     CommunicationDidDocument {
         context: String::from("https://w3id.org/did/v1"),
         id: from_did.to_string(),
         public_key: pub_key_vec,
-        authentication: vec![key_id.to_owned()],
+        authentication: vec![key_id],
         service: service_vec,
     }
 }
@@ -155,7 +153,7 @@ pub fn get_exchange_info_from_message(
         from: from_did,
         to: String::from(to_did),
         did_id: did_document.id,
-        pub_key_hex: String::from(pub_key_hex),
+        pub_key_hex,
         service_endpoint: String::from(service_endpoint),
     })
 }
@@ -168,7 +166,7 @@ pub fn get_did_document_from_body(
     > = serde_json::from_str(message)?;
     let did_document_base64_encoded_string = message_with_base64_did_document
         .body
-        .ok_or_else(|| "body is a required field for DID exchange messages")?
+        .ok_or("body is a required field for DID exchange messages")?
         .did_doc_attach
         .base64;
     let did_document_base64_encoded_bytes = did_document_base64_encoded_string.as_bytes();

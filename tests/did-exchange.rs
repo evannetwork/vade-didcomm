@@ -41,7 +41,7 @@ pub fn get_com_keypair(key_agreement_did: &str) -> Result<CommKeyPair, Box<dyn s
 }
 
 fn get_didcomm_receiver_options(
-    use_shared_key: bool,
+    _use_shared_key: bool,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let sign_keypair = get_keypair_set();
 
@@ -57,7 +57,7 @@ fn get_didcomm_receiver_options(
     Ok(serde_json::to_string(&options)?)
 }
 
-fn get_didcomm_sender_options(use_shared_key: bool) -> Result<String, Box<dyn std::error::Error>> {
+fn get_didcomm_sender_options(_use_shared_key: bool) -> Result<String, Box<dyn std::error::Error>> {
     let sign_keypair = get_keypair_set();
 
     let options: DidCommOptions;
@@ -130,8 +130,8 @@ async fn send_request(
 
 async fn receive_request(
     vade: &mut Vade,
-    sender: &str,
-    receiver: &str,
+    _sender: &str,
+    _receiver: &str,
     message: String,
     options: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -145,19 +145,19 @@ async fn receive_request(
         MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
     > = serde_json::from_str(result)?;
     let received_did_doc = get_did_document_from_body(received.message)?;
-    let comm_keypair = get_com_keypair(&received_did_doc.id)?;
+    let _comm_keypair = get_com_keypair(&received_did_doc.id)?;
 
-    let pub_key = received
+    let _pub_key = received
         .metadata
         .get("pub_key")
         .ok_or("send DIDComm request does not return pub_key")?
         .to_owned();
-    let secret_key = received
+    let _secret_key = received
         .metadata
         .get("secret_key")
         .ok_or("send DIDComm request does not return secret_key")?
         .to_owned();
-    let target_pub_key = received
+    let _target_pub_key = received
         .metadata
         .get("target_pub_key")
         .ok_or("send DIDComm request does not return target_pub_key")?
@@ -197,8 +197,8 @@ async fn send_response(
 
 async fn receive_response(
     vade: &mut Vade,
-    sender: &str,
-    receiver: &str,
+    _sender: &str,
+    _receiver: &str,
     message: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive("{}", &message).await?;
@@ -266,8 +266,7 @@ async fn receive_complete(
 }
 
 pub fn get_did_document_from_body(
-    message: MessageWithBody<
-    DidDocumentBodyAttachment<Base64Container>>,
+    message: MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
 ) -> Result<CommunicationDidDocument, Box<dyn std::error::Error>> {
     let did_document_base64_encoded_string = message
         .body
@@ -291,7 +290,8 @@ async fn can_do_key_exchange_and_use_shared_secret_for_initial_encryption(
     let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
     let sender_options = get_didcomm_sender_options(true)?;
     let receiver_options = get_didcomm_receiver_options(true)?;
-    let request_message = send_request(&mut vade, &user_1_did, &user_2_did, &sender_options).await?;
+    let request_message =
+        send_request(&mut vade, &user_1_did, &user_2_did, &sender_options).await?;
     receive_request(
         &mut vade,
         &user_1_did,

@@ -1,3 +1,4 @@
+use data_encoding::BASE64;
 use didcomm_rs::Jwe;
 use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 use serial_test::serial;
@@ -143,12 +144,8 @@ async fn receive_request(
     let received: VadeDidCommPluginOutput<
         MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
     > = serde_json::from_str(result)?;
-    let comm_keypair = get_com_keypair(
-        &received
-            .message
-            .id
-            .unwrap_or_else(|| "missing id in message".to_string()),
-    )?;
+    let received_did_doc = get_did_document_from_body(received.message)?;
+    let comm_keypair = get_com_keypair(&received_did_doc.id)?;
 
     let pub_key = received
         .metadata
@@ -268,6 +265,22 @@ async fn receive_complete(
     return Ok(());
 }
 
+pub fn get_did_document_from_body(
+    message: MessageWithBody<
+    DidDocumentBodyAttachment<Base64Container>>,
+) -> Result<CommunicationDidDocument, Box<dyn std::error::Error>> {
+    let did_document_base64_encoded_string = message
+        .body
+        .ok_or_else(|| "body is a required field for DID exchange messages")?
+        .did_doc_attach
+        .base64;
+    let did_document_base64_encoded_bytes = did_document_base64_encoded_string.as_bytes();
+    let did_document_bytes = BASE64.decode(did_document_base64_encoded_bytes)?;
+    let did_document_string = std::str::from_utf8(&did_document_bytes)?;
+    let did_document: CommunicationDidDocument = serde_json::from_str(did_document_string)?;
+    Ok(did_document)
+}
+
 #[tokio::test]
 #[serial]
 async fn can_do_key_exchange_and_use_shared_secret_for_initial_encryption(
@@ -278,8 +291,7 @@ async fn can_do_key_exchange_and_use_shared_secret_for_initial_encryption(
     let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
     let sender_options = get_didcomm_sender_options(true)?;
     let receiver_options = get_didcomm_receiver_options(true)?;
-    let request_message =
-        send_request(&mut vade, &user_1_did, &user_2_did, &sender_options).await?;
+    let request_message = send_request(&mut vade, &user_1_did, &user_2_did, &sender_options).await?;
     receive_request(
         &mut vade,
         &user_1_did,

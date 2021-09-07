@@ -26,7 +26,7 @@ before_script:
   ## Collect SSH RSA public key from gitlab and add them to the known_hosts file
   ## 
   - ssh-keyscan -t rsa git.slock.it >> ~/.ssh/known_hosts
-  - git config --global url."gitlab-ci-token:${CI_JOB_TOKEN}@git.slock.it/".insteadOf 'git@git.slock.it'
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@git.slock.it/".insteadOf 'ssh://git@git.slock.it'
 build:
   stage: build
   script:

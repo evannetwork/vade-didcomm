@@ -5,12 +5,20 @@ use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
-        BaseMessage, CommKeyPair, CommunicationDidDocument, DidCommOptions,
-        KeyInformation, MessageWithBody, VadeDidCommPluginOutput,
+        Base64Container,
+        BaseMessage,
+        CommKeyPair,
+        CommunicationDidDocument,
+        DidCommOptions,
+        DidDocumentBodyAttachment,
+        KeyInformation,
+        MessageWithBody,
+        VadeDidCommPluginOutput,
     },
     VadeDidComm,
 };
 
+const DID_SERVICE_ENDPOINT: &str = "https://evan.network";
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
 const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
 
@@ -24,16 +32,16 @@ pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
     }
 }
 
-pub fn get_com_keypair(
-    key_agreement_did: &str,
-) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
+pub fn get_com_keypair(key_agreement_did: &str) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
     let db_result = read_db(&format!("key_agreement_key_{}", key_agreement_did))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
     Ok(comm_keypair)
 }
 
-fn get_didcomm_receiver_options(use_shared_key: bool) -> Result<String, Box<dyn std::error::Error>> {
+fn get_didcomm_receiver_options(
+    use_shared_key: bool,
+) -> Result<String, Box<dyn std::error::Error>> {
     let sign_keypair = get_keypair_set();
 
     let options: DidCommOptions;
@@ -42,12 +50,11 @@ fn get_didcomm_receiver_options(use_shared_key: bool) -> Result<String, Box<dyn 
             my_secret: sign_keypair.user2_secret.to_bytes(),
             others_public: sign_keypair.user1_pub.to_bytes(),
         }),
-        sign_key: Some(sign_keypair.sign_keypair.secret.to_bytes())
+        sign_key: Some(sign_keypair.sign_keypair.secret.to_bytes()),
     };
 
     Ok(serde_json::to_string(&options)?)
 }
-
 
 fn get_didcomm_sender_options(use_shared_key: bool) -> Result<String, Box<dyn std::error::Error>> {
     let sign_keypair = get_keypair_set();
@@ -58,7 +65,7 @@ fn get_didcomm_sender_options(use_shared_key: bool) -> Result<String, Box<dyn st
             my_secret: sign_keypair.user1_secret.to_bytes(),
             others_public: sign_keypair.user2_pub.to_bytes(),
         }),
-        sign_key: Some(sign_keypair.sign_keypair.secret.to_bytes())
+        sign_key: Some(sign_keypair.sign_keypair.secret.to_bytes()),
     };
 
     Ok(serde_json::to_string(&options)?)
@@ -81,7 +88,7 @@ async fn send_request(
     let exchange_request = format!(
         r#"{{
             "type": "{}/request",
-            "service_endpoint": "https://evan.network",
+            "serviceEndpoint": "https://evan.network",
             "from": "{}",
             "to": ["{}"]
         }}"#,
@@ -133,9 +140,15 @@ async fn receive_request(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let received: VadeDidCommPluginOutput<MessageWithBody<CommunicationDidDocument>> =
-        serde_json::from_str(result)?;
-    let comm_keypair = get_com_keypair(&received.message.body.unwrap().id)?;
+    let received: VadeDidCommPluginOutput<
+        MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
+    > = serde_json::from_str(result)?;
+    let comm_keypair = get_com_keypair(
+        &received
+            .message
+            .id
+            .unwrap_or_else(|| "missing id in message".to_string()),
+    )?;
 
     let pub_key = received
         .metadata
@@ -168,11 +181,11 @@ async fn send_response(
     let exchange_response = format!(
         r#"{{
             "type": "{}/response",
-            "service_endpoint": "https://evan.network",
+            "serviceEndpoint": "{}",
             "from": "{}",
             "to": ["{}"]
         }}"#,
-        DID_EXCHANGE_PROTOCOL_URL, sender, receiver
+        DID_EXCHANGE_PROTOCOL_URL, DID_SERVICE_ENDPOINT, sender, receiver
     );
     let results = vade.didcomm_send("{}", &exchange_response).await?;
     let result = results
@@ -265,7 +278,8 @@ async fn can_do_key_exchange_and_use_shared_secret_for_initial_encryption(
     let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
     let sender_options = get_didcomm_sender_options(true)?;
     let receiver_options = get_didcomm_receiver_options(true)?;
-    let request_message = send_request(&mut vade, &user_1_did, &user_2_did, &sender_options).await?;
+    let request_message =
+        send_request(&mut vade, &user_1_did, &user_2_did, &sender_options).await?;
     receive_request(
         &mut vade,
         &user_1_did,
@@ -276,13 +290,7 @@ async fn can_do_key_exchange_and_use_shared_secret_for_initial_encryption(
     .await?;
 
     let response_message = send_response(&mut vade, &user_2_did, &user_1_did).await?;
-    receive_response(
-        &mut vade,
-        &user_2_did,
-        &user_1_did,
-        response_message,
-    )
-    .await?;
+    receive_response(&mut vade, &user_2_did, &user_1_did, response_message).await?;
 
     let complete_message = send_complete(&mut vade, &user_1_did, &user_2_did).await?;
     receive_complete(&mut vade, &user_2_did, &user_1_did, complete_message).await?;
@@ -300,7 +308,8 @@ async fn can_do_key_exchange_and_use_secret_and_public_for_initial_encryption(
     let sender_options = get_didcomm_sender_options(true)?;
     let receiver_options = get_didcomm_receiver_options(true)?;
 
-    let request_message = send_request(&mut vade, &user_1_did, &user_2_did, &sender_options).await?;
+    let request_message =
+        send_request(&mut vade, &user_1_did, &user_2_did, &sender_options).await?;
     receive_request(
         &mut vade,
         &user_1_did,
@@ -311,13 +320,7 @@ async fn can_do_key_exchange_and_use_secret_and_public_for_initial_encryption(
     .await?;
 
     let response_message = send_response(&mut vade, &user_2_did, &user_1_did).await?;
-    receive_response(
-        &mut vade,
-        &user_2_did,
-        &user_1_did,
-        response_message,
-    )
-    .await?;
+    receive_response(&mut vade, &user_2_did, &user_1_did, response_message).await?;
 
     let complete_message = send_complete(&mut vade, &user_1_did, &user_2_did).await?;
     receive_complete(&mut vade, &user_1_did, &user_2_did, complete_message).await?;

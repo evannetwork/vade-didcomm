@@ -108,7 +108,6 @@ mod tests {
     use didcomm_rs::Jwe;
     use serde::{Deserialize, Serialize};
     use utilities::keypair::get_keypair_set;
-    use base58::FromBase58;
     use ed25519_dalek::{
         SecretKey,
         PublicKey,
@@ -155,8 +154,8 @@ mod tests {
                 "type": "test"
             }"#
         .to_string();
-        let alice_private = "6QN8DfuN9hjgHgPvLXqgzqYE3jRRGRrmJQZkd5tL8paR".from_base58().unwrap();
-        let bobs_private = "HBTcN2MrXNRj9xF9oi8QqYyuEPv3JLLjQKuEgW9oxVKP".from_base58().unwrap();
+        let alice_private = bs58::decode("6QN8DfuN9hjgHgPvLXqgzqYE3jRRGRrmJQZkd5tL8paR").into_vec()?;
+        let bobs_private = bs58::decode("HBTcN2MrXNRj9xF9oi8QqYyuEPv3JLLjQKuEgW9oxVKP").into_vec()?;
         let secret_key: SecretKey = SecretKey::from_bytes(alice_private.as_slice())?;
         let alice_public: PublicKey = (&secret_key).into();
 

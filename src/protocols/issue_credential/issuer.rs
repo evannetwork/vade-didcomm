@@ -13,7 +13,7 @@ use super::helper::{
 };
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/offer_credential`
-pub fn send_offer_credential(message: &str) -> StepResult {
+pub fn send_offer_credential(_options: &str, message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from,
@@ -61,7 +61,7 @@ pub fn send_offer_credential(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `receive`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/request_credential`
-pub fn receive_request_credential(message: &str) -> StepResult {
+pub fn receive_request_credential(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<CredentialData> = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from.clone(),
@@ -113,7 +113,7 @@ pub fn receive_request_credential(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `receive`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/propose-credential`
-pub fn receive_propose_credential(message: &str) -> StepResult {
+pub fn receive_propose_credential(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<CredentialData> = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from.clone(),
@@ -165,7 +165,7 @@ pub fn receive_propose_credential(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/issue_credential`
-pub fn send_issue_credential(message: &str) -> StepResult {
+pub fn send_issue_credential(_options: &str, message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from,

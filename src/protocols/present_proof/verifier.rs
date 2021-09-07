@@ -13,7 +13,7 @@ use super::helper::{
 };
 
 /// Protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/request-presentation`
-pub fn send_request_presentation(message: &str) -> StepResult {
+pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from,
@@ -73,7 +73,7 @@ pub fn send_request_presentation(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/presentation`
-pub fn receive_presentation(message: &str) -> StepResult {
+pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<PresentationData> = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from.clone(),
@@ -128,7 +128,7 @@ pub fn receive_presentation(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/propose-presentation`
-pub fn receive_propose_presentation(message: &str) -> StepResult {
+pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<PresentationData> = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from.clone(),

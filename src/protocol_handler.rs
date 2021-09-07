@@ -18,8 +18,11 @@ impl ProtocolHandler {
     ///
     /// # Returns
     /// * `ProtocolHandleOutput` - general information about the analyzed protocol step
-    pub fn before_send(message: &str) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
-        handle_protocol(message, MessageDirection::Send)
+    pub fn before_send(
+        options: &str,
+        message: &str,
+    ) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
+        handle_protocol(options, message, MessageDirection::Send)
     }
 
     /// Runs all protocol handlers for a message, to analyze it after receiving and decryption.
@@ -32,9 +35,10 @@ impl ProtocolHandler {
     /// # Returns
     /// * `ProtocolHandleOutput` - general information about the analyzed protocol step
     pub fn after_receive(
+        options: &str,
         message: &str,
     ) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
-        handle_protocol(message, MessageDirection::Receive)
+        handle_protocol(options, message, MessageDirection::Receive)
     }
 }
 
@@ -42,6 +46,7 @@ impl ProtocolHandler {
 /// It analyse the message type and checks if a step with a specific direction is configured.
 /// When a step is found, the logic will be executed and no other handler will be searched.
 fn handle_protocol(
+    options: &str,
     message: &str,
     direction: MessageDirection,
 ) -> Result<ProtocolHandleOutput, Box<dyn std::error::Error>> {
@@ -71,7 +76,7 @@ fn handle_protocol(
                 let protocol_type = format!("{}/{}", protocol_name, step.name);
                 // check for configured step names and directions
                 if step.direction == direction && m_type.contains(&protocol_type) {
-                    let step_outcome = (step.handler)(message)?;
+                    let step_outcome = (step.handler)(options, message)?;
                     encrypt = step_outcome.encrypt;
                     metadata = step_outcome.metadata;
                     message_output = step_outcome.message;

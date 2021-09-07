@@ -19,7 +19,7 @@ pub struct Protocol {
 /// returned to the user.
 pub struct ProtocolStep {
     pub direction: MessageDirection,
-    pub handler: fn(message: &str) -> StepResult,
+    pub handler: fn(options: &str, message: &str) -> StepResult,
     pub name: String,
 }
 
@@ -42,7 +42,10 @@ pub type StepResult = Result<StepOutput, Box<dyn std::error::Error>>;
 ///
 /// # Returns
 /// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
-pub fn generate_send_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
+pub fn generate_send_step(
+    name: &str,
+    handler: fn(options: &str, message: &str) -> StepResult,
+) -> ProtocolStep {
     ProtocolStep {
         direction: MessageDirection::Send,
         name: String::from(name),
@@ -59,7 +62,10 @@ pub fn generate_send_step(name: &str, handler: fn(message: &str) -> StepResult) 
 ///
 /// # Returns
 /// * `ProtocolStep` - The new protocol step, that can be pushed to a protocol steps vec.
-pub fn generate_receive_step(name: &str, handler: fn(message: &str) -> StepResult) -> ProtocolStep {
+pub fn generate_receive_step(
+    name: &str,
+    handler: fn(options: &str, message: &str) -> StepResult,
+) -> ProtocolStep {
     ProtocolStep {
         direction: MessageDirection::Receive,
         name: String::from(name),

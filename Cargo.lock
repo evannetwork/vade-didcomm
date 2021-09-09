@@ -1386,7 +1386,7 @@ version = "0.0.1"
 dependencies = [
  "ed25519-dalek",
  "k256",
- "vade 0.1.0",
+ "vade",
  "vade-didcomm",
  "x25519-dalek",
 ]
@@ -1412,18 +1412,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "vade"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "env_logger",
- "futures",
- "log",
-]
-
-[[package]]
 name = "vade-didcomm"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "async-trait",
  "cargo-husky",
@@ -1446,7 +1436,7 @@ dependencies = [
  "tokio",
  "utilities",
  "uuid",
- "vade 0.1.0 (git+ssh://git@git.slock.it/equs/interop/vade/vade.git?branch=develop)",
+ "vade",
  "web-sys",
  "x25519-dalek",
 ]

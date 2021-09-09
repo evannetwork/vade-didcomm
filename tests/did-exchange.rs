@@ -10,9 +10,7 @@ use vade_didcomm::{
         BaseMessage,
         CommKeyPair,
         CommunicationDidDocument,
-        DidCommOptions,
         DidDocumentBodyAttachment,
-        KeyInformation,
         MessageWithBody,
         VadeDidCommPluginOutput,
     },
@@ -38,38 +36,6 @@ pub fn get_com_keypair(key_agreement_did: &str) -> Result<CommKeyPair, Box<dyn s
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
     Ok(comm_keypair)
-}
-
-fn get_didcomm_receiver_options(
-    use_shared_key: bool,
-) -> Result<String, Box<dyn std::error::Error>> {
-    let sign_keypair = get_keypair_set();
-
-    let options: DidCommOptions;
-    options = DidCommOptions {
-        key_information: Some(KeyInformation::SecretPublic {
-            my_secret: sign_keypair.user2_secret.to_bytes(),
-            others_public: sign_keypair.user1_pub.to_bytes(),
-        }),
-        sign_key: Some(sign_keypair.sign_keypair.secret.to_bytes()),
-    };
-
-    Ok(serde_json::to_string(&options)?)
-}
-
-fn get_didcomm_sender_options(use_shared_key: bool) -> Result<String, Box<dyn std::error::Error>> {
-    let sign_keypair = get_keypair_set();
-
-    let options: DidCommOptions;
-    options = DidCommOptions {
-        key_information: Some(KeyInformation::SecretPublic {
-            my_secret: sign_keypair.user1_secret.to_bytes(),
-            others_public: sign_keypair.user2_pub.to_bytes(),
-        }),
-        sign_key: Some(sign_keypair.sign_keypair.secret.to_bytes()),
-    };
-
-    Ok(serde_json::to_string(&options)?)
 }
 
 async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
@@ -102,36 +68,34 @@ async fn send_request(
         .as_ref()
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
-    // let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver))?;
-    // let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
+    let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver))?;
+    let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
-    // let pub_key = prepared
-    //     .metadata
-    //     .get("pub_key")
-    //     .ok_or("send DIDComm request does not return pub_key")?
-    //     .to_owned();
-    // let secret_key = prepared
-    //     .metadata
-    //     .get("secret_key")
-    //     .ok_or("send DIDComm request does not return secret_key")?
-    //     .to_owned();
-    // let target_pub_key = prepared
-    //     .metadata
-    //     .get("target_pub_key")
-    //     .ok_or("send DIDComm request does not return target_pub_key")?
-    //     .to_owned();
+    let pub_key = prepared
+        .metadata
+        .get("pub_key")
+        .ok_or("send DIDComm request does not return pub_key")?
+        .to_owned();
+    let secret_key = prepared
+        .metadata
+        .get("secret_key")
+        .ok_or("send DIDComm request does not return secret_key")?
+        .to_owned();
+    let target_pub_key = prepared
+        .metadata
+        .get("target_pub_key")
+        .ok_or("send DIDComm request does not return target_pub_key")?
+        .to_owned();
 
-    // assert_eq!(target_pub_key, comm_keypair.target_pub_key);
-    // assert_eq!(pub_key, comm_keypair.pub_key);
-    // assert_eq!(secret_key, comm_keypair.secret_key);
+    assert_eq!(target_pub_key, comm_keypair.target_pub_key);
+    assert_eq!(pub_key, comm_keypair.pub_key);
+    assert_eq!(secret_key, comm_keypair.secret_key);
 
     return Ok(serde_json::to_string(&prepared.message)?);
 }
 
 async fn receive_request(
     vade: &mut Vade,
-    sender: &str,
-    receiver: &str,
     message: String,
     options: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -144,8 +108,8 @@ async fn receive_request(
     let received: VadeDidCommPluginOutput<
         MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
     > = serde_json::from_str(result)?;
-    let received_did_doc = get_did_document_from_body(received.message)?;
-    let comm_keypair = get_com_keypair(&received_did_doc.id)?;
+    let target_did = received.metadata.get("key_agreement_key").ok_or("no key_agreement_key")?;
+    let comm_keypair = get_com_keypair(&target_did)?;
 
     let pub_key = received
         .metadata
@@ -163,9 +127,9 @@ async fn receive_request(
         .ok_or("send DIDComm request does not return target_pub_key")?
         .to_owned();
 
-    // assert_eq!(target_pub_key, comm_keypair.target_pub_key);
-    // assert_eq!(pub_key, comm_keypair.pub_key);
-    // assert_eq!(secret_key, comm_keypair.secret_key);
+    assert_eq!(target_pub_key, comm_keypair.target_pub_key);
+    assert_eq!(pub_key, comm_keypair.pub_key);
+    assert_eq!(secret_key, comm_keypair.secret_key);
 
     return Ok(());
 }
@@ -197,23 +161,27 @@ async fn send_response(
 
 async fn receive_response(
     vade: &mut Vade,
-    sender: &str,
-    receiver: &str,
     message: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive("{}", &message).await?;
-    let _ = results
+    let result = results
         .get(0)
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    // let comm_keypair_sender = get_com_keypair(sender)?;
-    // let comm_keypair_receiver = get_com_keypair(receiver)?;
 
-    // assert_eq!(
-    //     comm_keypair_sender.target_pub_key,
-    //     comm_keypair_receiver.pub_key
-    // );
+    let received: VadeDidCommPluginOutput<
+            MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
+        > = serde_json::from_str(result)?;
+    let receiver_did = received.metadata.get("key_agreement_key").ok_or("no key_agreement_key")?;
+    let sender_did = received.metadata.get("target_key_agreement_key").ok_or("no target_key_agreement_key")?;
+    let comm_keypair_receiver = get_com_keypair(&receiver_did)?;
+    let comm_keypair_sender = get_com_keypair(&sender_did)?;
+
+    assert_eq!(
+        comm_keypair_sender.target_pub_key,
+        comm_keypair_receiver.pub_key
+    );
 
     return Ok(());
 }
@@ -245,8 +213,6 @@ async fn send_complete(
 
 async fn receive_complete(
     vade: &mut Vade,
-    _sender: &str,
-    _receiver: &str,
     message: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive("{}", &message).await?;
@@ -266,11 +232,11 @@ async fn receive_complete(
 }
 
 pub fn get_did_document_from_body(
-    message: MessageWithBody<
+    message: &MessageWithBody<
     DidDocumentBodyAttachment<Base64Container>>,
 ) -> Result<CommunicationDidDocument, Box<dyn std::error::Error>> {
-    let did_document_base64_encoded_string = message
-        .body
+    let did_document_base64_encoded_string = &message
+        .body.as_ref()
         .ok_or_else(|| "body is a required field for DID exchange messages")?
         .did_doc_attach
         .base64;
@@ -283,59 +249,23 @@ pub fn get_did_document_from_body(
 
 #[tokio::test]
 #[serial]
-async fn can_do_key_exchange_and_use_shared_secret_for_initial_encryption(
+async fn can_do_key_exchange(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-
-    let user_1_did = String::from("did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp");
-    let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
-    let sender_options = get_didcomm_sender_options(true)?;
-    let receiver_options = get_didcomm_receiver_options(true)?;
-    let request_message = send_request(&mut vade, &user_1_did, &user_2_did, &sender_options).await?;
+    let test_setup = get_keypair_set();
+    let request_message = send_request(&mut vade, &test_setup.user1_did, &test_setup.user2_did, &test_setup.sender_options_stringified).await?;
     receive_request(
         &mut vade,
-        &user_1_did,
-        &user_2_did,
         request_message,
-        &receiver_options,
+        &test_setup.receiver_options_stringified,
     )
     .await?;
 
-    let response_message = send_response(&mut vade, &user_2_did, &user_1_did).await?;
-    receive_response(&mut vade, &user_2_did, &user_1_did, response_message).await?;
+    let response_message = send_response(&mut vade, &test_setup.user2_did, &test_setup.user1_did).await?;
+    receive_response(&mut vade, response_message).await?;
 
-    let complete_message = send_complete(&mut vade, &user_1_did, &user_2_did).await?;
-    receive_complete(&mut vade, &user_2_did, &user_1_did, complete_message).await?;
-
-    Ok(())
-}
-
-#[tokio::test]
-#[serial]
-async fn can_do_key_exchange_and_use_secret_and_public_for_initial_encryption(
-) -> Result<(), Box<dyn std::error::Error>> {
-    let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp");
-    let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
-    let sender_options = get_didcomm_sender_options(true)?;
-    let receiver_options = get_didcomm_receiver_options(true)?;
-
-    let request_message =
-        send_request(&mut vade, &user_1_did, &user_2_did, &sender_options).await?;
-    receive_request(
-        &mut vade,
-        &user_1_did,
-        &user_2_did,
-        request_message,
-        &receiver_options,
-    )
-    .await?;
-
-    let response_message = send_response(&mut vade, &user_2_did, &user_1_did).await?;
-    receive_response(&mut vade, &user_2_did, &user_1_did, response_message).await?;
-
-    let complete_message = send_complete(&mut vade, &user_1_did, &user_2_did).await?;
-    receive_complete(&mut vade, &user_1_did, &user_2_did, complete_message).await?;
+    let complete_message = send_complete(&mut vade, &test_setup.user1_did, &test_setup.user2_did,).await?;
+    receive_complete(&mut vade, complete_message).await?;
 
     Ok(())
 }

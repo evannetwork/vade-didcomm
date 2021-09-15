@@ -1,7 +1,7 @@
 use crate::{
     datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
     get_from_to_from_message,
-    protocols::presentation_exchange::presentation_exchange::{get_current_state, save_presentation_exchange, save_state},
+    protocols::presentation_exchange::presentation_exchange_data::{get_current_state, save_presentation_exchange, save_state},
     protocols::presentation_exchange::datatypes::{PresentationExchangeData, State, UserType},
     protocols::protocol::{generate_step_output, StepResult},
 };

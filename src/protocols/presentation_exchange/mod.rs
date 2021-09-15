@@ -1,7 +1,7 @@
 pub mod datatypes;
 mod helper;
 mod holder;
-mod presentation_exchange;
+mod presentation_exchange_data;
 mod verifier;
 
 use crate::protocols::{

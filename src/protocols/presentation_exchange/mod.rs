@@ -6,7 +6,7 @@ mod verifier;
 
 use crate::protocols::{
     presentation_exchange::{
-        datatypes::PRESENTATION_EXCHANGE_PROTOCOL_URI,
+        datatypes::PRESENTATION_EXCHANGE_PROTOCOL_URL,
         holder::{receive_request_presentation, send_presentation, send_propose_presentation},
         verifier::{receive_presentation, receive_propose_presentation, send_request_presentation},
     },
@@ -19,7 +19,7 @@ use crate::protocols::{
 /// * `Protocol` - the new Presentation exchange protocol handler
 pub fn generate_issue_credential_protocol() -> Protocol {
     Protocol {
-        name: String::from(PRESENTATION_EXCHANGE_PROTOCOL_URI),
+        name: String::from(PRESENTATION_EXCHANGE_PROTOCOL_URL),
         steps: vec![
             generate_send_step("request-presentation", send_request_presentation),
             generate_receive_step("request-presentation", receive_request_presentation),

@@ -1,6 +1,6 @@
 use crate::datatypes::MessageWithBody;
 use crate::protocols::presentation_exchange::datatypes::{
-    PresentationExchangeData, PresentationExchangeInfo, PRESENTATION_EXCHANGE_PROTOCOL_URI,
+    PresentationExchangeData, PresentationExchangeInfo, PRESENTATION_EXCHANGE_PROTOCOL_URL,
 };
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -45,7 +45,7 @@ pub fn get_presentation_exchange_message(
         id: Some(String::from(&thread_id)),
         other: HashMap::new(),
         pthid: Some(format!("{}#presentation-exchange", thread_id)),
-        r#type: format!("{}/{}", PRESENTATION_EXCHANGE_PROTOCOL_URI, step_name),
+        r#type: format!("{}/{}", PRESENTATION_EXCHANGE_PROTOCOL_URL, step_name),
         thid: Some(thid.to_string()),
         to: Some([String::from(to_did)].to_vec()),
     };

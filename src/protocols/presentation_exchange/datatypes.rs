@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use std::collections::HashMap;
+use std::fmt;
 
-pub const PRESENTATION_EXCHANGE_PROTOCOL_URL: &str = "https://identity.foundation/presentation-exchange/spec/v1.0.0";
+pub const PRESENTATION_EXCHANGE_PROTOCOL_URL: &str =
+    "https://identity.foundation/presentation-exchange/spec/v1.0.0";
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -20,15 +21,52 @@ pub struct ProposePresentation {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Presentation {
+    context: Vec<String>,
+    r#type: Vec<String>,
+    presentation_submission: PresentationSubmission,
+    verifiable_credential: VerifiableCredential,
+    proof: Proof,
+}
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct CredentialSubject {
+    id: String,
+    license: Vec<String>,
+}
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct Proof {
+    r#type: String,
+    created: String,
+    proof_purpose: String,
+    verification_method: String,
+    jws: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    challenge: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    domain: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct VerifiableCredential {
+    context: String,
+    id: String,
+    r#type: Vec<String>,
+    issuer: String,
+    issuance_date: String,
+    credential_subject: CredentialSubject,
+    proof: Proof,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct PresentationSubmission {
     id: String,
     definition_id: String,
-    descriptor_map: Vec<DescriptorMap>
+    descriptor_map: Vec<DescriptorMap>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -36,13 +74,13 @@ pub struct DescriptorMap {
     id: String,
     path: String,
     format: String,
-    path_nested: Option<Box<DescriptorMap>>
+    path_nested: Option<Box<DescriptorMap>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct RequestPresentation {
     pub options: Options,
-    pub presentation_definition: PresentationDefinition
+    pub presentation_definition: PresentationDefinition,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -92,7 +130,7 @@ pub struct SubmissionRequirement {
     pub min: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub max: Option<u8>
+    pub max: Option<u8>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -120,7 +158,7 @@ pub struct Format {
     pub ldp_vp: Option<ProofType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub ldp: Option<ProofType>
+    pub ldp: Option<ProofType>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -137,7 +175,6 @@ pub struct InputDescriptor {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub constraints: Option<Constraints>,
-
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -233,11 +270,19 @@ pub struct PresentationExchangeData {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub comment: Option<String>,
-    attachment: Attachment,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    proposal_attach: Option<Attachment>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    request_presentation_attach: Option<Attachment>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    presentations_attach: Option<Attachment>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Attachment{
+pub struct Attachment {
     id: String,
     mime_type: String,
     data: Vec<Data>,
@@ -245,6 +290,11 @@ pub struct Attachment{
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Data {
+    json: JsonData,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct JsonData {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub propose_presentation: Option<ProposePresentation>,
@@ -264,7 +314,7 @@ pub enum State {
     ReceiveProposePresentation,
     SendPresentation,
     ReceivePresentation,
-    Unknown
+    Unknown,
 }
 
 impl fmt::Display for State {
@@ -315,4 +365,3 @@ impl fmt::Display for ValueType {
         write!(f, "{:?}", self)
     }
 }
-

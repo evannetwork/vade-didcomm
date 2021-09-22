@@ -9,6 +9,6 @@ license = "Apache-2.0"
 k256 = "0.7.2"
 x25519-dalek = "1.1.1"
 ed25519-dalek = "1.0.1"
-vade = { git = "ssh://git@git.slock.it/equs/interop/vade/vade.git", branch = "develop", version = "0.1.0" }
+vade = { git = "https://git.slock.it/equs/interop/vade/vade.git", branch = "develop", version = "0.1.0" }
 vade-didcomm = { path = "..", version = "0.0.2" }
 

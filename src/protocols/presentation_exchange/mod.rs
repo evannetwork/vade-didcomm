@@ -17,7 +17,7 @@ use crate::protocols::{
 ///
 /// # Returns
 /// * `Protocol` - the new Presentation exchange protocol handler
-pub fn generate_issue_credential_protocol() -> Protocol {
+pub fn generate_presentation_exchange_protocol() -> Protocol {
     Protocol {
         name: String::from(PRESENTATION_EXCHANGE_PROTOCOL_URL),
         steps: vec![

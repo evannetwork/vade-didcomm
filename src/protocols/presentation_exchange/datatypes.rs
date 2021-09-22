@@ -15,20 +15,6 @@ pub struct PresentationExchangeInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct ProposePresentation {
-    pub input_descriptors: Vec<InputDescriptor>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct Presentation {
-    context: Vec<String>,
-    r#type: Vec<String>,
-    presentation_submission: PresentationSubmission,
-    verifiable_credential: VerifiableCredential,
-    proof: Proof,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct CredentialSubject {
     id: String,
     license: Vec<String>,
@@ -53,34 +39,38 @@ pub struct Proof {
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct VerifiableCredential {
-    context: String,
-    id: String,
-    r#type: Vec<String>,
-    issuer: String,
-    issuance_date: String,
-    credential_subject: CredentialSubject,
-    proof: Proof,
+    pub context: String,
+    pub id: String,
+    pub r#type: Vec<String>,
+    pub issuer: String,
+    pub issuance_date: String,
+    pub credential_subject: CredentialSubject,
+    pub proof: Proof,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct PresentationSubmission {
-    id: String,
-    definition_id: String,
-    descriptor_map: Vec<DescriptorMap>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    definition_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    descriptor_map: Option<Vec<DescriptorMap>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct DescriptorMap {
     id: String,
     path: String,
-    format: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    format: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     path_nested: Option<Box<DescriptorMap>>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct RequestPresentation {
-    pub options: Options,
-    pub presentation_definition: PresentationDefinition,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -179,7 +169,7 @@ pub struct InputDescriptor {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Constraints {
-    pub field: Vec<Field>,
+    pub fields: Vec<Field>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     // Values should be required, preferred
@@ -261,8 +251,6 @@ pub struct ProofType {
 /// required for all messages of Presentation Exchange protocol.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PresentationExchangeData {
-    id: String,
-    r#type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub format: Option<Vec<Format>>,
@@ -272,38 +260,59 @@ pub struct PresentationExchangeData {
     pub comment: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    proposal_attach: Option<Attachment>,
+    pub proposal_attach: Option<Attachment>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    request_presentation_attach: Option<Attachment>,
+    pub request_presentation_attach: Option<Attachment>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    presentations_attach: Option<Attachment>,
+    pub presentations_attach: Option<Attachment>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Attachment {
-    id: String,
-    mime_type: String,
-    data: Vec<Data>,
+    pub id: String,
+    pub mime_type: String,
+    pub data: Vec<Data>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Data {
-    json: JsonData,
+    pub json: JsonData,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct JsonData {
+    // input_descriptors are required only for propose_presentation message
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub propose_presentation: Option<ProposePresentation>,
+    pub input_descriptors: Option<Vec<InputDescriptor>>,
+
+    // context, type, presentation_submission, verifiable_credential and proof are required
+    // only for presentation message
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub request_presentation: Option<Vec<RequestPresentation>>,
+    pub context: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    pub presentation: Option<Presentation>,
+    pub r#type: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub presentation_submission: Option<PresentationSubmission>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub verifiable_credential: Option<Vec<VerifiableCredential>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub proof: Option<Proof>,
+
+    // options and presentation_definition are required for request_presentation message
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub options: Option<Options>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub presentation_definition: Option<PresentationDefinition>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

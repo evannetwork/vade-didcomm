@@ -297,8 +297,45 @@ async fn send_presentation(
                             .to_vec(),
                         ),
                     }),
-                    verifiable_credential: ,
-                    proof: None,
+                    verifiable_credential: Some(
+                        [VerifiableCredential {
+                            context: "https://www.w3.org/2018/credentials/v1".to_string(),
+                            id: "https://eu.com/claims/DriversLicense".to_string(),
+                            r#type: ["EUDriversLicense".to_string()].to_vec(),
+                            issuer: "did:foo:123".to_string(),
+                            issuance_date: "2010-01-01T19:73:24Z".to_string(),
+                            credential_subject: CredentialSubject {
+                                id: "did:example:ebfeb1f712ebc6f1c276e12ec21".to_string(),
+                                data: [
+                                    ("number".to_string(), "34DGE352".to_string()),
+                                    ("dob".to_string(), "07/13/80".to_string()),
+                                ]
+                                .iter()
+                                .cloned()
+                                .collect(),
+                            },
+                            proof: Proof {
+                                r#type: "RsaSignature2018".to_string(),
+                                created: "2017-06-18T21:19:10Z".to_string(),
+                                proof_purpose: "assertionMethod".to_string(),
+                                verification_method: "https://example.edu/issuers/keys/1"
+                                    .to_string(),
+                                jws: "...".to_string(),
+                                challenge: None,
+                                domain: None,
+                            },
+                        }]
+                        .to_vec(),
+                    ),
+                    proof: Some(Proof {
+                        r#type: "RsaSignature2018".to_string(),
+                        created: "2017-06-18T21:19:10Z".to_string(),
+                        proof_purpose: "assertionMethod".to_string(),
+                        verification_method: "https://example.edu/issuers/keys/1".to_string(),
+                        jws: "...".to_string(),
+                        challenge: Some("1f44d55f-f161-4938-a659-f8026467f126".to_string()),
+                        domain: Some("4jt78h47fh47".to_string()),
+                    }),
                 },
             }]
             .to_vec(),
@@ -359,43 +396,41 @@ async fn receive_presentation(
 
     let state = received_presentation.state;
     let attached_presentation = received_presentation
-    .presentations_attach
-    .ok_or("Presentation not attached")?;
+        .presentations_attach
+        .ok_or("Presentation not attached")?;
 
-    let data= attached_presentation
-    .data
-    .get(0)
-    .ok_or("Presentation data is empty")?
-    .json
-    .verifiable_credential.as_ref()
-    .ok_or("Credentials not attached")?
-    .get(0)
-    .ok_or("Credentials are empty")?
-    .r#type
-    .get(0)
-    .ok_or("Credential type not found")?;
-    
-    
- 
+    let data = attached_presentation
+        .data
+        .get(0)
+        .ok_or("Presentation data is empty")?
+        .json
+        .verifiable_credential
+        .as_ref()
+        .ok_or("Credentials not attached")?
+        .get(0)
+        .ok_or("Credentials are empty")?
+        .r#type
+        .get(0)
+        .ok_or("Credential type not found")?;
 
     let req_data_saved = get_presentation(sender, receiver, id, state)?;
     let attached_presentation_saved = req_data_saved
-    .presentations_attach
-    .ok_or("Presentation not attached")?;
+        .presentations_attach
+        .ok_or("Presentation not attached")?;
 
     let data_saved = attached_presentation_saved
-    .data
-    .get(0)
-    .ok_or("Presentation data is empty")?
-    .json
-    .verifiable_credential.as_ref()
-    .ok_or("Credentials not attached")?
-    .get(0)
-    .ok_or("Credentials are empty")?
-    .r#type
-    .get(0)
-    .ok_or("Credential type not found")?;
-
+        .data
+        .get(0)
+        .ok_or("Presentation data is empty")?
+        .json
+        .verifiable_credential
+        .as_ref()
+        .ok_or("Credentials not attached")?
+        .get(0)
+        .ok_or("Credentials are empty")?
+        .r#type
+        .get(0)
+        .ok_or("Credential type not found")?;
 
     assert_eq!(data, data_saved);
 

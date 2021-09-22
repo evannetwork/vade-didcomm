@@ -16,24 +16,24 @@ pub struct PresentationExchangeInfo {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct CredentialSubject {
-    id: String,
-    license: Vec<String>,
+    pub id: String,
+    pub data: HashMap<String, String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Proof {
-    r#type: String,
-    created: String,
-    proof_purpose: String,
-    verification_method: String,
-    jws: Vec<String>,
+    pub r#type: String,
+    pub created: String,
+    pub proof_purpose: String,
+    pub verification_method: String,
+    pub jws: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    challenge: Option<String>,
+    pub challenge: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    domain: Option<String>,
+    pub domain: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -52,25 +52,25 @@ pub struct VerifiableCredential {
 pub struct PresentationSubmission {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    id: Option<String>,
+    pub id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    definition_id: Option<String>,
+    pub definition_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    descriptor_map: Option<Vec<DescriptorMap>>,
+    pub descriptor_map: Option<Vec<DescriptorMap>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct DescriptorMap {
-    id: String,
-    path: String,
+    pub id: String,
+    pub path: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    format: Option<String>,
+    pub format: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    path_nested: Option<Box<DescriptorMap>>,
+    pub path_nested: Option<Box<DescriptorMap>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -127,10 +127,10 @@ pub struct SubmissionRequirement {
 pub struct Format {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    attach_id: Option<String>,
+    pub attach_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    format: Option<String>,
+    pub format: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub jwt: Option<Alg>,
@@ -173,20 +173,20 @@ pub struct Constraints {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     // Values should be required, preferred
-    limit_disclosure: Option<ValueType>,
+    pub limit_disclosure: Option<ValueType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    statuses: Option<Vec<Status>>,
+    pub statuses: Option<Vec<Status>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     // Values should be required, preferred
-    subject_is_issuer: Option<ValueType>,
+    pub subject_is_issuer: Option<ValueType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    is_holder: Option<Vec<GenericObject>>,
+    pub is_holder: Option<Vec<GenericObject>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
-    same_subject: Option<Vec<GenericObject>>,
+    pub same_subject: Option<Vec<GenericObject>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -215,7 +215,7 @@ pub struct Status {
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Field {
     pub path: Vec<String>,
-    id: String,
+    pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub purpose: Option<String>,

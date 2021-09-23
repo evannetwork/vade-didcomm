@@ -7,8 +7,8 @@ use vade_didcomm::{
     protocols::presentation_exchange::datatypes::{
         Attachment, Constraints, CredentialSubject, Data, DescriptorMap, Field, Format,
         InputDescriptor, JsonData, Options, PresentationDefinition, PresentationExchangeData,
-        PresentationSubmission, Proof, ProofType, Schema, State, SubmissionRequirement, UserType,
-        VerifiableCredential, PRESENTATION_EXCHANGE_PROTOCOL_URL,
+        PresentationSubmission, Proof, ProofType, Schema, State, VerifiableCredential,
+        PRESENTATION_EXCHANGE_PROTOCOL_URL,
     },
     VadeDidComm,
 };
@@ -247,7 +247,7 @@ async fn send_presentation(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let presentation_data = PresentationExchangeData {
-        state: State::SendPresentationRequest,
+        state: State::SendPresentation,
         format: Some(
             [Format {
                 attach_id: Some(id.to_string()),
@@ -261,7 +261,7 @@ async fn send_presentation(
             }]
             .to_vec(),
         ),
-        request_presentation_attach: Some(Attachment {
+        presentations_attach: Some(Attachment {
             id: id.to_string(),
             mime_type: String::from("application/json"),
             data: [Data {
@@ -342,7 +342,7 @@ async fn send_presentation(
         }),
         comment: None,
         proposal_attach: None,
-        presentations_attach: None,
+        request_presentation_attach: None,
     };
 
     let exchange_response = format!(
@@ -445,7 +445,7 @@ async fn send_presentation_proposal(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let presentation_data = PresentationExchangeData {
-        state: State::SendPresentationRequest,
+        state: State::SendProposePresentation,
         format: Some(
             [Format {
                 attach_id: Some(id.to_string()),
@@ -459,7 +459,7 @@ async fn send_presentation_proposal(
             }]
             .to_vec(),
         ),
-        request_presentation_attach: Some(Attachment {
+        proposal_attach: Some(Attachment {
             id: id.to_string(),
             mime_type: String::from("application/json"),
             data: [Data {
@@ -515,8 +515,8 @@ async fn send_presentation_proposal(
             .to_vec(),
         }),
         comment: None,
-        proposal_attach: None,
         presentations_attach: None,
+        request_presentation_attach: None,
     };
 
     let exchange_response = format!(

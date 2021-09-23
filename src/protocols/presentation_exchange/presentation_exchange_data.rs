@@ -39,7 +39,7 @@ pub fn save_presentation_exchange(
 /// * `thid` - thread id
 /// * `state` - state
 /// # Returns
-/// * `presentation_exchange` - credential data stored in db.
+/// * `presentation_exchange` - presentation_exchange data stored in db.
 #[allow(dead_code)]
 pub fn get_presentation_exchange(
     from_did: &str,
@@ -51,7 +51,8 @@ pub fn get_presentation_exchange(
         "presentation_exchange_{}_{}_{}_{}",
         from_did, to_did, state, thid
     ))?;
-    let presentation_exchange: PresentationExchangeData = serde_json::from_str(&presentation_exchange)?;
+    let presentation_exchange: PresentationExchangeData =
+        serde_json::from_str(&presentation_exchange)?;
     Ok(presentation_exchange)
 }
 
@@ -86,7 +87,10 @@ pub fn get_current_state(
     thid: &str,
     user_type: &UserType,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let result = read_db(&format!("presentation_exchange_state_{}_{}", user_type, thid));
+    let result = read_db(&format!(
+        "presentation_exchange_state_{}_{}",
+        user_type, thid
+    ));
     let state = match result {
         Ok(value) => value,
         Err(_) => "Unknown".to_string(),

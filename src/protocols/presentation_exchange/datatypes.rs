@@ -337,12 +337,12 @@ impl std::str::FromStr for State {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "SendProposeCredential" => Ok(State::SendPresentation),
-            "ReceiveProposeCredential" => Ok(State::ReceivePresentation),
-            "SendOfferCredential" => Ok(State::SendProposePresentation),
-            "ReceiveOfferCredential" => Ok(State::ReceiveProposePresentation),
-            "SendRequestCredential" => Ok(State::SendPresentation),
-            "ReceiveRequestCredential" => Ok(State::ReceivePresentation),
+            "SendPresentationRequest" => Ok(State::SendPresentationRequest),
+            "ReceivePresentatonRequest" => Ok(State::ReceivePresentatonRequest),
+            "SendProposePresentation" => Ok(State::SendProposePresentation),
+            "ReceiveProposePresentation" => Ok(State::ReceiveProposePresentation),
+            "SendPresentation" => Ok(State::SendPresentation),
+            "ReceivePresentation" => Ok(State::ReceivePresentation),
             _ => Ok(State::Unknown),
         }
     }

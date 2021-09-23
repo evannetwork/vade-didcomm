@@ -1,14 +1,15 @@
 use crate::{
     datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
     get_from_to_from_message,
-    protocols::presentation_exchange::presentation_exchange_data::{get_current_state, save_presentation_exchange, save_state},
     protocols::presentation_exchange::datatypes::{PresentationExchangeData, State, UserType},
+    protocols::presentation_exchange::presentation_exchange_data::{
+        get_current_state, save_presentation_exchange, save_state,
+    },
     protocols::protocol::{generate_step_output, StepResult},
 };
 
 use super::helper::{
-    get_presentation_exchange_info_from_message,
-    get_presentation_exchange_message,
+    get_presentation_exchange_info_from_message, get_presentation_exchange_message,
     PresentationExchangeType,
 };
 
@@ -22,8 +23,11 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
     };
     let exchange_info = get_from_to_from_message(base_message)?;
 
-    let data =
-        &serde_json::to_string(&parsed_message.body.ok_or("Presentation exchange data not provided.")?)?;
+    let data = &serde_json::to_string(
+        &parsed_message
+            .body
+            .ok_or("Presentation exchange data not provided.")?,
+    )?;
     let presentation_exchange_data: PresentationExchangeData = serde_json::from_str(&data)?;
 
     let thid = parsed_message.thid.ok_or("Thread id can't be empty.")?;
@@ -60,7 +64,6 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
     )?;
 
     generate_step_output(&serde_json::to_string(&request_message)?, "{}")
-
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENTATION_EXCHANGE_PROTOCOL_URI/request-presentation`
@@ -125,8 +128,11 @@ pub fn send_presentation(message: &str) -> StepResult {
     };
     let exchange_info = get_from_to_from_message(base_message)?;
 
-    let data =
-        &serde_json::to_string(&parsed_message.body.ok_or("Presentation exchagne data not provided.")?)?;
+    let data = &serde_json::to_string(
+        &parsed_message
+            .body
+            .ok_or("Presentation exchagne data not provided.")?,
+    )?;
     let presentation_exchange_data: PresentationExchangeData = serde_json::from_str(&data)?;
 
     let thid = parsed_message.thid.ok_or("Thread id can't be empty.")?;
@@ -134,7 +140,7 @@ pub fn send_presentation(message: &str) -> StepResult {
     let current_state: State = get_current_state(&thid, &UserType::Holder)?.parse()?;
 
     match current_state {
-        State::ReceivePresentatonRequest | State::Unknown => {
+        State::ReceivePresentatonRequest => {
             save_state(&thid, &State::SendPresentation, &UserType::Holder)?
         }
         _ => {
@@ -163,5 +169,4 @@ pub fn send_presentation(message: &str) -> StepResult {
     )?;
 
     generate_step_output(&serde_json::to_string(&request_message)?, "{}")
-
 }

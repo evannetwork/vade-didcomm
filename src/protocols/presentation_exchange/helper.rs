@@ -70,7 +70,8 @@ pub fn get_presentation_exchange_info_from_message(
         return Err(Box::from("No Credential data was sent."));
     }
     let to_did = &to_vec[0];
-    let presentation_exchange_data: PresentationExchangeData = message.body.ok_or("body is required.")?;
+    let presentation_exchange_data: PresentationExchangeData =
+        message.body.ok_or("body is required.")?;
     let msg_type = message.r#type;
 
     Ok(PresentationExchangeInfo {

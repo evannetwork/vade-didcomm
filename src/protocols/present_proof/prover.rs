@@ -27,7 +27,7 @@ pub fn send_presentation(message: &str) -> StepResult {
             .body
             .ok_or("Presentation data not provided.")?,
     )?;
-    let presentation_data: PresentationData = serde_json::from_str(&data)?;
+    let presentation_data: PresentationData = serde_json::from_str(data)?;
 
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
@@ -150,7 +150,7 @@ pub fn send_propose_presentation(message: &str) -> StepResult {
             .body
             .ok_or("Presentation data not provided.")?,
     )?;
-    let presentation_data: PresentationData = serde_json::from_str(&data)?;
+    let presentation_data: PresentationData = serde_json::from_str(data)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
     let current_state: State = get_current_state(&thid, &UserType::Prover)?.parse()?;

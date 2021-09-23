@@ -34,7 +34,7 @@ pub fn get_presentation(
         from_did, to_did, state, thid
     ))?;
     let presentation_data: PresentationData = serde_json::from_str(&presentation)?;
-    return Ok(presentation_data);
+    Ok(presentation_data)
 }
 
 async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
@@ -92,7 +92,7 @@ async fn send_request_presentation(
 
     let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_request_presentation(
@@ -103,7 +103,7 @@ async fn receive_request_presentation(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -129,7 +129,7 @@ async fn receive_request_presentation(
 
     assert_eq!(presentation_data.data, presentation_data_saved.data);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_presentation(
@@ -169,7 +169,7 @@ async fn send_presentation(
         &serde_json::to_string(&presentation_data)?,
         id
     );
-    let results = vade.didcomm_send(&options, &exchange_response).await?;
+    let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -177,7 +177,7 @@ async fn send_presentation(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_presentation(
@@ -188,7 +188,7 @@ async fn receive_presentation(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -221,7 +221,7 @@ async fn receive_presentation(
 
     assert_eq!(presentation_data.data, presentation_data_saved.data);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_presentation_proposal(
@@ -274,7 +274,7 @@ async fn send_presentation_proposal(
         &serde_json::to_string(&presentation_data)?,
         id
     );
-    let results = vade.didcomm_send(&options, &exchange_response).await?;
+    let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -282,7 +282,7 @@ async fn send_presentation_proposal(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_presentation_proposal(
@@ -293,7 +293,7 @@ async fn receive_presentation_proposal(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -328,7 +328,7 @@ async fn receive_presentation_proposal(
         .get(0)
         .ok_or("Saved Attribute is invalid")?;
     assert_eq!(attribute.value, attribute_saved.value);
-    return Ok(());
+    Ok(())
 }
 
 async fn send_ack(
@@ -369,7 +369,7 @@ async fn send_ack(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_ack(
@@ -392,7 +392,7 @@ async fn receive_ack(
 
     assert_eq!(received_ack.thid.ok_or("Thread id not sent")?, id);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_problem_report(
@@ -441,7 +441,7 @@ async fn send_problem_report(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_problem_report(
@@ -464,7 +464,7 @@ async fn receive_problem_report(
 
     assert_eq!(received_problem.thid.ok_or("Thread id not sent")?, id);
 
-    return Ok(());
+    Ok(())
 }
 
 #[tokio::test]

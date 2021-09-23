@@ -24,7 +24,7 @@ pub fn send_offer_credential(message: &str) -> StepResult {
 
     let data =
         &serde_json::to_string(&parsed_message.body.ok_or("Credential data not provided.")?)?;
-    let credential_data: CredentialData = serde_json::from_str(&data)?;
+    let credential_data: CredentialData = serde_json::from_str(data)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
     let request_message = get_issue_credential_message(
@@ -176,7 +176,7 @@ pub fn send_issue_credential(message: &str) -> StepResult {
 
     let data =
         &serde_json::to_string(&parsed_message.body.ok_or("Credential data not provided.")?)?;
-    let credential_data: CredentialData = serde_json::from_str(&data)?;
+    let credential_data: CredentialData = serde_json::from_str(data)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
     let request_message = get_issue_credential_message(

@@ -49,7 +49,7 @@ impl VadePlugin for VadeDidComm {
         log::debug!("preparing DIDComm message for being sent");
 
         // run protocol specific logic
-        let message_with_id = fill_message_id_and_timestamps(&message)?;
+        let message_with_id = fill_message_id_and_timestamps(message)?;
         let protocol_result = ProtocolHandler::before_send(&message_with_id)?;
 
         // message string, that will be returned
@@ -61,7 +61,7 @@ impl VadePlugin for VadeDidComm {
             let sign_keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
 
             // if shared secret was passed to the options, use this one
-            let options = serde_json::from_str::<DidCommOptions>(&options)?;
+            let options = serde_json::from_str::<DidCommOptions>(options)?;
             let encryption_key: [u8; 32] = match options.key_information {
                 Some(crate::datatypes::KeyInformation::SharedSecret { shared_secret }) => {
                     shared_secret
@@ -139,7 +139,7 @@ impl VadePlugin for VadeDidComm {
                 .ok_or("kid not set in encrypted message")?;
 
             // if shared secret was passed to the options, use this one
-            let options = serde_json::from_str::<DidCommOptions>(&options)?;
+            let options = serde_json::from_str::<DidCommOptions>(options)?;
             let decryption_key: [u8; 32] = match options.key_information {
                 Some(crate::datatypes::KeyInformation::SharedSecret { shared_secret }) => {
                     shared_secret
@@ -168,7 +168,7 @@ impl VadePlugin for VadeDidComm {
                     secret.diffie_hellman(&target_pub_key).to_bytes()
                 }
             };
-            decrypted = decrypt_message(&message, &decryption_key, &hex::decode(signing_pub_key)?)?;
+            decrypted = decrypt_message(message, &decryption_key, &hex::decode(signing_pub_key)?)?;
         } else {
             decrypted = String::from(message);
         }

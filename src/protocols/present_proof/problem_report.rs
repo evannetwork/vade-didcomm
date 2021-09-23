@@ -13,7 +13,7 @@ pub fn send_problem_report(message: &str) -> StepResult {
             .body
             .ok_or("Presentation data not provided.")?,
     )?;
-    let problem_report: ProblemReport = serde_json::from_str(&data)?;
+    let problem_report: ProblemReport = serde_json::from_str(data)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
     let current_state: State = get_current_state(&thid, &problem_report.user_type)?.parse()?;
 
@@ -40,7 +40,7 @@ pub fn send_problem_report(message: &str) -> StepResult {
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/problem-report`
 pub fn receive_problem_report(message: &str) -> StepResult {
-    let parsed_message: ProblemReport = serde_json::from_str(&message)?;
+    let parsed_message: ProblemReport = serde_json::from_str(message)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
     let current_state: State = get_current_state(&thid, &parsed_message.user_type)?.parse()?;
 

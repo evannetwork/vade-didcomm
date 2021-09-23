@@ -108,7 +108,7 @@ async fn send_request(
     assert_eq!(pub_key, comm_keypair.pub_key);
     assert_eq!(secret_key, comm_keypair.secret_key);
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_request(
@@ -118,7 +118,7 @@ async fn receive_request(
     message: String,
     options: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -148,7 +148,7 @@ async fn receive_request(
     assert_eq!(pub_key, comm_keypair.pub_key);
     assert_eq!(secret_key, comm_keypair.secret_key);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_response(
@@ -166,7 +166,7 @@ async fn send_response(
         }}"#,
         DID_EXCHANGE_PROTOCOL_URL, sender, receiver
     );
-    let results = vade.didcomm_send(&options, &exchange_response).await?;
+    let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -174,7 +174,7 @@ async fn send_response(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_response(
@@ -184,7 +184,7 @@ async fn receive_response(
     message: String,
     options: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let _ = results
         .get(0)
         .ok_or("no result")?
@@ -198,7 +198,7 @@ async fn receive_response(
         comm_keypair_receiver.pub_key
     );
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_complete(
@@ -222,7 +222,7 @@ async fn send_complete(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_complete(
@@ -244,7 +244,7 @@ async fn receive_complete(
         format!("{}/complete", DID_EXCHANGE_PROTOCOL_URL)
     );
 
-    return Ok(());
+    Ok(())
 }
 
 #[tokio::test]

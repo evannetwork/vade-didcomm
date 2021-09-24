@@ -104,9 +104,9 @@ pub fn validate_presentation_against_credentials(
         received_selector("$.presentations_attach.data[0].json.verifiable_credential[*].type")?;
 
     if requested_credentials != received_credentials {
-        return Err(Box::from(format!(
-            "Received credentials do not match the requested presentation"
-        )));
+        return Err(Box::from(
+            "Received credentials do not match the requested presentation",
+        ));
     }
 
     Ok(())

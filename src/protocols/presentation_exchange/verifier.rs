@@ -3,14 +3,14 @@ use crate::{
     get_from_to_from_message,
     protocols::presentation_exchange::datatypes::{PresentationExchangeData, State, UserType},
     protocols::presentation_exchange::presentation_exchange_data::{
-        get_current_state, save_presentation_exchange, save_state,
+        get_current_state, get_presentation_exchange, save_presentation_exchange, save_state,
     },
     protocols::protocol::{generate_step_output, StepResult},
 };
 
 use super::helper::{
     get_presentation_exchange_info_from_message, get_presentation_exchange_message,
-    PresentationExchangeType,
+    validate_presentation_against_credentials, PresentationExchangeType,
 };
 
 /// Protocol handler for direction: `send`, type: `PRESENTATION_EXCHANGE_PROTOCOL_URI/request-presentation`
@@ -145,6 +145,23 @@ pub fn receive_presentation(message: &str) -> StepResult {
     let presentation_exchange_data = exchange_info
         .presentation_exchange_data
         .ok_or("Presentation exchange data not provided.")?;
+
+    let req_data_saved = get_presentation_exchange(
+        &base_info.to,
+        &base_info.from,
+        &thid,
+        &State::SendPresentationRequest,
+    )?;
+
+    let result = validate_presentation_against_credentials(
+        req_data_saved,
+        presentation_exchange_data.clone(),
+    );
+
+    match result {
+        Ok(_) => {}
+        Err(err) => return Err(err),
+    }
 
     let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
 

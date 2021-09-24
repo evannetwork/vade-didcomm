@@ -1,5 +1,7 @@
+extern crate jsonpath_lib as jsonpath;
 use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 use serial_test::serial;
+use std::cmp::Ordering;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
@@ -98,7 +100,7 @@ async fn send_request_presentation(
                                     predicate: None,
                                     filter: [
                                         ("type".to_string(), "date".to_string()),
-                                        ("minimum".to_string(), "1999-5-16".to_string()),
+                                        ("minimum".to_string(), "1978-05-16".to_string()),
                                     ]
                                     .iter()
                                     .cloned()
@@ -301,14 +303,15 @@ async fn send_presentation(
                         [VerifiableCredential {
                             context: "https://www.w3.org/2018/credentials/v1".to_string(),
                             id: "https://eu.com/claims/DriversLicense".to_string(),
-                            r#type: ["EUDriversLicense".to_string()].to_vec(),
+                            r#type: "US Passport".to_string(),
                             issuer: "did:foo:123".to_string(),
                             issuance_date: "2010-01-01T19:73:24Z".to_string(),
                             credential_subject: CredentialSubject {
                                 id: "did:example:ebfeb1f712ebc6f1c276e12ec21".to_string(),
                                 data: [
+                                    ("type".to_string(), "passport".to_string()),
                                     ("number".to_string(), "34DGE352".to_string()),
-                                    ("dob".to_string(), "07/13/80".to_string()),
+                                    ("dob".to_string(), "1980-07-09".to_string()),
                                 ]
                                 .iter()
                                 .cloned()
@@ -399,7 +402,7 @@ async fn receive_presentation(
         .presentations_attach
         .ok_or("Presentation not attached")?;
 
-    let data = attached_presentation
+    let data = &attached_presentation
         .data
         .get(0)
         .ok_or("Presentation data is empty")?
@@ -409,16 +412,16 @@ async fn receive_presentation(
         .ok_or("Credentials not attached")?
         .get(0)
         .ok_or("Credentials are empty")?
-        .r#type
-        .get(0)
-        .ok_or("Credential type not found")?;
+        .r#type;
 
     let req_data_saved = get_presentation(sender, receiver, id, state)?;
+    let req_data_saved_cloned = req_data_saved.clone();
+
     let attached_presentation_saved = req_data_saved
         .presentations_attach
         .ok_or("Presentation not attached")?;
 
-    let data_saved = attached_presentation_saved
+    let data_saved = &attached_presentation_saved
         .data
         .get(0)
         .ok_or("Presentation data is empty")?
@@ -428,11 +431,33 @@ async fn receive_presentation(
         .ok_or("Credentials not attached")?
         .get(0)
         .ok_or("Credentials are empty")?
-        .r#type
-        .get(0)
-        .ok_or("Credential type not found")?;
+        .r#type;
 
     assert_eq!(data, data_saved);
+
+    let sent_request = get_presentation(receiver, sender, id, State::SendPresentationRequest)?;
+
+    let requested_json = serde_json::to_value(sent_request)?;
+    let mut requested_selector = jsonpath::selector(&requested_json);
+
+    let received_json = serde_json::to_value(req_data_saved_cloned)?;
+    let mut received_selector = jsonpath::selector(&received_json);
+
+    let passport_dob = received_selector(
+        "$.presentations_attach.data[0].json.verifiable_credential[*].credentialSubject.data.dob",
+    )?
+    .get(0)
+    .ok_or("Dob not provided")?
+    .to_string();
+
+    let minimum_date = requested_selector(
+        "$.request_presentation_attach.data[0].json.presentation_definition.input_descriptors[*].constraints.fields[*].filter.minimum",
+    )?
+    .get(0)
+    .ok_or("Date filter not provided")?
+    .to_string();
+
+    assert_eq!(passport_dob.cmp(&minimum_date), Ordering::Greater);
 
     return Ok(());
 }

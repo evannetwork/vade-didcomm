@@ -41,7 +41,7 @@ pub struct Proof {
 pub struct VerifiableCredential {
     pub context: String,
     pub id: String,
-    pub r#type: Vec<String>,
+    pub r#type: String,
     pub issuer: String,
     pub issuance_date: String,
     pub credential_subject: CredentialSubject,

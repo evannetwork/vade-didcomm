@@ -1,3 +1,4 @@
+extern crate jsonpath_lib as jsonpath;
 use crate::datatypes::MessageWithBody;
 use crate::protocols::presentation_exchange::datatypes::{
     PresentationExchangeData, PresentationExchangeInfo, PRESENTATION_EXCHANGE_PROTOCOL_URL,
@@ -80,4 +81,33 @@ pub fn get_presentation_exchange_info_from_message(
         to: Some(String::from(to_did)),
         presentation_exchange_data: Some(presentation_exchange_data),
     })
+}
+
+/// Validates received presentation credentials against the requested presentation_definition
+/// response.
+///
+/// # Arguments
+/// * `request_presentation` - Presentation request
+/// * `received_presentation` - Received Presentation from Holder
+/// # Returns
+/// * `bool` - returns true if presentation is valid and satisfies constraints otherwise returns false
+pub fn validate_presentation_against_credentials(
+    request_presentation: PresentationExchangeData,
+    received_presentation: PresentationExchangeData,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let request_json = serde_json::to_value(request_presentation)?;
+    let received_json = serde_json::to_value(received_presentation)?;
+    let mut request_selector = jsonpath::selector(&request_json);
+    let mut received_selector = jsonpath::selector(&received_json);
+    let requested_credentials = request_selector("$.request_presentation_attach.data[0].json.presentation_definition.input_descriptors[*].name")?;
+    let received_credentials =
+        received_selector("$.presentations_attach.data[0].json.verifiable_credential[*].type")?;
+
+    if requested_credentials != received_credentials {
+        return Err(Box::from(format!(
+            "Received credentials do not match the requested presentation"
+        )));
+    }
+
+    Ok(())
 }

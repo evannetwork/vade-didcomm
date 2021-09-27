@@ -283,6 +283,109 @@ Issue Credential message:
     ]
 }
 ```
+### presentation exchange protocol
+The [`Presentation Exchange Protocol`] consists of 3 steps. The whole flow is implemented in the [`presentation-exchange test`]. The general flow starts with a verifier sending a `request-presentation` message to a holder. The holder has an option to answer with the `propose-presentation` or send `presentation` message. Once Verifier receives `presentation` message, he/she will match the received credential claims against `presentation-definition` request and validate the claims values with the contraints present in the `input-descriptors` array in `presentation-definition` 
+
+request-presentation message:
+
+```json
+{
+    "options": {
+        "challenge": "...",
+        "domain": "...",
+    },
+    "presentation_definition": {
+        // presentation definition object
+    }
+}
+```
+
+presentation-definition example:
+
+```json
+{
+  "comment": "Note: VP, OIDC, DIDComm, or CHAPI outer wrapper would be here.",
+  "presentation_definition": {
+    "id": "32f54163-7166-48f1-93d8-ff217bdb0653",
+    "input_descriptors": [
+      {
+        "id": "wa_driver_license",
+        "name": "Washington State Business License",
+        "purpose": "We can only allow licensed Washington State business representatives into the WA Business Conference",
+        "schema": [{
+            "uri": "https://licenses.example.com/business-license.json"
+        }]
+      }
+    ]
+  }
+}
+```
+
+presentation message example:
+
+```json
+{
+    "@type": "https://didcomm.org/present-proof/%VER/presentation",
+    "@id": "f1ca8245-ab2d-4d9c-8d7d-94bf310314ef",
+    "comment": "some comment",
+    "formats" : [{
+        "attach_id" : "2a3f1c4c-623c-44e6-b159-179048c51260",
+        "format" : "dif/presentation-exchange/submission@v1.0"
+    }],
+    "presentations~attach": [{
+        "@id": "2a3f1c4c-623c-44e6-b159-179048c51260",
+        "mime-type": "application/ld+json",
+        "data": {
+            "json": {
+                "@context": [
+                    "https://www.w3.org/2018/credentials/v1",
+                    "https://identity.foundation/presentation-exchange/submission/v1"
+                ],
+                "type": [
+                    "VerifiablePresentation",
+                    "PresentationSubmission"
+                ],
+                "presentation_submission": {
+                    "descriptor_map": [{
+                        "id": "citizenship_input",
+                        "path": "$.verifiableCredential.[0]"
+                    }]
+                },
+                "verifiableCredential": [{
+                    "@context": "https://www.w3.org/2018/credentials/v1",
+                    "id": "https://eu.com/claims/DriversLicense",
+                    "type": ["EUDriversLicense"],
+                    "issuer": "did:foo:123",
+                    "issuanceDate": "2010-01-01T19:73:24Z",
+                    "credentialSubject": {
+                        "id": "did:example:ebfeb1f712ebc6f1c276e12ec21",
+                        "license": {
+                            "number": "34DGE352",
+                            "dob": "07/13/80"
+                        }
+                    },
+                    "proof": {
+                        "type": "RsaSignature2018",
+                        "created": "2017-06-18T21:19:10Z",
+                        "proofPurpose": "assertionMethod",
+                        "verificationMethod": "https://example.edu/issuers/keys/1",
+                        "jws": "..."
+                    }
+                }],
+                "proof": {
+                    "type": "RsaSignature2018",
+                    "created": "2018-09-14T21:19:10Z",
+                    "proofPurpose": "authentication",
+                    "verificationMethod": "did:example:ebfeb1f712ebc6f1c276e12ec21#keys-1",
+                    "challenge": "1f44d55f-f161-4938-a659-f8026467f126",
+                    "domain": "4jt78h47fh47",
+                    "jws": "..."
+                }
+            }
+        }
+    }]
+}
+```
 
 ## Registering a new protocol
 
@@ -357,3 +460,5 @@ Afterwards, you can just test your protocol by passing the following message to 
 [`present-proof test`]:https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/DID-46-implement-present-proof-protocol-in-vade/tests/present-proof.rs
 [`Issue Credential Protocol`]: https://github.com/hyperledger/aries-rfcs/tree/main/features/0036-issue-credential#preview-credential
 [`issue-credential test`]:https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/DID-54-implement-issue-credential-protocol-in-vade/tests/issue-credential.rs
+[`Presentation Exchange Protocol`]:https://identity.foundation/presentation-exchange/
+[`presentation-exchange test`]:https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/DID-517-implement-presentation-exchange-protocol-in-vade/tests/presentation-exchange.rs

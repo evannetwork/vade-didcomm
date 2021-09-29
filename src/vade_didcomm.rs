@@ -50,14 +50,14 @@ impl VadePlugin for VadeDidComm {
         log::debug!("preparing DIDComm message for being sent");
 
         // run protocol specific logic
-        let message_with_id = fill_message_id_and_timestamps(&message)?;
-        let mut protocol_result = ProtocolHandler::before_send(&options, &message_with_id)?;
+        let message_with_id = fill_message_id_and_timestamps(message)?;
+        let mut protocol_result = ProtocolHandler::before_send(options, &message_with_id)?;
 
         // message string, that will be returned
         let final_message: String;
 
         if protocol_result.encrypt {
-            let options = serde_json::from_str::<DidCommOptions>(&options)?;
+            let options = serde_json::from_str::<DidCommOptions>(options)?;
 
             let encryption_keys: EncryptionKeys;
             if options.encryption_keys.is_some() {
@@ -161,7 +161,7 @@ impl VadePlugin for VadeDidComm {
         // if the message is encrypted, try to decrypt it
         if parsed_message.is_ok() {
             // if shared secret was passed to the options, use this one
-            let options = serde_json::from_str::<DidCommOptions>(&options)?;
+            let options = serde_json::from_str::<DidCommOptions>(options)?;
             let decryption_keys: EncryptionKeys;
             if options.encryption_keys.is_some() {
                 decryption_keys = options
@@ -178,7 +178,7 @@ impl VadePlugin for VadeDidComm {
                 let recipient = &parsed_message.recipients.unwrap_or_default()[0];
                 let to = recipient.header.kid.as_ref().unwrap();
                 log::debug!("fetching kak for from: {}  to: {}", to, from);
-                let mut encoded_keypair = get_key_agreement_key(&to);
+                let mut encoded_keypair = get_key_agreement_key(to);
                 if encoded_keypair.is_err() {
                     // when we dont find a stored keypair, try to get the key agreement key
                     log::debug!("fetching kak for {}", to);
@@ -189,7 +189,7 @@ impl VadePlugin for VadeDidComm {
                 }
                 let keypair = encoded_keypair?;
                 let mut target_pub_key = None;
-                if keypair.target_pub_key != "" {
+                if !keypair.target_pub_key.is_empty() {
                     target_pub_key = Some(vec_to_array(hex::decode(keypair.target_pub_key)?)?);
                 }
                 decryption_keys = EncryptionKeys {
@@ -199,7 +199,7 @@ impl VadePlugin for VadeDidComm {
             }
             let signing_keys = options.signing_keys.ok_or("No signing keys provided")?;
             decrypted = decrypt_message(
-                &message,
+                message,
                 Some(&decryption_keys.encryption_my_secret),
                 decryption_keys
                     .encryption_others_public
@@ -213,7 +213,7 @@ impl VadePlugin for VadeDidComm {
 
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(&decrypted)?;
-        let protocol_result = ProtocolHandler::after_receive(&options, &message_with_id)?;
+        let protocol_result = ProtocolHandler::after_receive(options, &message_with_id)?;
 
         let receive_result = format!(
             r#"{{

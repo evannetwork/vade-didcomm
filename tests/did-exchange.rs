@@ -85,7 +85,7 @@ async fn send_request(
     assert_eq!(pub_key, comm_keypair.pub_key);
     assert_eq!(secret_key, comm_keypair.secret_key);
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_request(
@@ -93,7 +93,7 @@ async fn receive_request(
     message: String,
     options: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -106,7 +106,7 @@ async fn receive_request(
         .metadata
         .get("key_agreement_key")
         .ok_or("no key_agreement_key")?;
-    let comm_keypair = get_com_keypair(&target_did)?;
+    let comm_keypair = get_com_keypair(target_did)?;
 
     let pub_key = received
         .metadata
@@ -128,7 +128,7 @@ async fn receive_request(
     assert_eq!(pub_key, comm_keypair.pub_key);
     assert_eq!(secret_key, comm_keypair.secret_key);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_response(
@@ -154,7 +154,7 @@ async fn send_response(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_response(
@@ -180,15 +180,15 @@ async fn receive_response(
         .metadata
         .get("target_key_agreement_key")
         .ok_or("no target_key_agreement_key")?;
-    let comm_keypair_receiver = get_com_keypair(&receiver_did)?;
-    let comm_keypair_sender = get_com_keypair(&sender_did)?;
+    let comm_keypair_receiver = get_com_keypair(receiver_did)?;
+    let comm_keypair_sender = get_com_keypair(sender_did)?;
 
     assert_eq!(
         comm_keypair_sender.target_pub_key,
         comm_keypair_receiver.pub_key
     );
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_complete(
@@ -214,7 +214,7 @@ async fn send_complete(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_complete(
@@ -235,7 +235,7 @@ async fn receive_complete(
         format!("{}/complete", DID_EXCHANGE_PROTOCOL_URL)
     );
 
-    return Ok(());
+    Ok(())
 }
 
 pub fn get_did_document_from_body(
@@ -243,8 +243,7 @@ pub fn get_did_document_from_body(
 ) -> Result<CommunicationDidDocument, Box<dyn std::error::Error>> {
     let did_document_base64_encoded_string = &message
         .body
-        .as_ref()
-        .ok_or_else(|| "body is a required field for DID exchange messages")?
+        .as_ref().ok_or("body is a required field for DID exchange messages")?
         .did_doc_attach
         .base64;
     let did_document_base64_encoded_bytes = did_document_base64_encoded_string.as_bytes();

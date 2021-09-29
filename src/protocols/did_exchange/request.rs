@@ -36,7 +36,7 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
         &exchange_info.from,
         &exchange_info.to,
         &key_did,
-        &"",
+        "",
         &hex::encode(pub_key.to_bytes()),
         &hex::encode(secret_key.to_bytes()),
         None,
@@ -51,7 +51,7 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
         &key_did,
         &exchange_info.to,
         &options.service_endpoint.unwrap_or_else(|| "".to_string()),
-        &pub_key_base58_string,
+        pub_key_base58_string,
     )?;
 
     generate_step_output(&serde_json::to_string(&request_message)?, &metadata)

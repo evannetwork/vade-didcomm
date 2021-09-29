@@ -32,7 +32,7 @@ pub fn send_response(options: &str, message: &str) -> StepResult {
         &encoded_keypair.key_agreement_key,
         &encoded_keypair.key_agreement_key,
         &options.service_endpoint.unwrap_or_else(|| "".to_string()),
-        &pub_key_base58_string,
+        pub_key_base58_string,
     )?;
 
     generate_step_output(&serde_json::to_string(&request_message)?, &metadata)

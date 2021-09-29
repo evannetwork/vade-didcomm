@@ -72,10 +72,7 @@ pub(crate) mod hex_option {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     pub fn serialize<S: Serializer>(v: &Option<[u8; 32]>, s: S) -> Result<S::Ok, S::Error> {
-        let hex_string = match v {
-            Some(v) => Some(hex::encode(v)),
-            None => None,
-        };
+        let hex_string = v.as_ref().map(hex::encode);
         <Option<String>>::serialize(&hex_string, s)
     }
 
@@ -83,7 +80,7 @@ pub(crate) mod hex_option {
         let hex_string = <Option<String>>::deserialize(d)?;
         match hex_string {
             Some(v) => {
-                let hex_decoded = hex::decode(v).map_err(|e| serde::de::Error::custom(e))?;
+                let hex_decoded = hex::decode(v).map_err(serde::de::Error::custom)?;
                 let mut arr: [u8; 32] = Default::default();
                 arr.copy_from_slice(&hex_decoded[..32]);
                 Ok(Some(arr))

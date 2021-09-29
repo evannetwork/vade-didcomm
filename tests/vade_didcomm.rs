@@ -39,7 +39,7 @@ async fn can_prepare_didcomm_message_for_sending() -> Result<(), Box<dyn std::er
         "custom3": "san"
     }"#;
     let results = vade
-        .didcomm_send(&sign_keypair.sender_options_stringified, &payload)
+        .didcomm_send(&sign_keypair.sender_options_stringified, payload)
         .await?;
     let _result = results
         .get(0)
@@ -61,7 +61,7 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
         "custom1": "nyuu"
     }"#;
     let results = vade
-        .didcomm_send(&sign_keypair.sender_options_stringified, &payload)
+        .didcomm_send(&sign_keypair.sender_options_stringified, payload)
         .await?;
 
     match results.get(0) {
@@ -117,7 +117,7 @@ async fn can_receive_unencrypted() -> Result<(), Box<dyn std::error::Error>> {
     }"#;
 
     let results = vade
-        .didcomm_receive(&sign_keypair.receiver_options_stringified, &payload)
+        .didcomm_receive(&sign_keypair.receiver_options_stringified, payload)
         .await?;
     let result = results
         .get(0)
@@ -146,7 +146,7 @@ async fn should_fill_empty_id_and_created_time() -> Result<(), Box<dyn std::erro
         "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ]
     }"#;
     let results = vade
-        .didcomm_receive(&sign_keypair.receiver_options_stringified, &payload)
+        .didcomm_receive(&sign_keypair.receiver_options_stringified, payload)
         .await?;
     let result = results
         .get(0)

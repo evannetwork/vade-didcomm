@@ -36,7 +36,7 @@ pub fn get_credential(
         from_did, to_did, state, thid
     ))?;
     let credential_data: CredentialData = serde_json::from_str(&credential)?;
-    return Ok(credential_data);
+    Ok(credential_data)
 }
 
 async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
@@ -104,7 +104,7 @@ async fn send_propose_credential(
 
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_propose_credential(
@@ -115,7 +115,7 @@ async fn receive_propose_credential(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -140,7 +140,7 @@ async fn receive_propose_credential(
 
     assert_eq!(attached_req.id, attached_req_saved.id);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_offer_credential(
@@ -188,7 +188,7 @@ async fn send_offer_credential(
         &serde_json::to_string(&credential_data)?,
         id
     );
-    let results = vade.didcomm_send(&options, &exchange_response).await?;
+    let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -196,7 +196,7 @@ async fn send_offer_credential(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_offer_credential(
@@ -207,7 +207,7 @@ async fn receive_offer_credential(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -238,7 +238,7 @@ async fn receive_offer_credential(
 
     assert_eq!(credential_data.data, attached_data_saved.data);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_request_credential(
@@ -278,7 +278,7 @@ async fn send_request_credential(
         &serde_json::to_string(&credential_data)?,
         id
     );
-    let results = vade.didcomm_send(&options, &exchange_response).await?;
+    let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -286,7 +286,7 @@ async fn send_request_credential(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_request_credential(
@@ -297,7 +297,7 @@ async fn receive_request_credential(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -328,7 +328,7 @@ async fn receive_request_credential(
         .get(0)
         .ok_or("Saved Attachment is invalid")?;
     assert_eq!(attribute.data, attribute_saved.data);
-    return Ok(());
+    Ok(())
 }
 
 async fn send_issue_credential(
@@ -368,7 +368,7 @@ async fn send_issue_credential(
         &serde_json::to_string(&credential_data)?,
         id
     );
-    let results = vade.didcomm_send(&options, &exchange_response).await?;
+    let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -376,7 +376,7 @@ async fn send_issue_credential(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_issue_credential(
@@ -387,7 +387,7 @@ async fn receive_issue_credential(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -418,7 +418,7 @@ async fn receive_issue_credential(
         .get(0)
         .ok_or("Saved Attachment is invalid")?;
     assert_eq!(attachment.data, attachment_saved.data);
-    return Ok(());
+    Ok(())
 }
 
 async fn send_ack(
@@ -460,7 +460,7 @@ async fn send_ack(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_ack(
@@ -484,7 +484,7 @@ async fn receive_ack(
 
     assert_eq!(received_ack.thid.ok_or("Thread id not sent")?, id);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_problem_report(
@@ -534,7 +534,7 @@ async fn send_problem_report(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_problem_report(
@@ -558,7 +558,7 @@ async fn receive_problem_report(
 
     assert_eq!(received_problem.thid.ok_or("Thread id not sent")?, id);
 
-    return Ok(());
+    Ok(())
 }
 
 #[tokio::test]

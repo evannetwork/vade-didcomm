@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 /// Specifies all possible message directions.
 #[derive(PartialEq)]
+#[allow(clippy::enum_variant_names)]
 pub enum IssueCredentialType {
     ProposeCredential,
     OfferCredential,

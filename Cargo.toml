@@ -23,7 +23,7 @@ wasm = [
 
 [dependencies]
 async-trait = "0.1.50"
-didcomm-rs = {path = "../didcomm-rs" }
+didcomm-rs = { git = "https://github.com/evannetwork/didcomm-rs.git", branch = "main", version = "0.6.1"}
 ed25519-dalek = "1.0.1"
 env_logger = "0.7.1"
 futures = "0.3.13"

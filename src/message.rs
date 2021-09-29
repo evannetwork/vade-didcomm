@@ -1,7 +1,7 @@
 use crate::datatypes::ExtendedMessage;
 use didcomm_rs::{
     crypto::{CryptoAlgorithm, SignatureAlgorithm},
-    Message as DIDCommMessage
+    Message as DIDCommMessage,
 };
 
 macro_rules! apply_optional {
@@ -22,19 +22,21 @@ macro_rules! apply_optional {
 ///
 /// # Arguments
 /// * `message` - message string (should match message.rs/EncryptedMessage)
-/// * `encryption_key` - encryption public key (usually the shared_secret)
-/// * `keypair` - signing key_pair (ed25519_dalek keypair)
+/// * `encryption_secret` - encryption secret key from the sender
+/// * `encryption_target_public` - encryption public key from the receiver - if None it tries to resolve the did
+/// * `sign_keypair` - signing key_pair (ed25519_dalek keypair)
 ///
 /// # Returns
 /// * `String` - encrypted stringified message
 pub fn encrypt_message(
     message_string: &str,
-    encryption_key: &[u8],
-    keypair: &ed25519_dalek::Keypair,
+    encryption_secret: &[u8],
+    encryption_target_public: Option<&[u8]>,
+    sign_keypair: &ed25519_dalek::Keypair,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut d_message = DIDCommMessage::new()
         .set_body(&message_string.to_string())
-        .as_jwe(&CryptoAlgorithm::XC20P);
+        .as_jwe(&CryptoAlgorithm::XC20P, encryption_target_public);
     let message: ExtendedMessage = serde_json::from_str(message_string)?;
 
     // apply optional headers to known sections, use remaining as custom headers
@@ -51,14 +53,15 @@ pub fn encrypt_message(
     }
 
     // ensure to set kid to pub key of temporary keypair for encryption / signing
-    d_message = d_message.kid(&hex::encode(keypair.public.to_bytes()));
+    d_message = d_message.kid(&hex::encode(sign_keypair.public.to_bytes()));
 
     // finally sign and encrypt
     let encrypted = d_message
         .seal_signed(
-            encryption_key,
-            &keypair.to_bytes(),
+            encryption_secret,
+            &sign_keypair.to_bytes(),
             SignatureAlgorithm::EdDsa,
+            encryption_target_public,
         )
         .map_err(|err| {
             format!(
@@ -75,18 +78,21 @@ pub fn encrypt_message(
 ///
 /// # Arguments
 /// * `message` - message string (should match message.rs/EncryptedMessage)
-/// * `decryption_key` - decryption public key (usually the shared_secret)
+/// * `decryption_key` - decryption secret key from the receiver - if None it treats the message as "unencrypted"
+/// * `decryption_public` - decryption public key from the sender - if None it tries to resolve the did
 /// * `sign_public` - signing public key (usually delivered within the encrypted message kid field)
 ///
 /// # Returns
 /// * `String` - decrypted stringified message
 pub fn decrypt_message(
     message: &str,
-    decryption_key: &[u8],
-    _sign_public: &[u8],
+    decryption_key: Option<&[u8]>,
+    decryption_public: Option<&[u8]>,
+    sign_public: Option<&[u8]>,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let received = DIDCommMessage::receive(&message, decryption_key)
-        .map_err(|err| format!("could not decrypt message: {}", &err.to_string()))?;
+    let received =
+        DIDCommMessage::receive(&message, decryption_key, encryption_public, sign_public)
+            .map_err(|err| format!("could not decrypt message: {}", &err.to_string()))?;
 
     let decrypted = received.get_body().map_err(|err| {
         format!(
@@ -102,17 +108,12 @@ pub fn decrypt_message(
 mod tests {
     extern crate utilities;
 
-    use crate::datatypes::{MessageWithBody};
+    use crate::datatypes::MessageWithBody;
 
     use super::*;
     use didcomm_rs::Jwe;
     use serde::{Deserialize, Serialize};
     use utilities::keypair::get_keypair_set;
-    use ed25519_dalek::{
-        SecretKey,
-        PublicKey,
-        Keypair
-    };
     #[derive(Debug, Serialize, Deserialize, Clone)]
     struct TestBody {
         test: bool,
@@ -135,6 +136,7 @@ mod tests {
         let encrypted = encrypt_message(
             &payload,
             &sign_keypair.user1_secret.to_bytes(),
+            Some(&sign_keypair.user2_pub.to_bytes()),
             &sign_keypair.sign_keypair,
         )?;
         let _: Jwe = serde_json::from_str(&encrypted)?;
@@ -144,6 +146,7 @@ mod tests {
 
     #[test]
     fn can_decrypt_message() -> Result<(), Box<dyn std::error::Error>> {
+        let sign_keypair = get_keypair_set();
         let payload = r#"{
                 "body": {"test": true},
                 "custom1": "ichi",
@@ -154,22 +157,18 @@ mod tests {
                 "type": "test"
             }"#
         .to_string();
-        let alice_private = bs58::decode("6QN8DfuN9hjgHgPvLXqgzqYE3jRRGRrmJQZkd5tL8paR").into_vec()?;
-        let bobs_private = bs58::decode("HBTcN2MrXNRj9xF9oi8QqYyuEPv3JLLjQKuEgW9oxVKP").into_vec()?;
-        let secret_key: SecretKey = SecretKey::from_bytes(alice_private.as_slice())?;
-        let alice_public: PublicKey = (&secret_key).into();
-
-        let keypair = Keypair::from_bytes([secret_key.as_ref(), alice_public.as_ref()].concat().as_slice())?;
         let encrypted = encrypt_message(
             &payload,
-            &alice_private,
-            &keypair,
+            &sign_keypair.user1_secret.to_bytes(),
+            Some(&sign_keypair.user2_pub.to_bytes()),
+            &sign_keypair.sign_keypair,
         )?;
 
         let decrypted = decrypt_message(
             &encrypted,
-            &bobs_private,
-            &alice_public.to_bytes(),
+            Some(&sign_keypair.user2_secret.to_bytes()),
+            Some(&sign_keypair.user1_pub.to_bytes()),
+            None,
         )?;
 
         let decryped_parsed: MessageWithBody<TestBody> = serde_json::from_str(&decrypted)?;

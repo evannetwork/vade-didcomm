@@ -1,3 +1,4 @@
+use crate::utils::hex_option;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -160,24 +161,36 @@ pub struct EncryptedMessage {
 
 /// Either a computed shared secret or a (local) private key plus a contacts public key
 #[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", untagged)]
-pub enum KeyInformation {
-    #[serde(rename_all = "camelCase")]
-    SecretPublic {
-        #[serde(with = "hex")]
-        my_secret: [u8; 32],
-        #[serde(with = "hex")]
-        others_public: [u8; 32],
-    },
+#[serde(rename_all = "camelCase")]
+pub struct EncryptionKeys {
+    #[serde(with = "hex")]
+    pub encryption_my_secret: [u8; 32],
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(with = "hex_option")]
+    pub encryption_others_public: Option<[u8; 32]>,
+}
+
+/// Either a computed shared secret or a (local) private key plus a contacts public key
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SigningKeys {
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(with = "hex_option")]
+    pub signing_my_secret: Option<[u8; 32]>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(with = "hex_option")]
+    pub signing_others_public: Option<[u8; 32]>,
 }
 
 /// Optional parameter that can be passed to vade DIDComm functions to enforce a specific encryption key
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DidCommOptions {
-    #[serde(flatten)]
-    pub key_information: Option<KeyInformation>,
-    pub sign_key: Option<[u8; 32]>
+    pub encryption_keys: Option<EncryptionKeys>,
+    pub signing_keys: Option<SigningKeys>,
 }
 
 /// Output of didcomm_send or didcomm_receive.

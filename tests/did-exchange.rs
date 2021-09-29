@@ -6,13 +6,8 @@ use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
-        Base64Container,
-        BaseMessage,
-        CommKeyPair,
-        CommunicationDidDocument,
-        DidDocumentBodyAttachment,
-        MessageWithBody,
-        VadeDidCommPluginOutput,
+        Base64Container, BaseMessage, CommKeyPair, CommunicationDidDocument,
+        DidDocumentBodyAttachment, MessageWithBody, VadeDidCommPluginOutput,
     },
     VadeDidComm,
 };
@@ -42,7 +37,6 @@ async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
     let mut vade = Vade::new();
     let vade_didcomm = VadeDidComm::new()?;
     vade.register_plugin(Box::from(vade_didcomm));
-
     Ok(vade)
 }
 
@@ -108,7 +102,10 @@ async fn receive_request(
     let received: VadeDidCommPluginOutput<
         MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
     > = serde_json::from_str(result)?;
-    let target_did = received.metadata.get("key_agreement_key").ok_or("no key_agreement_key")?;
+    let target_did = received
+        .metadata
+        .get("key_agreement_key")
+        .ok_or("no key_agreement_key")?;
     let comm_keypair = get_com_keypair(&target_did)?;
 
     let pub_key = received
@@ -138,6 +135,7 @@ async fn send_response(
     vade: &mut Vade,
     sender: &str,
     receiver: &str,
+    options: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_response = format!(
         r#"{{
@@ -148,7 +146,7 @@ async fn send_response(
         }}"#,
         DID_EXCHANGE_PROTOCOL_URL, DID_SERVICE_ENDPOINT, sender, receiver
     );
-    let results = vade.didcomm_send("{}", &exchange_response).await?;
+    let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -162,8 +160,9 @@ async fn send_response(
 async fn receive_response(
     vade: &mut Vade,
     message: String,
+    options: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive("{}", &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -171,10 +170,16 @@ async fn receive_response(
         .ok_or("no value in result")?;
 
     let received: VadeDidCommPluginOutput<
-            MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
-        > = serde_json::from_str(result)?;
-    let receiver_did = received.metadata.get("key_agreement_key").ok_or("no key_agreement_key")?;
-    let sender_did = received.metadata.get("target_key_agreement_key").ok_or("no target_key_agreement_key")?;
+        MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
+    > = serde_json::from_str(result)?;
+    let receiver_did = received
+        .metadata
+        .get("key_agreement_key")
+        .ok_or("no key_agreement_key")?;
+    let sender_did = received
+        .metadata
+        .get("target_key_agreement_key")
+        .ok_or("no target_key_agreement_key")?;
     let comm_keypair_receiver = get_com_keypair(&receiver_did)?;
     let comm_keypair_sender = get_com_keypair(&sender_did)?;
 
@@ -190,6 +195,7 @@ async fn send_complete(
     vade: &mut Vade,
     sender: &str,
     receiver: &str,
+    options: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_complete = format!(
         r#"{{
@@ -200,7 +206,7 @@ async fn send_complete(
         DID_EXCHANGE_PROTOCOL_URL, sender, receiver
     );
 
-    let results = vade.didcomm_send("{}", &exchange_complete).await?;
+    let results = vade.didcomm_send(options, &exchange_complete).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -214,8 +220,9 @@ async fn send_complete(
 async fn receive_complete(
     vade: &mut Vade,
     message: String,
+    options: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive("{}", &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let received = results
         .get(0)
         .ok_or("no result")?
@@ -232,11 +239,11 @@ async fn receive_complete(
 }
 
 pub fn get_did_document_from_body(
-    message: &MessageWithBody<
-    DidDocumentBodyAttachment<Base64Container>>,
+    message: &MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
 ) -> Result<CommunicationDidDocument, Box<dyn std::error::Error>> {
     let did_document_base64_encoded_string = &message
-        .body.as_ref()
+        .body
+        .as_ref()
         .ok_or_else(|| "body is a required field for DID exchange messages")?
         .did_doc_attach
         .base64;
@@ -249,11 +256,16 @@ pub fn get_did_document_from_body(
 
 #[tokio::test]
 #[serial]
-async fn can_do_key_exchange(
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn can_do_key_exchange() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let test_setup = get_keypair_set();
-    let request_message = send_request(&mut vade, &test_setup.user1_did, &test_setup.user2_did, &test_setup.sender_options_stringified).await?;
+    let request_message = send_request(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+    )
+    .await?;
     receive_request(
         &mut vade,
         request_message,
@@ -261,11 +273,33 @@ async fn can_do_key_exchange(
     )
     .await?;
 
-    let response_message = send_response(&mut vade, &test_setup.user2_did, &test_setup.user1_did).await?;
-    receive_response(&mut vade, response_message).await?;
+    let response_message = send_response(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        &test_setup.receiver_signing_options_stringified,
+    )
+    .await?;
+    receive_response(
+        &mut vade,
+        response_message,
+        &test_setup.sender_signing_options_stringified,
+    )
+    .await?;
 
-    let complete_message = send_complete(&mut vade, &test_setup.user1_did, &test_setup.user2_did,).await?;
-    receive_complete(&mut vade, complete_message).await?;
+    let complete_message = send_complete(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_signing_options_stringified,
+    )
+    .await?;
+    receive_complete(
+        &mut vade,
+        complete_message,
+        &test_setup.receiver_signing_options_stringified,
+    )
+    .await?;
 
     Ok(())
 }

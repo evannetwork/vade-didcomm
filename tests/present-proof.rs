@@ -1,6 +1,7 @@
 use didcomm_rs::Jwe;
 use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 use serial_test::serial;
+use utilities::keypair::get_keypair_set;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
@@ -336,6 +337,7 @@ async fn send_ack(
     vade: &mut Vade,
     sender: &str,
     receiver: &str,
+    options: &str,
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let ack = Ack {
@@ -362,7 +364,7 @@ async fn send_ack(
         &serde_json::to_string(&ack)?,
         id
     );
-    let results = vade.didcomm_send("{}", &exchange_complete).await?;
+    let results = vade.didcomm_send(options, &exchange_complete).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -378,9 +380,10 @@ async fn receive_ack(
     _sender: &str,
     _receiver: &str,
     message: String,
+    options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive("{}", &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -400,6 +403,7 @@ async fn send_problem_report(
     vade: &mut Vade,
     sender: &str,
     receiver: &str,
+    options: &str,
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let problem = ProblemReport {
@@ -434,7 +438,7 @@ async fn send_problem_report(
         &serde_json::to_string(&problem)?,
         id
     );
-    let results = vade.didcomm_send("{}", &exchange_message).await?;
+    let results = vade.didcomm_send(options, &exchange_message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -450,9 +454,10 @@ async fn receive_problem_report(
     _sender: &str,
     _receiver: &str,
     message: String,
+    options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive("{}", &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -472,37 +477,62 @@ async fn receive_problem_report(
 #[serial]
 async fn can_do_presentation_exchange() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp");
-    let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
-    let options = String::from("{}");
+    let test_setup = get_keypair_set();
     let id = Uuid::new_v4().to_simple().to_string();
 
-    let request_message =
-        send_request_presentation(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    let request_message = send_request_presentation(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     receive_request_presentation(
         &mut vade,
-        &user_1_did,
-        &user_2_did,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
         request_message,
-        &options,
+        &test_setup.receiver_options_stringified,
         &id,
     )
     .await?;
 
-    let response_message =
-        send_presentation(&mut vade, &user_2_did, &user_1_did, &options, &id).await?;
+    let response_message = send_presentation(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        &test_setup.receiver_options_stringified,
+        &id,
+    )
+    .await?;
     receive_presentation(
         &mut vade,
-        &user_2_did,
-        &user_1_did,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
         response_message,
-        &options,
+        &test_setup.sender_options_stringified,
         &id,
     )
     .await?;
 
-    let complete_message = send_ack(&mut vade, &user_1_did, &user_2_did, &id).await?;
-    receive_ack(&mut vade, &user_1_did, &user_2_did, complete_message, &id).await?;
+    let complete_message = send_ack(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
+    receive_ack(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        complete_message,
+        &test_setup.receiver_options_stringified,
+        &id,
+    )
+    .await?;
 
     Ok(())
 }
@@ -511,31 +541,41 @@ async fn can_do_presentation_exchange() -> Result<(), Box<dyn std::error::Error>
 #[serial]
 async fn can_do_proposal_exchange() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp");
-    let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
-    let options = String::from("{}");
+    let test_setup = get_keypair_set();
     let id = Uuid::new_v4().to_simple().to_string();
 
-    let request_message =
-        send_request_presentation(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    let request_message = send_request_presentation(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     receive_request_presentation(
         &mut vade,
-        &user_1_did,
-        &user_2_did,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
         request_message,
-        &options,
+        &test_setup.receiver_options_stringified,
         &id,
     )
     .await?;
 
-    let response_message =
-        send_presentation_proposal(&mut vade, &user_2_did, &user_1_did, &options, &id).await?;
+    let response_message = send_presentation_proposal(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        &test_setup.receiver_options_stringified,
+        &id,
+    )
+    .await?;
     receive_presentation_proposal(
         &mut vade,
-        &user_2_did,
-        &user_1_did,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
         response_message,
-        &options,
+        &test_setup.sender_options_stringified,
         &id,
     )
     .await?;
@@ -547,40 +587,70 @@ async fn can_do_proposal_exchange() -> Result<(), Box<dyn std::error::Error>> {
 #[serial]
 async fn can_do_problem_report() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp");
-    let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
-    let options = String::from("{}");
+    let test_setup = get_keypair_set();
     let id = Uuid::new_v4().to_simple().to_string();
 
-    let request_message =
-        send_request_presentation(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    let request_message = send_request_presentation(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     receive_request_presentation(
         &mut vade,
-        &user_1_did,
-        &user_2_did,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
         request_message,
-        &options,
+        &test_setup.receiver_options_stringified,
         &id,
     )
     .await?;
 
-    let problem_message = send_problem_report(&mut vade, &user_1_did, &user_2_did, &id).await?;
-    receive_problem_report(&mut vade, &user_1_did, &user_2_did, problem_message, &id).await?;
+    let problem_message = send_problem_report(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
+    receive_problem_report(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        problem_message,
+        &test_setup.receiver_options_stringified,
+        &id,
+    )
+    .await?;
 
     Ok(())
 }
 
 async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp");
-    let user_2_did = String::from("did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG");
-    let options = String::from("{}");
+    let test_setup = get_keypair_set();
     let id = Uuid::new_v4().to_simple().to_string();
 
-    let _request_message =
-        send_request_presentation(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    let _request_message = send_request_presentation(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
 
-    let complete_message = send_ack(&mut vade, &user_1_did, &user_2_did, &id).await?;
+    let complete_message = send_ack(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     Ok(complete_message)
 }
 

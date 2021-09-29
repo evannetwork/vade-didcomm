@@ -63,7 +63,7 @@ impl VadePlugin for VadeDidComm {
             if options.encryption_keys.is_some() {
                 encryption_keys = options
                     .encryption_keys
-                    .ok_or("encryption_keys is missing")?;
+                    .ok_or("encryption_keys is missing in options parameter")?;
             } else {
                 // otherwise use keys from DID exchange
                 let parsed_message: BaseMessage = serde_json::from_str(&message_with_id)?;

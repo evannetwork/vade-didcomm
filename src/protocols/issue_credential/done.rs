@@ -1,8 +1,12 @@
 use crate::{
     datatypes::ExtendedMessage,
-    protocols::issue_credential::credential::{get_current_state, save_state},
-    protocols::issue_credential::datatypes::{Ack, State},
-    protocols::protocol::{generate_step_output, StepResult},
+    protocols::{
+        issue_credential::{
+            credential::{get_current_state, save_state},
+            datatypes::{Ack, State},
+        },
+        protocol::{generate_step_output, StepResult},
+    },
 };
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/ack`

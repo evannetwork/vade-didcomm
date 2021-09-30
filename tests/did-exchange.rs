@@ -6,8 +6,13 @@ use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
-        Base64Container, BaseMessage, CommKeyPair, CommunicationDidDocument,
-        DidDocumentBodyAttachment, MessageWithBody, VadeDidCommPluginOutput,
+        Base64Container,
+        BaseMessage,
+        CommKeyPair,
+        CommunicationDidDocument,
+        DidDocumentBodyAttachment,
+        MessageWithBody,
+        VadeDidCommPluginOutput,
     },
     VadeDidComm,
 };
@@ -243,7 +248,8 @@ pub fn get_did_document_from_body(
 ) -> Result<CommunicationDidDocument, Box<dyn std::error::Error>> {
     let did_document_base64_encoded_string = &message
         .body
-        .as_ref().ok_or("body is a required field for DID exchange messages")?
+        .as_ref()
+        .ok_or("body is a required field for DID exchange messages")?
         .did_doc_attach
         .base64;
     let did_document_base64_encoded_bytes = did_document_base64_encoded_string.as_bytes();

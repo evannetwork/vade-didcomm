@@ -1,8 +1,12 @@
 use crate::{
     datatypes::ExtendedMessage,
-    protocols::present_proof::datatypes::{ProblemReport, State},
-    protocols::present_proof::presentation::{get_current_state, save_state},
-    protocols::protocol::{generate_step_output, StepResult},
+    protocols::{
+        present_proof::{
+            datatypes::{ProblemReport, State},
+            presentation::{get_current_state, save_state},
+        },
+        protocol::{generate_step_output, StepResult},
+    },
 };
 
 /// Protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/problem-report`

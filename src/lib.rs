@@ -18,4 +18,6 @@ pub mod protocols;
 mod utils;
 mod vade_didcomm;
 
-pub use {crate::vade_didcomm::*, utils::*};
+pub use utils::*;
+
+pub use crate::vade_didcomm::*;

@@ -1,15 +1,18 @@
-use crate::{
-    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
-    get_from_to_from_message,
-    protocols::present_proof::datatypes::{PresentationData, State, UserType},
-    protocols::present_proof::presentation::{get_current_state, save_presentation, save_state},
-    protocols::protocol::{generate_step_output, StepResult},
-};
-
 use super::helper::{
     get_present_proof_info_from_message,
     get_present_proof_message,
     PresentProofType,
+};
+use crate::{
+    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
+    get_from_to_from_message,
+    protocols::{
+        present_proof::{
+            datatypes::{PresentationData, State, UserType},
+            presentation::{get_current_state, save_presentation, save_state},
+        },
+        protocol::{generate_step_output, StepResult},
+    },
 };
 
 /// Protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/request-presentation`

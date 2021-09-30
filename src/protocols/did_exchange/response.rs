@@ -1,16 +1,15 @@
-use crate::{
-    datatypes::BaseMessage,
-    get_from_to_from_message,
-    keypair::{get_com_keypair, get_key_agreement_key, save_com_keypair},
-    protocols::protocol::{generate_step_output, StepResult},
-};
-
 use super::helper::{
     get_did_document_from_body,
     get_did_exchange_message,
     get_exchange_info_from_message,
     DidExchangeOptions,
     DidExchangeType,
+};
+use crate::{
+    datatypes::BaseMessage,
+    get_from_to_from_message,
+    keypair::{get_com_keypair, get_key_agreement_key, save_com_keypair},
+    protocols::protocol::{generate_step_output, StepResult},
 };
 
 /// protocol handler for direction: `send`, type: `DID_EXCHANGE_PROTOCOL_URL/response`

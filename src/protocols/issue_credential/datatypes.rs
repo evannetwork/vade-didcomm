@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
 use std::fmt;
+
+use serde::{Deserialize, Serialize};
 
 pub const ISSUE_CREDENTIAL_PROTOCOL_URL: &str = "https://didcomm.org/issue-credential/1.0";
 
@@ -12,7 +13,7 @@ pub struct IssuerCredentialReq {
     pub credential_data: Option<CredentialData>,
 }
 
-/// CredentialAttach struct contains common fields which are required by 
+/// CredentialAttach struct contains common fields which are required by
 /// offer-credential/request-credential/issue-credential messages for attachment.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct CredentialAttach {
@@ -34,7 +35,7 @@ pub struct CredentialProposal {
     pub issuer_did: String,
 }
 
-/// Attribute struct is required for Credential Preview. 
+/// Attribute struct is required for Credential Preview.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Attribute {
     pub name: String,
@@ -49,7 +50,7 @@ pub struct CredentialPreview {
     pub attributes: Vec<Attribute>,
 }
 
-/// CredentialData struct is the general structure which contains all optional fields 
+/// CredentialData struct is the general structure which contains all optional fields
 /// required for all messages of Issue Credential protocol.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CredentialData {

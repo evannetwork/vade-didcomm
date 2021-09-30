@@ -1,9 +1,15 @@
-use crate::datatypes::MessageWithBody;
-use crate::protocols::present_proof::datatypes::{
-    PresentProofReq, PresentationData, PRESENT_PROOF_PROTOCOL_URL,
-};
 use std::collections::HashMap;
+
 use uuid::Uuid;
+
+use crate::{
+    datatypes::MessageWithBody,
+    protocols::present_proof::datatypes::{
+        PresentProofReq,
+        PresentationData,
+        PRESENT_PROOF_PROTOCOL_URL,
+    },
+};
 
 /// Specifies all possible message directions.
 #[derive(PartialEq)]

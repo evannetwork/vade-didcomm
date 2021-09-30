@@ -62,9 +62,12 @@ pub fn get_com_keypair(
     from_did: &str,
     to_did: &str,
 ) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
-
     let db_result = read_db(&format!("comm_keypair_{}_{}", from_did, to_did))?;
-    log::debug!("receiving key: {} with data: {}", format!("comm_keypair_{}_{}", from_did, to_did), db_result);
+    log::debug!(
+        "receiving key: {} with data: {}",
+        format!("comm_keypair_{}_{}", from_did, to_did),
+        db_result
+    );
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
     Ok(comm_keypair)
@@ -83,7 +86,11 @@ pub fn get_key_agreement_key(
     key_agreement_key: &str,
 ) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
     let db_result = read_db(&format!("key_agreement_key_{}", key_agreement_key))?;
-    log::debug!("receving key: {} with data: {}", format!("key_agreement_key_{}", key_agreement_key), db_result);
+    log::debug!(
+        "receving key: {} with data: {}",
+        format!("key_agreement_key_{}", key_agreement_key),
+        db_result
+    );
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
     Ok(comm_keypair)

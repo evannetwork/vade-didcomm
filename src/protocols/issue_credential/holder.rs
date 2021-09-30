@@ -1,15 +1,18 @@
-use crate::{
-    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
-    get_from_to_from_message,
-    protocols::issue_credential::credential::{get_current_state, save_credential, save_state},
-    protocols::issue_credential::datatypes::{CredentialData, State, UserType},
-    protocols::protocol::{generate_step_output, StepResult},
-};
-
 use super::helper::{
     get_issue_credential_info_from_message,
     get_issue_credential_message,
     IssueCredentialType,
+};
+use crate::{
+    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
+    get_from_to_from_message,
+    protocols::{
+        issue_credential::{
+            credential::{get_current_state, save_credential, save_state},
+            datatypes::{CredentialData, State, UserType},
+        },
+        protocol::{generate_step_output, StepResult},
+    },
 };
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/propose_credential`

@@ -1,8 +1,9 @@
-use crate::datatypes::ExtendedMessage;
 use didcomm_rs::{
     crypto::{CryptoAlgorithm, SignatureAlgorithm},
     Message as DIDCommMessage,
 };
+
+use crate::datatypes::ExtendedMessage;
 
 macro_rules! apply_optional {
     ($message:ident, $payload:ident, $payload_arg:ident) => {{
@@ -90,9 +91,8 @@ pub fn decrypt_message(
     decryption_public: Option<&[u8]>,
     sign_public: Option<&[u8]>,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let received =
-        DIDCommMessage::receive(message, decryption_key, decryption_public, sign_public)
-            .map_err(|err| format!("could not decrypt message: {}", &err.to_string()))?;
+    let received = DIDCommMessage::receive(message, decryption_key, decryption_public, sign_public)
+        .map_err(|err| format!("could not decrypt message: {}", &err.to_string()))?;
 
     let decrypted = received.get_body().map_err(|err| {
         format!(
@@ -108,12 +108,12 @@ pub fn decrypt_message(
 mod tests {
     extern crate utilities;
 
-    use crate::datatypes::MessageWithBody;
-
-    use super::*;
     use didcomm_rs::Jwe;
     use serde::{Deserialize, Serialize};
     use utilities::keypair::get_keypair_set;
+
+    use super::*;
+    use crate::datatypes::MessageWithBody;
     #[derive(Debug, Serialize, Deserialize, Clone)]
     struct TestBody {
         test: bool,

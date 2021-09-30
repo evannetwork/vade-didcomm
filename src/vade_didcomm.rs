@@ -1,16 +1,18 @@
-use crate::{
-    datatypes::{BaseMessage, DidCommOptions, EncryptionKeys, ExtendedMessage},
-    fill_message_id_and_timestamps, get_from_to_from_message,
-    keypair::{get_com_keypair, get_key_agreement_key},
-    message::{decrypt_message, encrypt_message},
-    protocol_handler::ProtocolHandler,
-    utils::vec_to_array,
-};
 use async_trait::async_trait;
 use didcomm_rs::Jwe;
 use ed25519_dalek::{Keypair, PublicKey, SecretKey};
 use vade::{VadePlugin, VadePluginResultValue};
 use x25519_dalek::StaticSecret;
+
+use crate::{
+    datatypes::{BaseMessage, DidCommOptions, EncryptionKeys, ExtendedMessage},
+    fill_message_id_and_timestamps,
+    get_from_to_from_message,
+    keypair::{get_com_keypair, get_key_agreement_key},
+    message::{decrypt_message, encrypt_message},
+    protocol_handler::ProtocolHandler,
+    utils::vec_to_array,
+};
 
 big_array! { BigArray; }
 

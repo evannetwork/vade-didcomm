@@ -7,8 +7,16 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::present_proof::datatypes::{
-        Ack, Attribute, Predicate, PresentationAttach, PresentationData, PresentationPreview,
-        ProblemReport, State, UserType, PRESENT_PROOF_PROTOCOL_URL,
+        Ack,
+        Attribute,
+        Predicate,
+        PresentationAttach,
+        PresentationData,
+        PresentationPreview,
+        ProblemReport,
+        State,
+        UserType,
+        PRESENT_PROOF_PROTOCOL_URL,
     },
     VadeDidComm,
 };

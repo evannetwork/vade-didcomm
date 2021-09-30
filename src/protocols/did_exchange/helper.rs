@@ -1,9 +1,20 @@
+use std::collections::HashMap;
+
 use data_encoding::BASE64;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use uuid::Uuid;
 
-use crate::datatypes::{Base64Container, BaseMessage, CommunicationDidDocument, DidCommOptions, DidCommPubKey, DidCommService, DidDocumentBodyAttachment, ExchangeInfo, MessageWithBody};
+use crate::datatypes::{
+    Base64Container,
+    BaseMessage,
+    CommunicationDidDocument,
+    DidCommOptions,
+    DidCommPubKey,
+    DidCommService,
+    DidDocumentBodyAttachment,
+    ExchangeInfo,
+    MessageWithBody,
+};
 
 pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
 

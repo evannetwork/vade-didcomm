@@ -4,7 +4,8 @@ use crate::{
         did_exchange::generate_did_exchange_protocol,
         issue_credential::generate_issue_credential_protocol,
         pingpong::generate_ping_pong_protocol, present_proof::generate_present_proof_protocol,
-        presentation_exchange::generate_presentation_exchange_protocol, protocol::Protocol,
+        presentation_exchange::generate_presentation_exchange_protocol,
+        protocol::Protocol,
     },
 };
 

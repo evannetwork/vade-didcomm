@@ -284,6 +284,7 @@ Issue Credential message:
 }
 ```
 ### presentation exchange protocol
+
 The [`Presentation Exchange Protocol`] consists of 3 steps. The whole flow is implemented in the [`presentation-exchange test`]. The general flow starts with a verifier sending a `request-presentation` message to a holder. The holder has an option to answer with the `propose-presentation` or send `presentation` message. Once Verifier receives `presentation` message, he/she will match the received credential claims against `presentation-definition` request and validate the claims values with the contraints present in the `input-descriptors` array in `presentation-definition` 
 
 In the current implementation of presentation exchange protocol, the json schema constraints have to be verified by the client application which is using vade because the constraints are quite diverse and specific to application requirements, for details regarding constraints, please visit [`Presentation Exchange Protocol`].

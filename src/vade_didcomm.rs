@@ -179,7 +179,7 @@ impl VadePlugin for VadeDidComm {
                     .unwrap_or_default();
                 let recipient = &parsed_message.recipients.unwrap_or_default()[0];
                 let to = recipient.header.kid.as_ref().unwrap();
-                log::debug!("fetching kak for from: {}  to: {}", to, from);
+                log::debug!("fetching kak for from: {} to: {}", to, from);
                 let mut encoded_keypair = get_key_agreement_key(to);
                 if encoded_keypair.is_err() {
                     // when we dont find a stored keypair, try to get the key agreement key

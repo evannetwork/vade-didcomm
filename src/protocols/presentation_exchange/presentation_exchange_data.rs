@@ -40,7 +40,6 @@ pub fn save_presentation_exchange(
 /// * `state` - state
 /// # Returns
 /// * `presentation_exchange` - presentation_exchange data stored in db.
-#[allow(dead_code)]
 pub fn get_presentation_exchange(
     from_did: &str,
     to_did: &str,

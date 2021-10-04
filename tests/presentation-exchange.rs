@@ -80,7 +80,8 @@ async fn send_request_presentation(
                         id: id.to_string(),
                         input_descriptors: [InputDescriptor {
                             id: "citizenship_input".to_string(),
-                            name: "US Passport".to_string(),
+                            name: Some("US Passport".to_string()),
+                            format: None,
                             schema: [Schema {
                                 uri: "hub://did:foo:123/Collections/schema.us.gov/passport.json"
                                     .to_string(),
@@ -95,16 +96,16 @@ async fn send_request_presentation(
                                         "$.birth_date".to_string(),
                                     ]
                                     .to_vec(),
-                                    id: "Some_field_id".to_string(),
+                                    id: Some("Some_field_id".to_string()),
                                     purpose: None,
                                     predicate: None,
-                                    filter: [
+                                    filter: Some([
                                         ("type".to_string(), "date".to_string()),
                                         ("minimum".to_string(), "1978-05-16".to_string()),
                                     ]
                                     .iter()
                                     .cloned()
-                                    .collect(),
+                                    .collect()),
                                 }]
                                 .to_vec(),
                                 limit_disclosure: None,
@@ -492,7 +493,8 @@ async fn send_presentation_proposal(
                     input_descriptors: Some(
                         [InputDescriptor {
                             id: "citizenship_input".to_string(),
-                            name: "US Passport".to_string(),
+                            name: Some("US Passport".to_string()),
+                            format: None,
                             schema: [Schema {
                                 uri: "hub://did:foo:123/Collections/schema.us.gov/passport.json"
                                     .to_string(),
@@ -507,16 +509,16 @@ async fn send_presentation_proposal(
                                         "$.birth_date".to_string(),
                                     ]
                                     .to_vec(),
-                                    id: "Some_field_id".to_string(),
+                                    id: Some("Some_field_id".to_string()),
                                     purpose: None,
                                     predicate: None,
-                                    filter: [
+                                    filter: Some([
                                         ("type".to_string(), "date".to_string()),
                                         ("minimum".to_string(), "1999-5-16".to_string()),
                                     ]
                                     .iter()
                                     .cloned()
-                                    .collect(),
+                                    .collect()),
                                 }]
                                 .to_vec(),
                                 limit_disclosure: None,

@@ -156,6 +156,9 @@ pub struct InputDescriptor {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
+    pub format: Option<Format>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub name: Option<String>,
     pub schema: Vec<Schema>,
     #[serde(skip_serializing_if = "Option::is_none")]

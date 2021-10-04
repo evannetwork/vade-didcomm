@@ -154,7 +154,9 @@ pub struct Format {
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct InputDescriptor {
     pub id: String,
-    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub name: Option<String>,
     pub schema: Vec<Schema>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
@@ -215,7 +217,7 @@ pub struct Status {
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Field {
     pub path: Vec<String>,
-    pub id: String,
+    pub id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub purpose: Option<String>,
@@ -223,7 +225,7 @@ pub struct Field {
     #[serde(default)]
     // Value should be either required or preferred
     pub predicate: Option<ValueType>,
-    pub filter: HashMap<String, String>,
+    pub filter: Option<HashMap<String, String>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]

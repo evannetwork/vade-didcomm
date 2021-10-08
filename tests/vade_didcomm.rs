@@ -3,13 +3,8 @@ use utilities::keypair::get_keypair_set;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
-        BaseMessage,
-        DidCommOptions,
-        EncryptedMessage,
-        ExtendedMessage,
-        KeyInformation,
-        MessageWithBody,
-        VadeDidCommPluginOutput,
+        BaseMessage, DidCommOptions, EncryptedMessage, ExtendedMessage, KeyInformation,
+        MessageWithBody, VadeDidCommPluginOutput,
     },
     VadeDidComm,
 };
@@ -59,7 +54,7 @@ async fn can_prepare_didcomm_message_for_sending() -> Result<(), Box<dyn std::er
         "custom2": "ni",
         "custom3": "san"
     }"#;
-    let results = vade.didcomm_send(&options, &payload).await?;
+    let results = vade.didcomm_send(&options, payload).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -90,7 +85,7 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
         "to": [ "did::xyz:34r3cu403hnth03r49g03" ],
         "custom1": "nyuu"
     }"#;
-    let results = vade.didcomm_send(&options, &payload).await?;
+    let results = vade.didcomm_send(&options, payload).await?;
 
     match results.get(0) {
         Some(Some(value)) => {
@@ -140,7 +135,7 @@ async fn can_receive_unencrypted() -> Result<(), Box<dyn std::error::Error>> {
     }"#;
 
     let options = get_didcomm_options(&sign_keypair.user2_shared)?;
-    let results = vade.didcomm_receive(&options, &payload).await?;
+    let results = vade.didcomm_receive(&options, payload).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -168,7 +163,7 @@ async fn should_fill_empty_id_and_created_time() -> Result<(), Box<dyn std::erro
     }"#;
 
     let options = get_didcomm_options(&sign_keypair.user2_shared)?;
-    let results = vade.didcomm_receive(&options, &payload).await?;
+    let results = vade.didcomm_receive(&options, payload).await?;
     let result = results
         .get(0)
         .ok_or("no result")?

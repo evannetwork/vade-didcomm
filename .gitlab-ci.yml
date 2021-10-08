@@ -23,6 +23,7 @@ test_unit:
   script:
     - apt-get update
     - apt-get install -y clang
+    - mkdir -p .git/hooks
     - cargo install cargo2junit
     - cargo test --release --verbose -- -Z unstable-options --format json --report-time | cargo2junit > results.xml
     - cat results.xml

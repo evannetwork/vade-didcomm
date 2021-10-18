@@ -28,6 +28,7 @@ ed25519-dalek = "1.0.1"
 env_logger = "0.7.1"
 futures = "0.3.13"
 getrandom = { version = "0.2.3" }
+jsonpath_lib = "0.3.0"
 k256 = "0.7.2"
 log = "0.4.8"
 rand = "0.8.3"

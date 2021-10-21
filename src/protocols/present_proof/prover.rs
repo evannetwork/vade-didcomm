@@ -23,7 +23,7 @@ pub fn send_presentation(_options: &str, message: &str) -> StepResult {
         r#type: parsed_message.r#type,
         to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),
     };
-    let exchange_info = get_from_to_from_message(base_message)?;
+    let exchange_info = get_from_to_from_message(&base_message)?;
 
     let data = &serde_json::to_string(
         &parsed_message
@@ -99,7 +99,7 @@ pub fn receive_request_presentation(_options: &str, message: &str) -> StepResult
         .ok_or("Thread id can't be empty")?;
 
     let exchange_info = get_present_proof_info_from_message(parsed_message)?;
-    let base_info = get_from_to_from_message(base_message)?;
+    let base_info = get_from_to_from_message(&base_message)?;
     let presentation_data = exchange_info
         .presentation_data
         .ok_or("Presentation data not provided.")?;
@@ -146,7 +146,7 @@ pub fn send_propose_presentation(_options: &str, message: &str) -> StepResult {
         r#type: parsed_message.r#type,
         to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),
     };
-    let exchange_info = get_from_to_from_message(base_message)?;
+    let exchange_info = get_from_to_from_message(&base_message)?;
 
     let data = &serde_json::to_string(
         &parsed_message

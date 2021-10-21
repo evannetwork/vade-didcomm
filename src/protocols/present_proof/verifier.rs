@@ -23,7 +23,7 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
         r#type: parsed_message.r#type,
         to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),
     };
-    let exchange_info = get_from_to_from_message(base_message)?;
+    let exchange_info = get_from_to_from_message(&base_message)?;
 
     let data = &serde_json::to_string(
         &parsed_message
@@ -93,7 +93,7 @@ pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
         .thid
         .to_owned()
         .ok_or("Thread id can't be empty")?;
-    let base_info = get_from_to_from_message(base_message)?;
+    let base_info = get_from_to_from_message(&base_message)?;
 
     let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
 
@@ -145,7 +145,7 @@ pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult
         ),
     };
 
-    let base_info = get_from_to_from_message(base_message)?;
+    let base_info = get_from_to_from_message(&base_message)?;
     let thid = parsed_message
         .thid
         .to_owned()

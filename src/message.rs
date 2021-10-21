@@ -33,7 +33,7 @@ pub fn encrypt_message(
     message_string: &str,
     encryption_secret: &[u8],
     encryption_target_public: Option<&[u8]>,
-    sign_keypair: &ed25519_dalek::Keypair,
+    sign_keypair: Option<ed25519_dalek::Keypair>,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut d_message = DIDCommMessage::new()
         .body(&message_string.to_string())
@@ -53,23 +53,36 @@ pub fn encrypt_message(
         d_message = d_message.add_header_field(key.to_owned(), val.to_string().to_owned());
     }
 
-    // ensure to set kid to pub key of temporary keypair for encryption / signing
-    d_message = d_message.kid(&hex::encode(sign_keypair.public.to_bytes()));
+    let encrypted;
+    if let Some(sign_keypair) = sign_keypair {
+        // ensure to set kid to pub key of temporary keypair for encryption / signing
+        d_message = d_message.kid(&hex::encode(sign_keypair.public.to_bytes()));
 
-    // finally sign and encrypt
-    let encrypted = d_message
-        .seal_signed(
-            encryption_secret,
-            Some(vec![encryption_target_public]),
-            SignatureAlgorithm::EdDsa,
-            &sign_keypair.to_bytes(),
-        )
-        .map_err(|err| {
-            format!(
-                "could not run seal_signed while encrypting message: {}",
-                &err.to_string()
+        // sign and encrypt
+        encrypted = d_message
+            .seal_signed(
+                encryption_secret,
+                Some(vec![encryption_target_public]),
+                SignatureAlgorithm::EdDsa,
+                &sign_keypair.to_bytes(),
             )
-        })?;
+            .map_err(|err| {
+                format!(
+                    "could not run seal_signed while encrypting message: {}",
+                    &err.to_string()
+                )
+            })?;
+    } else {
+        // no signing keys, so just encrypt
+        encrypted = d_message
+            .seal(encryption_secret, Some(vec![encryption_target_public]))
+            .map_err(|err| {
+                format!(
+                    "could not run seal while encrypting message: {}",
+                    &err.to_string()
+                )
+            })?;
+    }
 
     Ok(encrypted)
 }
@@ -137,7 +150,7 @@ mod tests {
             &payload,
             &sign_keypair.user1_secret.to_bytes(),
             Some(&sign_keypair.user2_pub.to_bytes()),
-            &sign_keypair.sign_keypair,
+            Some(sign_keypair.sign_keypair),
         )?;
         let _: Jwe = serde_json::from_str(&encrypted)?;
 
@@ -161,7 +174,7 @@ mod tests {
             &payload,
             &sign_keypair.user1_secret.to_bytes(),
             Some(&sign_keypair.user2_pub.to_bytes()),
-            &sign_keypair.sign_keypair,
+            Some(sign_keypair.sign_keypair),
         )?;
 
         let decrypted = decrypt_message(
@@ -177,4 +190,6 @@ mod tests {
 
         Ok(())
     }
+
+    // TODO swo: tests for unsigned
 }

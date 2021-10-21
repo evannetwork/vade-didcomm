@@ -27,11 +27,11 @@ pub fn vec_to_array<T, const N: usize>(v: Vec<T>) -> Result<[T; N], Box<dyn std:
 /// # Returns
 /// * `ExchangeInfo` - necessary information
 pub fn get_from_to_from_message(
-    message: BaseMessage,
+    message: &BaseMessage,
 ) -> Result<FromTo, Box<dyn std::error::Error>> {
-    let from_did = message.from.ok_or("from is required")?;
+    let from_did = message.from.as_ref().ok_or("from is required")?;
 
-    let to_vec = message.to.ok_or("to is required")?;
+    let to_vec = message.to.as_ref().ok_or("to is required")?;
     if to_vec.is_empty() {
         return Err(Box::from(
             "DID exchange requires at least one did in the to field.",
@@ -40,7 +40,7 @@ pub fn get_from_to_from_message(
     let to_did = &to_vec[0];
 
     Ok(FromTo {
-        from: from_did,
+        from: from_did.to_owned(),
         to: String::from(to_did),
     })
 }

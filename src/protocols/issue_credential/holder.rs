@@ -23,7 +23,7 @@ pub fn send_propose_credential(_options: &str, message: &str) -> StepResult {
         r#type: parsed_message.r#type,
         to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),
     };
-    let exchange_info = get_from_to_from_message(base_message)?;
+    let exchange_info = get_from_to_from_message(&base_message)?;
 
     let data =
         &serde_json::to_string(&parsed_message.body.ok_or("Credential data not provided.")?)?;
@@ -86,7 +86,7 @@ pub fn receive_offer_credential(_options: &str, message: &str) -> StepResult {
         .ok_or("Thread id can't be empty")?;
 
     let exchange_info = get_issue_credential_info_from_message(parsed_message)?;
-    let base_info = get_from_to_from_message(base_message)?;
+    let base_info = get_from_to_from_message(&base_message)?;
     let credential_data = exchange_info
         .credential_data
         .ok_or("Credential data not provided.")?;
@@ -125,7 +125,7 @@ pub fn send_request_credential(_options: &str, message: &str) -> StepResult {
         r#type: parsed_message.r#type,
         to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),
     };
-    let exchange_info = get_from_to_from_message(base_message)?;
+    let exchange_info = get_from_to_from_message(&base_message)?;
 
     let data =
         &serde_json::to_string(&parsed_message.body.ok_or("Credential data not provided.")?)?;
@@ -187,7 +187,7 @@ pub fn receive_issue_credential(_options: &str, message: &str) -> StepResult {
         .ok_or("Thread id can't be empty")?;
 
     let exchange_info = get_issue_credential_info_from_message(parsed_message)?;
-    let base_info = get_from_to_from_message(base_message)?;
+    let base_info = get_from_to_from_message(&base_message)?;
     let credential_data = exchange_info
         .credential_data
         .ok_or("Credential data not provided.")?;

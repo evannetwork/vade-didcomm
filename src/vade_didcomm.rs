@@ -54,6 +54,7 @@ impl VadePlugin for VadeDidComm {
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(message)?;
         let mut protocol_result = ProtocolHandler::before_send(options, &message_with_id)?;
+        let message_raw = &protocol_result.message.clone();
 
         // message string, that will be returned
         let final_message: String;
@@ -69,7 +70,7 @@ impl VadePlugin for VadeDidComm {
             } else {
                 // otherwise use keys from DID exchange
                 let parsed_message: BaseMessage = serde_json::from_str(&message_with_id)?;
-                let from_to = get_from_to_from_message(parsed_message)?;
+                let from_to = get_from_to_from_message(&parsed_message)?;
                 let mut encoded_keypair = get_key_agreement_key(&from_to.from);
                 if encoded_keypair.is_err() {
                     // when we dont find a  key agreement key, try to get the stored keypair
@@ -101,16 +102,21 @@ impl VadePlugin for VadeDidComm {
                     encryption_others_public: Some(public_decoded),
                 };
             }
-            let signing_keys = options.signing_keys.ok_or("No signing keys provided")?;
-            let secret_key = SecretKey::from_bytes(
-                &signing_keys
-                    .signing_my_secret
-                    .ok_or("No signing secret key provided")?,
-            )?;
-            let signing_keypair = Keypair {
-                public: PublicKey::from(&secret_key),
-                secret: secret_key,
-            };
+
+            let signing_keypair;
+            if let Some(signing_keys_input) = options.signing_keys {
+                let secret_key = SecretKey::from_bytes(
+                    &signing_keys_input
+                        .signing_my_secret
+                        .ok_or("No signing secret key provided")?,
+                )?;
+                signing_keypair = Some(Keypair {
+                    public: PublicKey::from(&secret_key),
+                    secret: secret_key,
+                });
+            } else {
+                signing_keypair = None;
+            }
             final_message = encrypt_message(
                 &protocol_result.message,
                 &encryption_keys.encryption_my_secret,
@@ -118,7 +124,7 @@ impl VadePlugin for VadeDidComm {
                     .encryption_others_public
                     .as_ref()
                     .map(|v| &v[..]),
-                &signing_keypair,
+                signing_keypair,
             )?;
         } else {
             final_message = protocol_result.message;
@@ -127,9 +133,10 @@ impl VadePlugin for VadeDidComm {
         let send_result = format!(
             r#"{{
                 "message": {},
+                "messageRaw": {},
                 "metadata": {}
             }}"#,
-            final_message, protocol_result.metadata,
+            final_message, message_raw, protocol_result.metadata,
         );
 
         return Ok(VadePluginResultValue::Success(Some(send_result)));
@@ -220,9 +227,10 @@ impl VadePlugin for VadeDidComm {
         let receive_result = format!(
             r#"{{
                 "message": {},
+                "messageRaw": {},
                 "metadata": {}
             }}"#,
-            protocol_result.message, protocol_result.metadata,
+            protocol_result.message, decrypted, protocol_result.metadata,
         );
 
         return Ok(VadePluginResultValue::Success(Some(receive_result)));

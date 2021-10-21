@@ -34,6 +34,16 @@ pub struct DidExchangeOptions {
     pub didcomm_options: DidCommOptions,
 }
 
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct DidExchangeBaseMessage {
+    #[serde(flatten)]
+    pub base_message: BaseMessage,
+    pub id: Option<String>,
+    pub pthid: Option<String>,
+    pub thid: Option<String>,
+}
+
 /// Creates a new communication DID document for a specific DID, a communication pub key and the
 /// service url, where the user can be reached.
 ///
@@ -91,13 +101,16 @@ pub fn get_did_exchange_message(
     to_did: &str,
     from_service_endpoint: &str,
     pub_key: &str,
+    message: &DidExchangeBaseMessage,
 ) -> Result<MessageWithBody<DidDocumentBodyAttachment<Base64Container>>, Box<dyn std::error::Error>>
 {
+    let message = message.clone();
     // convert this to doc attach with base 64 use data_encoding::BASE64;
     let did_document = get_communication_did_doc(key_agreement_did, pub_key, from_service_endpoint);
     let base64_encoded_did_document =
         BASE64.encode(serde_json::to_string(&did_document)?.as_bytes());
-    let thread_id = Uuid::new_v4().to_simple().to_string();
+    // let thread_id = Uuid::new_v4().to_simple().to_string();
+    let thread_id = "FALLBACK".to_string();
     let service_id = format!("{0}#key-1", key_agreement_did);
     let step_name = match step_type {
         DidExchangeType::Request => "request",
@@ -113,11 +126,17 @@ pub fn get_did_exchange_message(
             created_time: None,
             expires_time: None,
             from: Some(String::from(from_did)),
-            id: Some(String::from(&thread_id)),
+            id: message
+                .id
+                .as_ref()
+                .or_else(|| Some(&thread_id))
+                .map(|v| v.to_owned()),
             other: HashMap::new(),
-            pthid: Some(format!("{}#key-1", thread_id)),
+            pthid: message
+                .pthid
+                .or_else(|| Some(format!("{}#key-1", thread_id))),
             r#type: format!("{}/{}", DID_EXCHANGE_PROTOCOL_URL, step_name),
-            thid: Some(service_id),
+            thid: message.id.or_else(|| Some(service_id)),
             to: Some([String::from(to_did)].to_vec()),
         };
 
@@ -133,9 +152,10 @@ pub fn get_did_exchange_message(
 /// # Returns
 /// * `ExchangeInfo` - necessary information
 pub fn get_exchange_info_from_message(
-    message: BaseMessage,
+    message: &BaseMessage,
     did_document: CommunicationDidDocument,
 ) -> Result<ExchangeInfo, Box<dyn std::error::Error>> {
+    let message = message.clone();
     let from_did = message.from.ok_or("from is required")?;
 
     let to_vec = message.to.ok_or("to is required")?;

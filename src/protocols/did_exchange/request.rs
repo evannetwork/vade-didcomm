@@ -12,7 +12,10 @@ use crate::{
     datatypes::BaseMessage,
     get_from_to_from_message,
     keypair::save_com_keypair,
-    protocols::protocol::{generate_step_output, StepResult},
+    protocols::{
+        did_exchange::helper::DidExchangeBaseMessage,
+        protocol::{generate_step_output, StepResult},
+    },
 };
 
 /// protocol handler for direction: `send`, type: `DID_EXCHANGE_PROTOCOL_URL/request`
@@ -22,15 +25,20 @@ use crate::{
 /// Creates and stores a new communication keypair, that will be used for further communication with
 /// the target DID.
 pub fn send_request(options: &str, message: &str) -> StepResult {
-    let parsed_message: BaseMessage = serde_json::from_str(message)?;
+    let parsed_message: DidExchangeBaseMessage = serde_json::from_str(message)?;
     let options: DidExchangeOptions = serde_json::from_str(options)?;
-    let exchange_info = get_from_to_from_message(parsed_message)?;
+    let exchange_info = get_from_to_from_message(&parsed_message.base_message)?;
     let secret_key = StaticSecret::new(OsRng);
     let pub_key = PublicKey::from(&secret_key);
 
     let codec: &[u8] = &[0xec, 0x1];
     let data = [codec, pub_key.as_bytes()].concat();
-    let key_did = format!("did:key:z{}", bs58::encode(data).into_string());
+    let key_did = parsed_message
+        .base_message
+        .from
+        .as_ref()
+        .map(|v| v.to_owned())
+        .unwrap_or_else(|| format!("did:key:z{}", bs58::encode(data).into_string()));
     let encoded_keypair = save_com_keypair(
         &exchange_info.from,
         &exchange_info.to,
@@ -51,6 +59,7 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
         &exchange_info.to,
         &options.service_endpoint.unwrap_or_else(|| "".to_string()),
         pub_key_base58_string,
+        &parsed_message,
     )?;
 
     generate_step_output(&serde_json::to_string(&request_message)?, &metadata)
@@ -62,7 +71,7 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
 pub fn receive_request(_options: &str, message: &str) -> StepResult {
     let did_document = get_did_document_from_body(message)?;
     let parsed_message: BaseMessage = serde_json::from_str(message)?;
-    let exchange_info = get_exchange_info_from_message(parsed_message, did_document)?;
+    let exchange_info = get_exchange_info_from_message(&parsed_message, did_document)?;
     let secret_key = StaticSecret::new(OsRng);
     let pub_key = PublicKey::from(&secret_key);
 

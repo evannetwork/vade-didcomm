@@ -5,7 +5,14 @@ use vade::{VadePlugin, VadePluginResultValue};
 use x25519_dalek::StaticSecret;
 
 use crate::{
-    datatypes::{BaseMessage, DidCommOptions, EncryptionKeys, ExtendedMessage},
+    datatypes::{
+        BaseMessage,
+        DidCommOptions,
+        EncryptionKeys,
+        ExtendedMessage,
+        MessageDirection,
+        ProtocolHandleOutput,
+    },
     fill_message_id_and_timestamps,
     get_from_to_from_message,
     keypair::{get_com_keypair, get_key_agreement_key},
@@ -51,25 +58,39 @@ impl VadePlugin for VadeDidComm {
     ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
         log::debug!("preparing DIDComm message for being sent");
 
-        // run protocol specific logic
+        let options_parsed = serde_json::from_str::<DidCommOptions>(options)?;
         let message_with_id = fill_message_id_and_timestamps(message)?;
-        let mut protocol_result = ProtocolHandler::before_send(options, &message_with_id)?;
-        let message_raw = &protocol_result.message.clone();
+
+        let mut protocol_result = match options_parsed.skip_protocol_handling {
+            None | Some(false) => {
+                // run protocol specific logic
+                ProtocolHandler::before_send(options, &message_with_id)?
+            }
+            _ => ProtocolHandleOutput {
+                direction: MessageDirection::Send,
+                encrypt: true,
+                protocol: "".to_string(),
+                metadata: "{}".to_string(),
+                message: message.to_owned(),
+                step: "".to_string(),
+            },
+        };
+
+        // keep a copy of unencrypted message
+        let message_raw = &message_with_id.clone();
 
         // message string, that will be returned
         let final_message: String;
 
         if protocol_result.encrypt {
-            let options = serde_json::from_str::<DidCommOptions>(options)?;
-
             let encryption_keys: EncryptionKeys;
-            if options.encryption_keys.is_some() {
-                encryption_keys = options
+            if options_parsed.encryption_keys.is_some() {
+                encryption_keys = options_parsed
                     .encryption_keys
                     .ok_or("encryption_keys is missing in options parameter")?;
             } else {
                 // otherwise use keys from DID exchange
-                let parsed_message: BaseMessage = serde_json::from_str(&message_with_id)?;
+                let parsed_message: BaseMessage = serde_json::from_str(&message)?;
                 let from_to = get_from_to_from_message(&parsed_message)?;
                 let mut encoded_keypair = get_key_agreement_key(&from_to.from);
                 if encoded_keypair.is_err() {
@@ -104,7 +125,7 @@ impl VadePlugin for VadeDidComm {
             }
 
             let signing_keypair;
-            if let Some(signing_keys_input) = options.signing_keys {
+            if let Some(signing_keys_input) = options_parsed.signing_keys {
                 let secret_key = SecretKey::from_bytes(
                     &signing_keys_input
                         .signing_my_secret
@@ -161,7 +182,7 @@ impl VadePlugin for VadeDidComm {
     ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
         log::debug!("handling incoming DIDComm message");
 
-        // run protocol specific logic
+        let options_parsed = serde_json::from_str::<DidCommOptions>(options)?;
         let parsed_message = serde_json::from_str::<Jwe>(message);
 
         // message string, that will be returned
@@ -170,10 +191,9 @@ impl VadePlugin for VadeDidComm {
         // if the message is encrypted, try to decrypt it
         if parsed_message.is_ok() {
             // if shared secret was passed to the options, use this one
-            let options = serde_json::from_str::<DidCommOptions>(options)?;
             let decryption_keys: EncryptionKeys;
-            if options.encryption_keys.is_some() {
-                decryption_keys = options
+            if options_parsed.encryption_keys.is_some() {
+                decryption_keys = options_parsed
                     .encryption_keys
                     .ok_or("encryption_keys is missing")?;
             } else {
@@ -206,7 +226,9 @@ impl VadePlugin for VadeDidComm {
                     encryption_others_public: target_pub_key,
                 };
             }
-            let signing_keys = options.signing_keys.ok_or("No signing keys provided")?;
+            let signing_keys = options_parsed
+                .signing_keys
+                .ok_or("No signing keys provided")?;
             decrypted = decrypt_message(
                 message,
                 Some(&decryption_keys.encryption_my_secret),
@@ -222,7 +244,20 @@ impl VadePlugin for VadeDidComm {
 
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(&decrypted)?;
-        let protocol_result = ProtocolHandler::after_receive(options, &message_with_id)?;
+        let protocol_result = match options_parsed.skip_protocol_handling {
+            None | Some(false) => {
+                // run protocol specific logic
+                ProtocolHandler::after_receive(options, &message_with_id)?
+            }
+            _ => ProtocolHandleOutput {
+                direction: MessageDirection::Receive,
+                encrypt: true,
+                protocol: "".to_string(),
+                metadata: "{}".to_string(),
+                message: message_with_id.to_string(),
+                step: "".to_string(),
+            },
+        };
 
         let receive_result = format!(
             r#"{{
@@ -230,7 +265,7 @@ impl VadePlugin for VadeDidComm {
                 "messageRaw": {},
                 "metadata": {}
             }}"#,
-            protocol_result.message, decrypted, protocol_result.metadata,
+            protocol_result.message, message_with_id, protocol_result.metadata,
         );
 
         return Ok(VadePluginResultValue::Success(Some(receive_result)));

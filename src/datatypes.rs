@@ -193,11 +193,14 @@ pub struct SigningKeys {
 pub struct DidCommOptions {
     pub encryption_keys: Option<EncryptionKeys>,
     pub signing_keys: Option<SigningKeys>,
+    pub skip_protocol_handling: Option<bool>,
 }
 
 /// Output of didcomm_send or didcomm_receive.
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct VadeDidCommPluginOutput<T> {
+#[serde(rename_all = "camelCase")]
+pub struct VadeDidCommPluginOutput<T, TRaw = serde_json::Value> {
     pub message: T,
+    pub message_raw: TRaw,
     pub metadata: HashMap<String, String>,
 }

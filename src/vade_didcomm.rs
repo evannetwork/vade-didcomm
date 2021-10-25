@@ -77,7 +77,7 @@ impl VadePlugin for VadeDidComm {
         };
 
         // keep a copy of unencrypted message
-        let message_raw = &message_with_id.clone();
+        let message_raw = &message_with_id;
 
         // message string, that will be returned
         let final_message: String;
@@ -90,7 +90,7 @@ impl VadePlugin for VadeDidComm {
                     .ok_or("encryption_keys is missing in options parameter")?;
             } else {
                 // otherwise use keys from DID exchange
-                let parsed_message: BaseMessage = serde_json::from_str(&message)?;
+                let parsed_message: BaseMessage = serde_json::from_str(message)?;
                 let from_to = get_from_to_from_message(&parsed_message)?;
                 let mut encoded_keypair = get_key_agreement_key(&from_to.from);
                 if encoded_keypair.is_err() {

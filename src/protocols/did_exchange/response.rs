@@ -7,7 +7,6 @@ use super::helper::{
     DidExchangeType,
 };
 use crate::{
-    datatypes::BaseMessage,
     get_from_to_from_message,
     keypair::{get_com_keypair, get_key_agreement_key, save_com_keypair},
     protocols::protocol::{generate_step_output, StepResult},

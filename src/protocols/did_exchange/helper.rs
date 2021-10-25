@@ -109,8 +109,7 @@ pub fn get_did_exchange_message(
     let did_document = get_communication_did_doc(key_agreement_did, pub_key, from_service_endpoint);
     let base64_encoded_did_document =
         BASE64.encode(serde_json::to_string(&did_document)?.as_bytes());
-    // let thread_id = Uuid::new_v4().to_simple().to_string();
-    let thread_id = "FALLBACK".to_string();
+    let fallback_id = Uuid::new_v4().to_simple().to_string();
     let service_id = format!("{0}#key-1", key_agreement_did);
     let step_name = match step_type {
         DidExchangeType::Request => "request",
@@ -129,14 +128,14 @@ pub fn get_did_exchange_message(
             id: message
                 .id
                 .as_ref()
-                .or_else(|| Some(&thread_id))
+                .or(Some(&fallback_id))
                 .map(|v| v.to_owned()),
             other: HashMap::new(),
             pthid: message
                 .pthid
-                .or_else(|| Some(format!("{}#key-1", thread_id))),
+                .or_else(|| Some(format!("{}#key-1", fallback_id))),
             r#type: format!("{}/{}", DID_EXCHANGE_PROTOCOL_URL, step_name),
-            thid: message.id.or_else(|| Some(service_id)),
+            thid: message.id.or(Some(service_id)),
             to: Some([String::from(to_did)].to_vec()),
         };
 

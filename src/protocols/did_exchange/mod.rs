@@ -18,7 +18,7 @@ use crate::protocols::{
 ///
 /// # Returns
 /// * `Protocol` - the new DID exchange protocol handler
-pub fn generate_did_exchange_protocol() -> Protocol {
+pub(crate) fn generate_did_exchange_protocol() -> Protocol {
     Protocol {
         name: String::from(DID_EXCHANGE_PROTOCOL_URL),
         steps: vec![
@@ -31,3 +31,5 @@ pub fn generate_did_exchange_protocol() -> Protocol {
         ],
     }
 }
+
+pub use helper::DidExchangeOptions;

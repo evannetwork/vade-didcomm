@@ -4,16 +4,19 @@ use data_encoding::BASE64;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::datatypes::{
-    Base64Container,
-    BaseMessage,
-    CommunicationDidDocument,
-    DidCommOptions,
-    DidCommPubKey,
-    DidCommService,
-    DidDocumentBodyAttachment,
-    ExchangeInfo,
-    MessageWithBody,
+use crate::{
+    datatypes::{
+        Base64Container,
+        BaseMessage,
+        CommunicationDidDocument,
+        DidCommOptions,
+        DidCommPubKey,
+        DidCommService,
+        DidDocumentBodyAttachment,
+        ExchangeInfo,
+        MessageWithBody,
+    },
+    utils::hex_option,
 };
 
 pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
@@ -30,6 +33,10 @@ pub enum DidExchangeType {
 #[serde(rename_all = "camelCase")]
 pub struct DidExchangeOptions {
     pub service_endpoint: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(with = "hex_option")]
+    pub did_exchange_my_secret: Option<[u8; 32]>,
     #[serde(flatten)]
     pub didcomm_options: DidCommOptions,
 }

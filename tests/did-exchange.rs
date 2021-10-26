@@ -14,6 +14,7 @@ use vade_didcomm::{
         MessageWithBody,
         VadeDidCommPluginOutput,
     },
+    protocols::did_exchange::DidExchangeOptions,
     VadeDidComm,
 };
 
@@ -261,7 +262,7 @@ pub fn get_did_document_from_body(
 
 #[tokio::test]
 #[serial]
-async fn can_do_key_exchange() -> Result<(), Box<dyn std::error::Error>> {
+async fn can_do_key_exchange_with_auto_generated_keys() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let test_setup = get_keypair_set();
     let request_message = send_request(
@@ -305,6 +306,79 @@ async fn can_do_key_exchange() -> Result<(), Box<dyn std::error::Error>> {
         &test_setup.receiver_signing_options_stringified,
     )
     .await?;
+
+    Ok(())
+}
+
+#[tokio::test]
+#[serial]
+async fn can_do_key_exchange_pregenerated_keys() -> Result<(), Box<dyn std::error::Error>> {
+    let sender_secret_key: [u8; 32] = x25519_dalek::StaticSecret::from([1; 32]).to_bytes();
+    let receiver_secret_key: [u8; 32] = x25519_dalek::StaticSecret::from([2; 32]).to_bytes();
+
+    let mut vade = get_vade().await?;
+    let test_setup = get_keypair_set();
+    let mut options_object: DidExchangeOptions =
+        serde_json::from_str(&test_setup.sender_options_stringified)?;
+    options_object.did_exchange_my_secret = Some(sender_secret_key.clone());
+    let options_string = serde_json::to_string(&options_object)?;
+    let request_message = send_request(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &options_string,
+    )
+    .await?;
+
+    let mut options_object: DidExchangeOptions =
+        serde_json::from_str(&test_setup.receiver_options_stringified)?;
+    options_object.did_exchange_my_secret = Some(receiver_secret_key.clone());
+    let options_string = serde_json::to_string(&options_object)?;
+    receive_request(&mut vade, request_message, &options_string).await?;
+
+    let response_message = send_response(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        &test_setup.receiver_signing_options_stringified,
+    )
+    .await?;
+    receive_response(
+        &mut vade,
+        response_message,
+        &test_setup.sender_signing_options_stringified,
+    )
+    .await?;
+
+    let complete_message = send_complete(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_signing_options_stringified,
+    )
+    .await?;
+    receive_complete(
+        &mut vade,
+        complete_message,
+        &test_setup.receiver_signing_options_stringified,
+    )
+    .await?;
+
+    // check sender key
+    let db_result = read_db(&format!(
+        "comm_keypair_{}_{}",
+        &test_setup.user1_did, &test_setup.user2_did
+    ))?;
+    let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
+    assert_eq!(comm_keypair.secret_key, hex::encode(sender_secret_key));
+
+    // check receiver key
+    let db_result = read_db(&format!(
+        "comm_keypair_{}_{}",
+        &test_setup.user2_did, &test_setup.user1_did
+    ))?;
+    let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
+    assert_eq!(comm_keypair.secret_key, hex::encode(receiver_secret_key));
 
     Ok(())
 }

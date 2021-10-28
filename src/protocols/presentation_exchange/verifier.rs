@@ -28,7 +28,7 @@ pub fn send_request_presentation(message: &str) -> StepResult {
             .body
             .ok_or("Presentation exchange data not provided.")?,
     )?;
-    let presentation_exchange_data: PresentationExchangeData = serde_json::from_str(&data)?;
+    let presentation_exchange_data: PresentationExchangeData = serde_json::from_str(data)?;
 
     let thid = parsed_message.thid.ok_or("Thread id can't be empty.")?;
 

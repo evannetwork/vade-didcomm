@@ -1,5 +1,8 @@
+mod common;
+
 extern crate jsonpath_lib as jsonpath;
-use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
+
+use common::{read_db, get_vade};
 use serial_test::serial;
 use std::cmp::Ordering;
 use uuid::Uuid;
@@ -12,22 +15,9 @@ use vade_didcomm::{
         PresentationSubmission, Proof, ProofType, Schema, State, VerifiableCredential,
         PRESENTATION_EXCHANGE_PROTOCOL_URL,
     },
-    VadeDidComm,
 };
 
-const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
-
-pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;
-
-    match db.get(key) {
-        Ok(Some(result)) => Ok(String::from_utf8(result)?),
-        Ok(None) => Err(format!("{0} not found", key).into()),
-        Err(e) => Err(format!("Error while loading key: {0}, {1}", key, e).into()),
-    }
-}
-
-pub fn get_presentation(
+pub fn get_presentation_exchange(
     from_did: &str,
     to_did: &str,
     thid: &str,
@@ -39,14 +29,6 @@ pub fn get_presentation(
     ))?;
     let presentation_data: PresentationExchangeData = serde_json::from_str(&presentation)?;
     return Ok(presentation_data);
-}
-
-async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
-    let mut vade = Vade::new();
-    let vade_didcomm = VadeDidComm::new()?;
-    vade.register_plugin(Box::from(vade_didcomm));
-
-    Ok(vade)
 }
 
 async fn send_request_presentation(
@@ -218,7 +200,7 @@ async fn receive_request_presentation(
         .ok_or("input descriptor not found")?
         .name;
 
-    let req_data_saved = get_presentation(sender, receiver, id, request_presentation.state)?;
+    let req_data_saved = get_presentation_exchange(sender, receiver, id, request_presentation.state)?;
 
     let attached_req_saved = req_data_saved
         .request_presentation_attach
@@ -415,7 +397,7 @@ async fn receive_presentation(
         .ok_or("Credentials are empty")?
         .r#type;
 
-    let req_data_saved = get_presentation(sender, receiver, id, state)?;
+    let req_data_saved = get_presentation_exchange(sender, receiver, id, state)?;
     let req_data_saved_cloned = req_data_saved.clone();
 
     let attached_presentation_saved = req_data_saved
@@ -436,7 +418,7 @@ async fn receive_presentation(
 
     assert_eq!(data, data_saved);
 
-    let sent_request = get_presentation(receiver, sender, id, State::SendPresentationRequest)?;
+    let sent_request = get_presentation_exchange(receiver, sender, id, State::SendPresentationRequest)?;
 
     let requested_json = serde_json::to_value(sent_request)?;
     let mut requested_selector = jsonpath::selector(&requested_json);
@@ -613,7 +595,7 @@ async fn receive_presentation_proposal(
         .ok_or("input descriptor not found")?
         .name;
 
-    let proposal_data_saved = get_presentation(sender, receiver, id, state)?.proposal_attach;
+    let proposal_data_saved = get_presentation_exchange(sender, receiver, id, state)?.proposal_attach;
     let proposal_data_saved_attributes =
         proposal_data_saved.ok_or("Proposal data not saved in db")?;
 

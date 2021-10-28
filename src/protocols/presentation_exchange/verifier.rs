@@ -3,14 +3,19 @@ use crate::{
     get_from_to_from_message,
     protocols::presentation_exchange::datatypes::{PresentationExchangeData, State, UserType},
     protocols::presentation_exchange::presentation_exchange_data::{
-        get_current_state, get_presentation_exchange, save_presentation_exchange, save_state,
+        get_current_state,
+        get_presentation_exchange,
+        save_presentation_exchange,
+        save_state,
     },
     protocols::protocol::{generate_step_output, StepResult},
 };
 
 use super::helper::{
-    get_presentation_exchange_info_from_message, get_presentation_exchange_message,
-    validate_presentation_against_credentials, PresentationExchangeType,
+    get_presentation_exchange_info_from_message,
+    get_presentation_exchange_message,
+    validate_presentation_against_credentials,
+    PresentationExchangeType,
 };
 
 /// Protocol handler for direction: `send`, type: `PRESENTATION_EXCHANGE_PROTOCOL_URI/request-presentation`

@@ -3,7 +3,11 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::datatypes::{
-    CommunicationDidDocument, DidCommPubKey, DidCommService, ExchangeInfo, MessageWithBody,
+    CommunicationDidDocument,
+    DidCommPubKey,
+    DidCommService,
+    ExchangeInfo,
+    MessageWithBody,
 };
 
 pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";

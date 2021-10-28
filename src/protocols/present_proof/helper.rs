@@ -1,6 +1,8 @@
 use crate::datatypes::MessageWithBody;
 use crate::protocols::present_proof::datatypes::{
-    PresentProofReq, PresentationData, PRESENT_PROOF_PROTOCOL_URL,
+    PresentProofReq,
+    PresentationData,
+    PRESENT_PROOF_PROTOCOL_URL,
 };
 use std::collections::HashMap;
 use uuid::Uuid;

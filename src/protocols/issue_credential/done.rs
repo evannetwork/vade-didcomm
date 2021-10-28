@@ -29,6 +29,7 @@ pub fn send_credential_ack(message: &str) -> StepResult {
 
     generate_step_output(&serde_json::to_string(&ack)?, "{}")
 }
+
 /// Protocol handler for direction: `receive`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/ack`
 pub fn receive_credential_ack(message: &str) -> StepResult {
     let parsed_message: Ack = serde_json::from_str(message)?;

@@ -245,7 +245,6 @@ pub struct JsonData {
     // input_descriptors are required only for propose_presentation message
     #[serde(skip_serializing_if = "Option::is_none")]
     pub input_descriptors: Option<Vec<InputDescriptor>>,
-
     // context, type, presentation_submission, verifiable_credential and proof are required
     // only for presentation message
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -38,7 +38,7 @@ serde_derive = "1.0.124"
 serde_json = { version = "1.0.53", features = ["preserve_order", "raw_value"] }
 serde-big-array = "0.3.2"
 uuid = { version = "0.8.2", features = ["v4"] }
-vade = { git = "https://git.slock.it/equs/interop/vade/vade.git", branch = "develop", version = "0.1.0" }
+vade = { git = "ssh://git@git.slock.it/equs/interop/vade/vade.git", branch = "develop", version = "0.1.0" }
 hex = { version = "0.4.3", features = ["serde"] }
 x25519-dalek = "1.1.1"
 

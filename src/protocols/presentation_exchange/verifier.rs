@@ -3,14 +3,19 @@ use crate::{
     get_from_to_from_message,
     protocols::presentation_exchange::datatypes::{PresentationExchangeData, State, UserType},
     protocols::presentation_exchange::presentation_exchange_data::{
-        get_current_state, get_presentation_exchange, save_presentation_exchange, save_state,
+        get_current_state,
+        get_presentation_exchange,
+        save_presentation_exchange,
+        save_state,
     },
     protocols::protocol::{generate_step_output, StepResult},
 };
 
 use super::helper::{
-    get_presentation_exchange_info_from_message, get_presentation_exchange_message,
-    validate_presentation_against_credentials, PresentationExchangeType,
+    get_presentation_exchange_info_from_message,
+    get_presentation_exchange_message,
+    validate_presentation_against_credentials,
+    PresentationExchangeType,
 };
 
 /// Protocol handler for direction: `send`, type: `PRESENTATION_EXCHANGE_PROTOCOL_URI/request-presentation`
@@ -28,7 +33,7 @@ pub fn send_request_presentation(message: &str) -> StepResult {
             .body
             .ok_or("Presentation exchange data not provided.")?,
     )?;
-    let presentation_exchange_data: PresentationExchangeData = serde_json::from_str(&data)?;
+    let presentation_exchange_data: PresentationExchangeData = serde_json::from_str(data)?;
 
     let thid = parsed_message.thid.ok_or("Thread id can't be empty.")?;
 

@@ -130,7 +130,6 @@ pub struct MessageWithBody<T> {
 /// Message format, when a message was encrypted with DIDComm rs.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EncryptedMessage {
-    #[serde(default)]
     pub from: Option<String>,
     pub kid: Option<String>,
     pub to: Option<Vec<String>>,

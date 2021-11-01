@@ -14,7 +14,7 @@ pub struct PresentProofReq {
 }
 
 /// PresentationAttach contains all the fields required for request-presentation and presentation steps.
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PresentationAttach {
     pub r#type: String,
     pub id: String,
@@ -23,18 +23,16 @@ pub struct PresentationAttach {
 }
 
 /// Presentation preview structure is sent by prover to propose alternate presentation.
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PresentationPreview {
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
     pub attribute: Option<Vec<Attribute>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
     pub predicate: Option<Vec<Predicate>>,
 }
 
 /// Attributes structure for PresentationPreview request.
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Attribute {
     pub name: String,
     pub cred_def_id: String,
@@ -44,7 +42,7 @@ pub struct Attribute {
 }
 
 /// Predicate structure for PresentationPreview request.
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Predicate {
     pub name: String,
     pub cred_def_id: String,
@@ -57,13 +55,10 @@ pub struct Predicate {
 pub struct PresentationData {
     pub state: State,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
     pub comment: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
     pub presentation_attach: Option<Vec<PresentationAttach>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
     pub presentation_proposal: Option<PresentationPreview>,
 }
 

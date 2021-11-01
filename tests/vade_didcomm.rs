@@ -1,25 +1,18 @@
+mod common;
+
+use common::get_vade;
 use serde::{Deserialize, Serialize};
 use utilities::keypair::get_keypair_set;
-use vade::Vade;
 use vade_didcomm::{
     datatypes::{
         BaseMessage, DidCommOptions, EncryptedMessage, ExtendedMessage, KeyInformation,
         MessageWithBody, VadeDidCommPluginOutput,
     },
-    VadeDidComm,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct PingBody {
     response_requested: bool,
-}
-
-async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
-    let mut vade = Vade::new();
-    let vade_didcomm = VadeDidComm::new()?;
-    vade.register_plugin(Box::from(vade_didcomm));
-
-    Ok(vade)
 }
 
 fn get_didcomm_options(

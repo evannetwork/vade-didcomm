@@ -1,7 +1,9 @@
 extern crate jsonpath_lib as jsonpath;
 use crate::datatypes::MessageWithBody;
 use crate::protocols::presentation_exchange::datatypes::{
-    PresentationExchangeData, PresentationExchangeInfo, PRESENTATION_EXCHANGE_PROTOCOL_URL,
+    PresentationExchangeData,
+    PresentationExchangeInfo,
+    PRESENTATION_EXCHANGE_PROTOCOL_URL,
 };
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -89,6 +91,7 @@ pub fn get_presentation_exchange_info_from_message(
 /// # Arguments
 /// * `request_presentation` - Presentation request
 /// * `received_presentation` - Received Presentation from Holder
+///
 /// # Returns
 /// * `bool` - returns true if presentation is valid and satisfies constraints otherwise returns false
 pub fn validate_presentation_against_credentials(

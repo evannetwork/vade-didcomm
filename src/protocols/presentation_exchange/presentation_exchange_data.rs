@@ -38,6 +38,7 @@ pub fn save_presentation_exchange(
 /// * `to_did` - to DID as string
 /// * `thid` - thread id
 /// * `state` - state
+///
 /// # Returns
 /// * `presentation_exchange` - presentation_exchange data stored in db.
 pub fn get_presentation_exchange(
@@ -74,12 +75,14 @@ pub fn save_state(
 
     Ok(())
 }
+
 /// Retrieves state of Presentation Exchange protocol for given thid. Entry key will be
 /// presentation_exchange_state_{user_type}_{thid}.
 ///
 /// # Arguments
 /// * `thid` - thread id
 /// * `user_type` - UserType
+///
 /// # Returns
 /// * `state` - State stored in db.
 pub fn get_current_state(

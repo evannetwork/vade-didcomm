@@ -11,11 +11,15 @@ use crate::protocols::{
         datatypes::ISSUE_CREDENTIAL_PROTOCOL_URL,
         done::{receive_credential_ack, send_credential_ack},
         holder::{
-            receive_issue_credential, receive_offer_credential, send_propose_credential,
+            receive_issue_credential,
+            receive_offer_credential,
+            send_propose_credential,
             send_request_credential,
         },
         issuer::{
-            receive_propose_credential, receive_request_credential, send_issue_credential,
+            receive_propose_credential,
+            receive_request_credential,
+            send_issue_credential,
             send_offer_credential,
         },
         problem_report::{receive_problem_report, send_problem_report},

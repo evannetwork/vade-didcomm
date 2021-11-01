@@ -35,6 +35,7 @@ pub fn save_presentation(
 /// * `to_did` - to DID as string
 /// * `thid` - thread id
 /// * `state` - state
+///
 /// # Returns
 /// * `Presentation` - presetation data stored in db.
 #[allow(dead_code)]
@@ -71,12 +72,14 @@ pub fn save_state(
 
     Ok(())
 }
+
 /// Retrieves state of Present_Proof protocol for given thid. Entry key will be
 /// present_proof_state_{thid}.
 ///
 /// # Arguments
 /// * `thid` - thread id
 /// * `user_type` - UserType
+///
 /// # Returns
 /// * `state` - State stored in db.
 pub fn get_current_state(

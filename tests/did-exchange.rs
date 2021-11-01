@@ -1,4 +1,6 @@
-use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
+mod common;
+
+use common::{read_db, get_vade};
 use serial_test::serial;
 use utilities::keypair::get_keypair_set;
 use vade::Vade;
@@ -7,21 +9,9 @@ use vade_didcomm::{
         BaseMessage, CommKeyPair, CommunicationDidDocument, DidCommOptions, EncryptedMessage,
         KeyInformation, MessageWithBody, VadeDidCommPluginOutput,
     },
-    VadeDidComm,
 };
 
-const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
 const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
-
-pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;
-
-    match db.get(key) {
-        Ok(Some(result)) => Ok(String::from_utf8(result)?),
-        Ok(None) => Err(format!("{0} not found", key).into()),
-        Err(e) => Err(format!("Error while loading key: {0}, {1}", key, e).into()),
-    }
-}
 
 pub fn get_com_keypair(
     from_did: &str,
@@ -53,14 +43,6 @@ fn get_didcomm_options(use_shared_key: bool) -> Result<String, Box<dyn std::erro
     }
 
     Ok(serde_json::to_string(&options)?)
-}
-
-async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
-    let mut vade = Vade::new();
-    let vade_didcomm = VadeDidComm::new()?;
-    vade.register_plugin(Box::from(vade_didcomm));
-
-    Ok(vade)
 }
 
 async fn send_request(

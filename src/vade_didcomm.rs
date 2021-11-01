@@ -226,9 +226,10 @@ impl VadePlugin for VadeDidComm {
                     encryption_others_public: target_pub_key,
                 };
             }
-            let signing_keys = options_parsed
+            let signing_others_public = options_parsed
                 .signing_keys
-                .ok_or("No signing keys provided")?;
+                .map(|keys| keys.signing_others_public)
+                .flatten();
             decrypted = decrypt_message(
                 message,
                 Some(&decryption_keys.encryption_my_secret),
@@ -236,7 +237,7 @@ impl VadePlugin for VadeDidComm {
                     .encryption_others_public
                     .as_ref()
                     .map(|v| &v[..]),
-                signing_keys.signing_others_public.as_ref().map(|v| &v[..]),
+                signing_others_public.as_ref().map(|v| &v[..]),
             )?;
         } else {
             decrypted = String::from(message);

@@ -1,6 +1,6 @@
+use std::{collections::HashMap, fmt};
+
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fmt;
 
 pub const PRESENTATION_EXCHANGE_PROTOCOL_URL: &str =
     "https://identity.foundation/presentation-exchange/spec/v1.0.0";

@@ -186,7 +186,7 @@ mod tests {
 
         let decryped_parsed: MessageWithBody<TestBody> = serde_json::from_str(&decrypted)?;
 
-        assert_eq!(decryped_parsed.body.ok_or("body not available")?.test, true);
+        assert!(decryped_parsed.body.ok_or("body not available")?.test);
 
         Ok(())
     }

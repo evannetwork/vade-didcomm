@@ -85,13 +85,12 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
                 parsed.message.r#type,
             );
             // ensure that send processor was executed
-            assert_eq!(
+            assert!(
                 parsed
                     .message
                     .body
                     .ok_or("no body filled")?
-                    .response_requested,
-                true
+                    .response_requested
             );
         }
         _ => {
@@ -231,7 +230,7 @@ async fn can_be_used_to_skip_protocol_handling_and_just_decrypt_data(
             let receive_result_object: VadeDidCommPluginOutput<
                 MessageWithBody<HashMap<String, String>>,
                 serde_json::Value,
-            > = serde_json::from_str(&receive_result_string)?;
+            > = serde_json::from_str(receive_result_string)?;
             assert_eq!(
                 "https://didcomm.org/type_does_not_matter_as_protocol_handling_is_skipped",
                 receive_result_object.message.r#type,

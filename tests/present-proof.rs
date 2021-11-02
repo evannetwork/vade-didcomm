@@ -106,7 +106,7 @@ async fn receive_request_presentation(
     let request_presentation = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
     let attached_req = request_presentation
         .presentation_attach
@@ -192,7 +192,7 @@ async fn receive_presentation(
     let received_presentation = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
     let state = received_presentation.state;
     let attached_presentation = received_presentation
@@ -297,7 +297,7 @@ async fn receive_presentation_proposal(
     let received_proposal = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
     let state = received_proposal.state;
 
@@ -649,8 +649,7 @@ async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
 #[serial]
 async fn will_panic_and_fail_to_process_wrong_state() {
     let result = send_wrong_ack_state().await;
-    match result {
-        Err(e) => panic!("Error : {:?}", e),
-        _ => {}
+    if let Err(e) = result {
+        panic!("Error : {:?}", e)
     }
 }

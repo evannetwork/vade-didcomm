@@ -11,7 +11,7 @@ use utilities::keypair::get_keypair_set;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{EncryptedMessage, MessageWithBody, VadeDidCommPluginOutput},
+    datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::presentation_exchange::datatypes::{
         Attachment,
         Constraints,
@@ -46,7 +46,7 @@ pub fn get_presentation_exchange(
         from_did, to_did, state, thid
     ))?;
     let presentation_data: PresentationExchangeData = serde_json::from_str(&presentation)?;
-    return Ok(presentation_data);
+    Ok(presentation_data)
 }
 
 async fn send_request_presentation(
@@ -178,7 +178,7 @@ async fn send_request_presentation(
 
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_request_presentation(
@@ -189,7 +189,7 @@ async fn receive_request_presentation(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -201,7 +201,7 @@ async fn receive_request_presentation(
     let request_presentation = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
     let attached_req = request_presentation
         .request_presentation_attach
@@ -242,7 +242,7 @@ async fn receive_request_presentation(
 
     assert_eq!(presentation_data, presentation_data_saved);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_presentation(
@@ -367,7 +367,7 @@ async fn send_presentation(
         &serde_json::to_string(&presentation_data)?,
         id
     );
-    let results = vade.didcomm_send(&options, &exchange_response).await?;
+    let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -375,7 +375,7 @@ async fn send_presentation(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_presentation(
@@ -386,7 +386,7 @@ async fn receive_presentation(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -399,7 +399,7 @@ async fn receive_presentation(
     let received_presentation = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
     let state = received_presentation.state;
     let attached_presentation = received_presentation
@@ -464,7 +464,7 @@ async fn receive_presentation(
 
     assert_eq!(passport_dob.cmp(&minimum_date), Ordering::Greater);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_presentation_proposal(
@@ -567,7 +567,7 @@ async fn send_presentation_proposal(
         &serde_json::to_string(&presentation_data)?,
         id
     );
-    let results = vade.didcomm_send(&options, &exchange_response).await?;
+    let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -575,7 +575,7 @@ async fn send_presentation_proposal(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_presentation_proposal(
@@ -586,7 +586,7 @@ async fn receive_presentation_proposal(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -599,7 +599,7 @@ async fn receive_presentation_proposal(
     let received_proposal = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
     let state = received_proposal.state;
 
@@ -637,7 +637,7 @@ async fn receive_presentation_proposal(
         .name;
 
     assert_eq!(attribute_data, attribute_data_saved);
-    return Ok(());
+    Ok(())
 }
 
 #[tokio::test]

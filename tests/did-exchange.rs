@@ -285,7 +285,7 @@ async fn can_do_key_exchange_pregenerated_keys() -> Result<(), Box<dyn std::erro
     let test_setup = get_keypair_set();
     let mut options_object: DidExchangeOptions =
         serde_json::from_str(&test_setup.sender_options_stringified)?;
-    options_object.did_exchange_my_secret = Some(sender_secret_key.clone());
+    options_object.did_exchange_my_secret = Some(sender_secret_key);
     let options_string = serde_json::to_string(&options_object)?;
     let request_message = send_request(
         &mut vade,
@@ -297,7 +297,7 @@ async fn can_do_key_exchange_pregenerated_keys() -> Result<(), Box<dyn std::erro
 
     let mut options_object: DidExchangeOptions =
         serde_json::from_str(&test_setup.receiver_options_stringified)?;
-    options_object.did_exchange_my_secret = Some(receiver_secret_key.clone());
+    options_object.did_exchange_my_secret = Some(receiver_secret_key);
     let options_string = serde_json::to_string(&options_object)?;
     receive_request(&mut vade, request_message, &options_string).await?;
 

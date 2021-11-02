@@ -116,7 +116,7 @@ async fn receive_propose_credential(
     let propose_credential = received
         .message
         .body
-        .ok_or("send DIDComm request does not return propose credential".to_owned())?;
+        .ok_or_else(|| "send DIDComm request does not return propose credential".to_string())?;
 
     let attached_req = propose_credential
         .credential_proposal
@@ -206,10 +206,9 @@ async fn receive_offer_credential(
     let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
-    let received_offer = received
-        .message
-        .body
-        .ok_or("send DIDComm request does not return offer credential request".to_owned())?;
+    let received_offer = received.message.body.ok_or_else(|| {
+        "send DIDComm request does not return offer credential request".to_string()
+    })?;
 
     let state = received_offer.state;
     let attached_data = received_offer
@@ -296,10 +295,9 @@ async fn receive_request_credential(
     let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
-    let received_proposal = received
-        .message
-        .body
-        .ok_or("send DIDComm request does not return request credential request".to_owned())?;
+    let received_proposal = received.message.body.ok_or_else(|| {
+        "send DIDComm request does not return request credential request".to_string()
+    })?;
 
     let state = received_proposal.state;
 
@@ -386,10 +384,9 @@ async fn receive_issue_credential(
     let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
-    let received_proposal = received
-        .message
-        .body
-        .ok_or("send DIDComm request does not return issue credential request".to_owned())?;
+    let received_proposal = received.message.body.ok_or_else(|| {
+        "send DIDComm request does not return issue credential request".to_string()
+    })?;
 
     let state = received_proposal.state;
 
@@ -726,8 +723,7 @@ async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
 #[serial]
 async fn will_panic_and_fail_to_process_wrong_state() {
     let result = send_wrong_ack_state().await;
-    match result {
-        Err(e) => panic!("Error : {:?}", e),
-        _ => {}
+    if let Err(e) = result {
+        panic!("Error : {:?}", e)
     }
 }

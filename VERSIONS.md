@@ -12,6 +12,10 @@
 
 ### Deprecations
 
+## v0.0.2
+### Fixes
+- added git urls as dependencies
+
 ## Initial Version
 
 - add initial project setup

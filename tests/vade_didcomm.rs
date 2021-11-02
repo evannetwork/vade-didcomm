@@ -1,30 +1,21 @@
+mod common;
+
 use std::collections::HashMap;
 
+use common::get_vade;
 use didcomm_rs::Jwe;
 use serde::{Deserialize, Serialize};
 use utilities::keypair::get_keypair_set;
-use vade::Vade;
-use vade_didcomm::{
-    datatypes::{
-        BaseMessage,
-        DidCommOptions,
-        ExtendedMessage,
-        MessageWithBody,
-        VadeDidCommPluginOutput,
-    },
-    VadeDidComm,
+use vade_didcomm::datatypes::{
+    BaseMessage,
+    DidCommOptions,
+    ExtendedMessage,
+    MessageWithBody,
+    VadeDidCommPluginOutput,
 };
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct PingBody {
     response_requested: bool,
-}
-
-async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
-    let mut vade = Vade::new();
-    let vade_didcomm = VadeDidComm::new()?;
-    vade.register_plugin(Box::from(vade_didcomm));
-
-    Ok(vade)
 }
 
 #[tokio::test]
@@ -153,6 +144,7 @@ async fn should_fill_empty_id_and_created_time() -> Result<(), Box<dyn std::erro
         "from": "did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp",
         "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ]
     }"#;
+
     let results = vade
         .didcomm_receive(&sign_keypair.receiver_options_stringified, payload)
         .await?;

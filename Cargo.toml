@@ -1,6 +1,6 @@
 [package]
 name = "vade-didcomm"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["BlockchainsInc"]
 edition = "2018"
 description = "DIDComm communication helper for vade"
@@ -28,6 +28,7 @@ ed25519-dalek = "1.0.1"
 env_logger = "0.7.1"
 futures = "0.3.13"
 getrandom = { version = "0.2.3" }
+jsonpath_lib = "0.3.0"
 k256 = "0.7.2"
 log = "0.4.8"
 rand = "0.8.3"
@@ -51,7 +52,7 @@ utilities = { path = "./utilities" }
 [dev-dependencies.cargo-husky]
 version = "1"
 default-features = false
-features = ["prepush-hook", "run-cargo-test", "run-cargo-clippy"]
+features = ["user-hooks"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rocksdb = "0.16.0"

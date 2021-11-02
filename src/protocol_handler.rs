@@ -5,6 +5,7 @@ use crate::{
         issue_credential::generate_issue_credential_protocol,
         pingpong::generate_ping_pong_protocol,
         present_proof::generate_present_proof_protocol,
+        presentation_exchange::generate_presentation_exchange_protocol,
         protocol::Protocol,
     },
 };
@@ -54,11 +55,12 @@ fn handle_protocol(
     let parsed_message: MessageWithType = serde_json::from_str(message)?;
     let m_type = parsed_message.r#type;
     // handle multiple protocols dynamically
-    let protocols: [&Protocol; 4] = [
+    let protocols: [&Protocol; 5] = [
         &generate_did_exchange_protocol(),
         &generate_ping_pong_protocol(),
         &generate_present_proof_protocol(),
         &generate_issue_credential_protocol(),
+        &generate_presentation_exchange_protocol(),
     ];
     // protocol results
     let mut protocol_name: String = String::from("unknown");

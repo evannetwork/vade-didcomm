@@ -15,7 +15,7 @@ pub struct IssuerCredentialReq {
 
 /// CredentialAttach struct contains common fields which are required by
 /// offer-credential/request-credential/issue-credential messages for attachment.
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CredentialAttach {
     pub id: String,
     pub mime_type: String,
@@ -23,7 +23,7 @@ pub struct CredentialAttach {
 }
 
 /// CredentialProposal struct contains fields required by propose-credential message.
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CredentialProposal {
     pub id: String,
     pub comment: String,
@@ -36,7 +36,7 @@ pub struct CredentialProposal {
 }
 
 /// Attribute struct is required for Credential Preview.
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Attribute {
     pub name: String,
     pub mime_type: String,
@@ -44,7 +44,7 @@ pub struct Attribute {
 }
 
 /// CredentialPreview struct contains fields required for offer-credential and propose-credential message.
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CredentialPreview {
     pub r#type: String,
     pub attributes: Vec<Attribute>,
@@ -56,17 +56,13 @@ pub struct CredentialPreview {
 pub struct CredentialData {
     pub state: State,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
     // credential_preview is sent only with offer-credential, propose-credential
     pub credential_preview: Option<CredentialPreview>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
     pub comment: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
     pub data_attach: Option<Vec<CredentialAttach>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
     pub credential_proposal: Option<CredentialProposal>,
 }
 

@@ -1,6 +1,7 @@
-use data_encoding::BASE64;
+mod common;
+
+use common::{get_vade, read_db};
 use didcomm_rs::Jwe;
-use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 use serial_test::serial;
 use utilities::keypair::get_keypair_set;
 use vade::Vade;
@@ -9,41 +10,21 @@ use vade_didcomm::{
         Base64Container,
         BaseMessage,
         CommKeyPair,
-        CommunicationDidDocument,
         DidDocumentBodyAttachment,
         MessageWithBody,
         VadeDidCommPluginOutput,
     },
     protocols::did_exchange::DidExchangeOptions,
-    VadeDidComm,
 };
 
 const DID_SERVICE_ENDPOINT: &str = "https://evan.network";
-const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
 const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
-
-pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;
-
-    match db.get(key) {
-        Ok(Some(result)) => Ok(String::from_utf8(result)?),
-        Ok(None) => Err(format!("{0} not found", key).into()),
-        Err(e) => Err(format!("Error while loading key: {0}, {1}", key, e).into()),
-    }
-}
 
 pub fn get_com_keypair(key_agreement_did: &str) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
     let db_result = read_db(&format!("key_agreement_key_{}", key_agreement_did))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
     Ok(comm_keypair)
-}
-
-async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
-    let mut vade = Vade::new();
-    let vade_didcomm = VadeDidComm::new()?;
-    vade.register_plugin(Box::from(vade_didcomm));
-    Ok(vade)
 }
 
 async fn send_request(
@@ -242,22 +223,6 @@ async fn receive_complete(
     );
 
     Ok(())
-}
-
-pub fn get_did_document_from_body(
-    message: &MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
-) -> Result<CommunicationDidDocument, Box<dyn std::error::Error>> {
-    let did_document_base64_encoded_string = &message
-        .body
-        .as_ref()
-        .ok_or("body is a required field for DID exchange messages")?
-        .did_doc_attach
-        .base64;
-    let did_document_base64_encoded_bytes = did_document_base64_encoded_string.as_bytes();
-    let did_document_bytes = BASE64.decode(did_document_base64_encoded_bytes)?;
-    let did_document_string = std::str::from_utf8(&did_document_bytes)?;
-    let did_document: CommunicationDidDocument = serde_json::from_str(did_document_string)?;
-    Ok(did_document)
 }
 
 #[tokio::test]

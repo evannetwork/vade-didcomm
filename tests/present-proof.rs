@@ -1,5 +1,7 @@
+mod common;
+
+use common::{get_vade, read_db};
 use didcomm_rs::Jwe;
-use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 use serial_test::serial;
 use utilities::keypair::get_keypair_set;
 use uuid::Uuid;
@@ -18,20 +20,7 @@ use vade_didcomm::{
         UserType,
         PRESENT_PROOF_PROTOCOL_URL,
     },
-    VadeDidComm,
 };
-
-const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
-
-pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;
-
-    match db.get(key) {
-        Ok(Some(result)) => Ok(String::from_utf8(result)?),
-        Ok(None) => Err(format!("{0} not found", key).into()),
-        Err(e) => Err(format!("Error while loading key: {0}, {1}", key, e).into()),
-    }
-}
 
 pub fn get_presentation(
     from_did: &str,
@@ -45,14 +34,6 @@ pub fn get_presentation(
     ))?;
     let presentation_data: PresentationData = serde_json::from_str(&presentation)?;
     Ok(presentation_data)
-}
-
-async fn get_vade() -> Result<Vade, Box<dyn std::error::Error>> {
-    let mut vade = Vade::new();
-    let vade_didcomm = VadeDidComm::new()?;
-    vade.register_plugin(Box::from(vade_didcomm));
-
-    Ok(vade)
 }
 
 async fn send_request_presentation(
@@ -483,7 +464,8 @@ async fn receive_problem_report(
 
 #[tokio::test]
 #[serial]
-async fn can_do_presentation_exchange() -> Result<(), Box<dyn std::error::Error>> {
+async fn can_do_presentation_exchange_for_present_proof() -> Result<(), Box<dyn std::error::Error>>
+{
     let mut vade = get_vade().await?;
     let test_setup = get_keypair_set();
     let id = Uuid::new_v4().to_simple().to_string();
@@ -547,7 +529,7 @@ async fn can_do_presentation_exchange() -> Result<(), Box<dyn std::error::Error>
 
 #[tokio::test]
 #[serial]
-async fn can_do_proposal_exchange() -> Result<(), Box<dyn std::error::Error>> {
+async fn can_do_proposal_exchange_for_present_proof() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let test_setup = get_keypair_set();
     let id = Uuid::new_v4().to_simple().to_string();

@@ -13,6 +13,7 @@ use crate::{
 
 /// Specifies all possible message directions.
 #[derive(PartialEq)]
+// allow because of standard naming convention
 #[allow(clippy::enum_variant_names)]
 pub enum IssueCredentialType {
     ProposeCredential,

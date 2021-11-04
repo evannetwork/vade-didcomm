@@ -2,8 +2,10 @@ use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
 use vade::Vade;
 use vade_didcomm::VadeDidComm;
 
+#[allow(dead_code)] // usage depends on integration test, so prevent false positives on unused code
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
 
+#[allow(dead_code)] // usage depends on integration test, so prevent false positives on unused code
 pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
     let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;
 

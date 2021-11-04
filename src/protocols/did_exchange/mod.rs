@@ -3,6 +3,8 @@ pub(crate) mod helper;
 pub(crate) mod request;
 pub(crate) mod response;
 
+use helper::DID_EXCHANGE_PROTOCOL_URL;
+
 use crate::protocols::{
     did_exchange::{
         complete::{receive_complete, send_complete},
@@ -11,13 +13,12 @@ use crate::protocols::{
     },
     protocol::{generate_receive_step, generate_send_step, Protocol},
 };
-use helper::DID_EXCHANGE_PROTOCOL_URL;
 
 /// Creates a new did_exchange protocol and maps the specific step handler functions.
 ///
 /// # Returns
 /// * `Protocol` - the new DID exchange protocol handler
-pub fn generate_did_exchange_protocol() -> Protocol {
+pub(crate) fn generate_did_exchange_protocol() -> Protocol {
     Protocol {
         name: String::from(DID_EXCHANGE_PROTOCOL_URL),
         steps: vec![
@@ -30,3 +31,5 @@ pub fn generate_did_exchange_protocol() -> Protocol {
         ],
     }
 }
+
+pub use helper::DidExchangeOptions;

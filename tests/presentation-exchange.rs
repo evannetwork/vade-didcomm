@@ -2,17 +2,35 @@ mod common;
 
 extern crate jsonpath_lib as jsonpath;
 
-use common::{read_db, get_vade};
-use serial_test::serial;
 use std::cmp::Ordering;
+
+use common::{get_vade, read_db};
+use didcomm_rs::Jwe;
+use serial_test::serial;
+use utilities::keypair::get_keypair_set;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{EncryptedMessage, MessageWithBody, VadeDidCommPluginOutput},
+    datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::presentation_exchange::datatypes::{
-        Attachment, Constraints, CredentialSubject, Data, DescriptorMap, Field, Format,
-        InputDescriptor, JsonData, Options, PresentationDefinition, PresentationExchangeData,
-        PresentationSubmission, Proof, ProofType, Schema, State, VerifiableCredential,
+        Attachment,
+        Constraints,
+        CredentialSubject,
+        Data,
+        DescriptorMap,
+        Field,
+        Format,
+        InputDescriptor,
+        JsonData,
+        Options,
+        PresentationDefinition,
+        PresentationExchangeData,
+        PresentationSubmission,
+        Proof,
+        ProofType,
+        Schema,
+        State,
+        VerifiableCredential,
         PRESENTATION_EXCHANGE_PROTOCOL_URL,
     },
 };
@@ -28,7 +46,7 @@ pub fn get_presentation_exchange(
         from_did, to_did, state, thid
     ))?;
     let presentation_data: PresentationExchangeData = serde_json::from_str(&presentation)?;
-    return Ok(presentation_data);
+    Ok(presentation_data)
 }
 
 async fn send_request_presentation(
@@ -81,13 +99,15 @@ async fn send_request_presentation(
                                     id: Some("Some_field_id".to_string()),
                                     purpose: None,
                                     predicate: None,
-                                    filter: Some([
-                                        ("type".to_string(), "date".to_string()),
-                                        ("minimum".to_string(), "1978-05-16".to_string()),
-                                    ]
-                                    .iter()
-                                    .cloned()
-                                    .collect()),
+                                    filter: Some(
+                                        [
+                                            ("type".to_string(), "date".to_string()),
+                                            ("minimum".to_string(), "1978-05-16".to_string()),
+                                        ]
+                                        .iter()
+                                        .cloned()
+                                        .collect(),
+                                    ),
                                 }]
                                 .to_vec(),
                                 limit_disclosure: None,
@@ -156,9 +176,9 @@ async fn send_request_presentation(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_request_presentation(
@@ -169,7 +189,7 @@ async fn receive_request_presentation(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -181,7 +201,7 @@ async fn receive_request_presentation(
     let request_presentation = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
     let attached_req = request_presentation
         .request_presentation_attach
@@ -200,7 +220,8 @@ async fn receive_request_presentation(
         .ok_or("input descriptor not found")?
         .name;
 
-    let req_data_saved = get_presentation_exchange(sender, receiver, id, request_presentation.state)?;
+    let req_data_saved =
+        get_presentation_exchange(sender, receiver, id, request_presentation.state)?;
 
     let attached_req_saved = req_data_saved
         .request_presentation_attach
@@ -221,7 +242,7 @@ async fn receive_request_presentation(
 
     assert_eq!(presentation_data, presentation_data_saved);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_presentation(
@@ -346,15 +367,15 @@ async fn send_presentation(
         &serde_json::to_string(&presentation_data)?,
         id
     );
-    let results = vade.didcomm_send(&options, &exchange_response).await?;
+    let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_presentation(
@@ -365,7 +386,7 @@ async fn receive_presentation(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -378,7 +399,7 @@ async fn receive_presentation(
     let received_presentation = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
     let state = received_presentation.state;
     let attached_presentation = received_presentation
@@ -418,7 +439,8 @@ async fn receive_presentation(
 
     assert_eq!(data, data_saved);
 
-    let sent_request = get_presentation_exchange(receiver, sender, id, State::SendPresentationRequest)?;
+    let sent_request =
+        get_presentation_exchange(receiver, sender, id, State::SendPresentationRequest)?;
 
     let requested_json = serde_json::to_value(sent_request)?;
     let mut requested_selector = jsonpath::selector(&requested_json);
@@ -442,7 +464,7 @@ async fn receive_presentation(
 
     assert_eq!(passport_dob.cmp(&minimum_date), Ordering::Greater);
 
-    return Ok(());
+    Ok(())
 }
 
 async fn send_presentation_proposal(
@@ -494,13 +516,15 @@ async fn send_presentation_proposal(
                                     id: Some("Some_field_id".to_string()),
                                     purpose: None,
                                     predicate: None,
-                                    filter: Some([
-                                        ("type".to_string(), "date".to_string()),
-                                        ("minimum".to_string(), "1999-5-16".to_string()),
-                                    ]
-                                    .iter()
-                                    .cloned()
-                                    .collect()),
+                                    filter: Some(
+                                        [
+                                            ("type".to_string(), "date".to_string()),
+                                            ("minimum".to_string(), "1999-5-16".to_string()),
+                                        ]
+                                        .iter()
+                                        .cloned()
+                                        .collect(),
+                                    ),
                                 }]
                                 .to_vec(),
                                 limit_disclosure: None,
@@ -543,15 +567,15 @@ async fn send_presentation_proposal(
         &serde_json::to_string(&presentation_data)?,
         id
     );
-    let results = vade.didcomm_send(&options, &exchange_response).await?;
+    let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
-    return Ok(serde_json::to_string(&prepared.message)?);
+    Ok(serde_json::to_string(&prepared.message)?)
 }
 
 async fn receive_presentation_proposal(
@@ -562,7 +586,7 @@ async fn receive_presentation_proposal(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive(&options, &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -575,7 +599,7 @@ async fn receive_presentation_proposal(
     let received_proposal = received
         .message
         .body
-        .ok_or("send DIDComm request does not return presentation request".to_owned())?;
+        .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
     let state = received_proposal.state;
 
@@ -595,7 +619,8 @@ async fn receive_presentation_proposal(
         .ok_or("input descriptor not found")?
         .name;
 
-    let proposal_data_saved = get_presentation_exchange(sender, receiver, id, state)?.proposal_attach;
+    let proposal_data_saved =
+        get_presentation_exchange(sender, receiver, id, state)?.proposal_attach;
     let proposal_data_saved_attributes =
         proposal_data_saved.ok_or("Proposal data not saved in db")?;
 
@@ -612,38 +637,49 @@ async fn receive_presentation_proposal(
         .name;
 
     assert_eq!(attribute_data, attribute_data_saved);
-    return Ok(());
+    Ok(())
 }
 
 #[tokio::test]
 #[serial]
-async fn can_do_presentation_exchange() -> Result<(), Box<dyn std::error::Error>> {
+async fn can_do_presentation_exchange_for_presentation_exchange(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:uknow:d34db33d");
-    let user_2_did = String::from("did:uknow:d34db33f");
-    let options = String::from("{}");
+    let test_setup = get_keypair_set();
     let id = Uuid::new_v4().to_simple().to_string();
 
-    let request_message =
-        send_request_presentation(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    let request_message = send_request_presentation(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     receive_request_presentation(
         &mut vade,
-        &user_1_did,
-        &user_2_did,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
         request_message,
-        &options,
+        &test_setup.receiver_options_stringified,
         &id,
     )
     .await?;
 
-    let response_message =
-        send_presentation(&mut vade, &user_2_did, &user_1_did, &options, &id).await?;
+    let response_message = send_presentation(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     receive_presentation(
         &mut vade,
-        &user_2_did,
-        &user_1_did,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
         response_message,
-        &options,
+        &test_setup.receiver_options_stringified,
         &id,
     )
     .await?;
@@ -652,33 +688,44 @@ async fn can_do_presentation_exchange() -> Result<(), Box<dyn std::error::Error>
 
 #[tokio::test]
 #[serial]
-async fn can_do_proposal_exchange() -> Result<(), Box<dyn std::error::Error>> {
+async fn can_do_proposal_exchange_for_presentation_exchange(
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:uknow:d34db33d");
-    let user_2_did = String::from("did:uknow:d34db33f");
-    let options = String::from("{}");
+    let test_setup = get_keypair_set();
     let id = Uuid::new_v4().to_simple().to_string();
 
-    let request_message =
-        send_request_presentation(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    let request_message = send_request_presentation(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     receive_request_presentation(
         &mut vade,
-        &user_1_did,
-        &user_2_did,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
         request_message,
-        &options,
+        &test_setup.receiver_options_stringified,
         &id,
     )
     .await?;
 
-    let response_message =
-        send_presentation_proposal(&mut vade, &user_2_did, &user_1_did, &options, &id).await?;
+    let response_message = send_presentation_proposal(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     receive_presentation_proposal(
         &mut vade,
-        &user_2_did,
-        &user_1_did,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
         response_message,
-        &options,
+        &test_setup.receiver_options_stringified,
         &id,
     )
     .await?;

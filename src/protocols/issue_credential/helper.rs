@@ -1,11 +1,15 @@
-use crate::datatypes::MessageWithBody;
-use crate::protocols::issue_credential::datatypes::{
-    CredentialData,
-    IssuerCredentialReq,
-    ISSUE_CREDENTIAL_PROTOCOL_URL,
-};
 use std::collections::HashMap;
+
 use uuid::Uuid;
+
+use crate::{
+    datatypes::MessageWithBody,
+    protocols::issue_credential::datatypes::{
+        CredentialData,
+        IssuerCredentialReq,
+        ISSUE_CREDENTIAL_PROTOCOL_URL,
+    },
+};
 
 /// Specifies all possible message directions.
 #[derive(PartialEq)]

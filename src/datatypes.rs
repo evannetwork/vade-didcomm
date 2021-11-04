@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+
+use crate::utils::hex_option;
 
 /// Struct for a pub key that will be sent during DID exchange with the users communication DID document.
 #[derive(Serialize, Deserialize)]
@@ -48,6 +51,7 @@ pub struct FromTo {
 pub struct ExchangeInfo {
     pub from: String,
     pub to: String,
+    pub did_id: String,
     pub pub_key_hex: String,
     pub service_endpoint: String,
 }
@@ -59,6 +63,8 @@ pub struct ExchangeInfo {
 pub struct CommKeyPair {
     pub pub_key: String,
     pub secret_key: String,
+    pub key_agreement_key: String,
+    pub target_key_agreement_key: String,
     pub target_pub_key: String,
     pub target_service_endpoint: String,
 }
@@ -111,6 +117,19 @@ pub struct ExtendedMessage {
     pub other: HashMap<String, String>,
 }
 
+/// Object with base64 encoded value
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Base64Container {
+    pub base64: String,
+}
+
+/// `did_doc~attach` attachment for body field
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DidDocumentBodyAttachment<T> {
+    #[serde(rename(serialize = "did_doc~attach", deserialize = "did_doc~attach"))]
+    pub did_doc_attach: T,
+}
+
 /// Decrypted messaged with dynamic body struct
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MessageWithBody<T> {
@@ -143,32 +162,44 @@ pub struct EncryptedMessage {
 
 /// Either a computed shared secret or a (local) private key plus a contacts public key
 #[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", untagged)]
-pub enum KeyInformation {
-    #[serde(rename_all = "camelCase")]
-    SharedSecret {
-        #[serde(with = "hex")]
-        shared_secret: [u8; 32],
-    },
-    #[serde(rename_all = "camelCase")]
-    SecretPublic {
-        #[serde(with = "hex")]
-        my_secret: [u8; 32],
-        #[serde(with = "hex")]
-        others_public: [u8; 32],
-    },
+#[serde(rename_all = "camelCase")]
+pub struct EncryptionKeys {
+    #[serde(with = "hex")]
+    pub encryption_my_secret: [u8; 32],
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(with = "hex_option")]
+    pub encryption_others_public: Option<[u8; 32]>,
+}
+
+/// Either a computed shared secret or a (local) private key plus a contacts public key
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SigningKeys {
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(with = "hex_option")]
+    pub signing_my_secret: Option<[u8; 32]>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(with = "hex_option")]
+    pub signing_others_public: Option<[u8; 32]>,
 }
 
 /// Optional parameter that can be passed to vade DIDComm functions to enforce a specific encryption key
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DidCommOptions {
-    pub key_information: Option<KeyInformation>,
+    pub encryption_keys: Option<EncryptionKeys>,
+    pub signing_keys: Option<SigningKeys>,
+    pub skip_protocol_handling: Option<bool>,
 }
 
 /// Output of didcomm_send or didcomm_receive.
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct VadeDidCommPluginOutput<T> {
+#[serde(rename_all = "camelCase")]
+pub struct VadeDidCommPluginOutput<T, TRaw = serde_json::Value> {
     pub message: T,
+    pub message_raw: TRaw,
     pub metadata: HashMap<String, String>,
 }

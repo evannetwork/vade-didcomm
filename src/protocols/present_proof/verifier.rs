@@ -1,26 +1,29 @@
-use crate::{
-    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
-    get_from_to_from_message,
-    protocols::present_proof::datatypes::{PresentationData, State, UserType},
-    protocols::present_proof::presentation::{get_current_state, save_presentation, save_state},
-    protocols::protocol::{generate_step_output, StepResult},
-};
-
 use super::helper::{
     get_present_proof_info_from_message,
     get_present_proof_message,
     PresentProofType,
 };
+use crate::{
+    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
+    get_from_to_from_message,
+    protocols::{
+        present_proof::{
+            datatypes::{PresentationData, State, UserType},
+            presentation::{get_current_state, save_presentation, save_state},
+        },
+        protocol::{generate_step_output, StepResult},
+    },
+};
 
 /// Protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/request-presentation`
-pub fn send_request_presentation(message: &str) -> StepResult {
+pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from,
         r#type: parsed_message.r#type,
         to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),
     };
-    let exchange_info = get_from_to_from_message(base_message)?;
+    let exchange_info = get_from_to_from_message(&base_message)?;
 
     let data = &serde_json::to_string(
         &parsed_message
@@ -73,7 +76,7 @@ pub fn send_request_presentation(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/presentation`
-pub fn receive_presentation(message: &str) -> StepResult {
+pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<PresentationData> = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from.clone(),
@@ -90,7 +93,7 @@ pub fn receive_presentation(message: &str) -> StepResult {
         .thid
         .to_owned()
         .ok_or("Thread id can't be empty")?;
-    let base_info = get_from_to_from_message(base_message)?;
+    let base_info = get_from_to_from_message(&base_message)?;
 
     let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
 
@@ -128,7 +131,7 @@ pub fn receive_presentation(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/propose-presentation`
-pub fn receive_propose_presentation(message: &str) -> StepResult {
+pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<PresentationData> = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from.clone(),
@@ -142,7 +145,7 @@ pub fn receive_propose_presentation(message: &str) -> StepResult {
         ),
     };
 
-    let base_info = get_from_to_from_message(base_message)?;
+    let base_info = get_from_to_from_message(&base_message)?;
     let thid = parsed_message
         .thid
         .to_owned()

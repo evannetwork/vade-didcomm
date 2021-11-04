@@ -1,14 +1,24 @@
 mod common;
 
-use common::{read_db, get_vade};
+use common::{get_vade, read_db};
+use didcomm_rs::Jwe;
 use serial_test::serial;
+use utilities::keypair::get_keypair_set;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{EncryptedMessage, MessageWithBody, VadeDidCommPluginOutput},
+    datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::issue_credential::datatypes::{
-        Ack, Attribute, CredentialAttach, CredentialData, CredentialPreview, CredentialProposal,
-        ProblemReport, State, UserType, ISSUE_CREDENTIAL_PROTOCOL_URL,
+        Ack,
+        Attribute,
+        CredentialAttach,
+        CredentialData,
+        CredentialPreview,
+        CredentialProposal,
+        ProblemReport,
+        State,
+        UserType,
+        ISSUE_CREDENTIAL_PROTOCOL_URL,
     },
 };
 
@@ -81,7 +91,7 @@ async fn send_propose_credential(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -106,7 +116,7 @@ async fn receive_propose_credential(
     let propose_credential = received
         .message
         .body
-        .ok_or("send DIDComm request does not return propose credential".to_owned())?;
+        .ok_or_else(|| "send DIDComm request does not return propose credential".to_string())?;
 
     let attached_req = propose_credential
         .credential_proposal
@@ -173,7 +183,7 @@ async fn send_offer_credential(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -196,10 +206,9 @@ async fn receive_offer_credential(
     let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
-    let received_offer = received
-        .message
-        .body
-        .ok_or("send DIDComm request does not return offer credential request".to_owned())?;
+    let received_offer = received.message.body.ok_or_else(|| {
+        "send DIDComm request does not return offer credential request".to_string()
+    })?;
 
     let state = received_offer.state;
     let attached_data = received_offer
@@ -263,7 +272,7 @@ async fn send_request_credential(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -286,10 +295,9 @@ async fn receive_request_credential(
     let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
-    let received_proposal = received
-        .message
-        .body
-        .ok_or("send DIDComm request does not return request credential request".to_owned())?;
+    let received_proposal = received.message.body.ok_or_else(|| {
+        "send DIDComm request does not return request credential request".to_string()
+    })?;
 
     let state = received_proposal.state;
 
@@ -353,7 +361,7 @@ async fn send_issue_credential(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -376,10 +384,9 @@ async fn receive_issue_credential(
     let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
-    let received_proposal = received
-        .message
-        .body
-        .ok_or("send DIDComm request does not return issue credential request".to_owned())?;
+    let received_proposal = received.message.body.ok_or_else(|| {
+        "send DIDComm request does not return issue credential request".to_string()
+    })?;
 
     let state = received_proposal.state;
 
@@ -404,6 +411,7 @@ async fn send_ack(
     vade: &mut Vade,
     sender: &str,
     receiver: &str,
+    options: &str,
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let ack = Ack {
@@ -430,13 +438,13 @@ async fn send_ack(
         &serde_json::to_string(&ack)?,
         id
     );
-    let results = vade.didcomm_send("{}", &exchange_complete).await?;
+    let results = vade.didcomm_send(options, &exchange_complete).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -445,10 +453,11 @@ async fn receive_ack(
     vade: &mut Vade,
     _sender: &str,
     _receiver: &str,
+    options: &str,
     message: String,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive("{}", &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -468,6 +477,7 @@ async fn send_problem_report(
     vade: &mut Vade,
     sender: &str,
     receiver: &str,
+    options: &str,
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let problem = ProblemReport {
@@ -502,13 +512,13 @@ async fn send_problem_report(
         &serde_json::to_string(&problem)?,
         id
     );
-    let results = vade.didcomm_send("{}", &exchange_message).await?;
+    let results = vade.didcomm_send(options, &exchange_message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<EncryptedMessage> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -517,10 +527,11 @@ async fn receive_problem_report(
     vade: &mut Vade,
     _sender: &str,
     _receiver: &str,
+    options: &str,
     message: String,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let results = vade.didcomm_receive("{}", &message).await?;
+    let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -540,61 +551,98 @@ async fn receive_problem_report(
 #[serial]
 async fn can_issue_credential() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:uknow:d34db33d");
-    let user_2_did = String::from("did:uknow:d34db33f");
-    let options = String::from("{}");
+    let test_setup = get_keypair_set();
     let id = Uuid::new_v4().to_simple().to_string();
 
-    let request_message =
-        send_propose_credential(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    let request_message = send_propose_credential(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     receive_propose_credential(
         &mut vade,
-        &user_1_did,
-        &user_2_did,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
         request_message,
-        &options,
+        &test_setup.receiver_options_stringified,
         &id,
     )
     .await?;
 
-    let response_message =
-        send_offer_credential(&mut vade, &user_2_did, &user_1_did, &options, &id).await?;
+    let response_message = send_offer_credential(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        &test_setup.receiver_options_stringified,
+        &id,
+    )
+    .await?;
     receive_offer_credential(
         &mut vade,
-        &user_2_did,
-        &user_1_did,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
         response_message,
-        &options,
+        &test_setup.sender_options_stringified,
         &id,
     )
     .await?;
 
-    let offer_credential =
-        send_request_credential(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    let offer_credential = send_request_credential(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     receive_request_credential(
         &mut vade,
-        &user_1_did,
-        &user_2_did,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
         offer_credential,
-        &options,
+        &test_setup.receiver_options_stringified,
         &id,
     )
     .await?;
 
-    let issue_credential =
-        send_issue_credential(&mut vade, &user_2_did, &user_1_did, &options, &id).await?;
+    let issue_credential = send_issue_credential(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        &test_setup.receiver_options_stringified,
+        &id,
+    )
+    .await?;
     receive_issue_credential(
         &mut vade,
-        &user_2_did,
-        &user_1_did,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
         issue_credential,
-        &options,
+        &test_setup.sender_options_stringified,
         &id,
     )
     .await?;
 
-    let complete_message = send_ack(&mut vade, &user_1_did, &user_2_did, &id).await?;
-    receive_ack(&mut vade, &user_1_did, &user_2_did, complete_message, &id).await?;
+    let complete_message = send_ack(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
+    receive_ack(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.receiver_options_stringified,
+        complete_message,
+        &id,
+    )
+    .await?;
 
     Ok(())
 }
@@ -603,40 +651,70 @@ async fn can_issue_credential() -> Result<(), Box<dyn std::error::Error>> {
 #[serial]
 async fn can_do_problem_report() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:uknow:d34db33d");
-    let user_2_did = String::from("did:uknow:d34db33f");
-    let options = String::from("{}");
+    let test_setup = get_keypair_set();
     let id = Uuid::new_v4().to_simple().to_string();
 
-    let request_message =
-        send_propose_credential(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    let request_message = send_propose_credential(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     receive_propose_credential(
         &mut vade,
-        &user_1_did,
-        &user_2_did,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
         request_message,
-        &options,
+        &test_setup.receiver_options_stringified,
         &id,
     )
     .await?;
 
-    let problem_message = send_problem_report(&mut vade, &user_1_did, &user_2_did, &id).await?;
-    receive_problem_report(&mut vade, &user_1_did, &user_2_did, problem_message, &id).await?;
+    let problem_message = send_problem_report(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
+    receive_problem_report(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.receiver_options_stringified,
+        problem_message,
+        &id,
+    )
+    .await?;
 
     Ok(())
 }
 
 async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-    let user_1_did = String::from("did:uknow:d34db33d");
-    let user_2_did = String::from("did:uknow:d34db33f");
-    let options = String::from("{}");
+    let test_setup = get_keypair_set();
     let id = Uuid::new_v4().to_simple().to_string();
 
-    let _request_message =
-        send_propose_credential(&mut vade, &user_1_did, &user_2_did, &options, &id).await?;
+    let _request_message = send_propose_credential(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
 
-    let complete_message = send_ack(&mut vade, &user_1_did, &user_2_did, &id).await?;
+    let complete_message = send_ack(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
     Ok(complete_message)
 }
 
@@ -645,8 +723,7 @@ async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
 #[serial]
 async fn will_panic_and_fail_to_process_wrong_state() {
     let result = send_wrong_ack_state().await;
-    match result {
-        Err(e) => panic!("Error : {:?}", e),
-        _ => {}
+    if let Err(e) = result {
+        panic!("Error : {:?}", e)
     }
 }

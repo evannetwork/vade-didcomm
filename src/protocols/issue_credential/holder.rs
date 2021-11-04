@@ -1,26 +1,29 @@
-use crate::{
-    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
-    get_from_to_from_message,
-    protocols::issue_credential::credential::{get_current_state, save_credential, save_state},
-    protocols::issue_credential::datatypes::{CredentialData, State, UserType},
-    protocols::protocol::{generate_step_output, StepResult},
-};
-
 use super::helper::{
     get_issue_credential_info_from_message,
     get_issue_credential_message,
     IssueCredentialType,
 };
+use crate::{
+    datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
+    get_from_to_from_message,
+    protocols::{
+        issue_credential::{
+            credential::{get_current_state, save_credential, save_state},
+            datatypes::{CredentialData, State, UserType},
+        },
+        protocol::{generate_step_output, StepResult},
+    },
+};
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/propose_credential`
-pub fn send_propose_credential(message: &str) -> StepResult {
+pub fn send_propose_credential(_options: &str, message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from,
         r#type: parsed_message.r#type,
         to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),
     };
-    let exchange_info = get_from_to_from_message(base_message)?;
+    let exchange_info = get_from_to_from_message(&base_message)?;
 
     let data =
         &serde_json::to_string(&parsed_message.body.ok_or("Credential data not provided.")?)?;
@@ -63,7 +66,7 @@ pub fn send_propose_credential(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `receive`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/offer_credential`
-pub fn receive_offer_credential(message: &str) -> StepResult {
+pub fn receive_offer_credential(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<CredentialData> = serde_json::from_str(message)?;
 
     let base_message: BaseMessage = BaseMessage {
@@ -83,7 +86,7 @@ pub fn receive_offer_credential(message: &str) -> StepResult {
         .ok_or("Thread id can't be empty")?;
 
     let exchange_info = get_issue_credential_info_from_message(parsed_message)?;
-    let base_info = get_from_to_from_message(base_message)?;
+    let base_info = get_from_to_from_message(&base_message)?;
     let credential_data = exchange_info
         .credential_data
         .ok_or("Credential data not provided.")?;
@@ -115,14 +118,14 @@ pub fn receive_offer_credential(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/request_credential`
-pub fn send_request_credential(message: &str) -> StepResult {
+pub fn send_request_credential(_options: &str, message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
         from: parsed_message.from,
         r#type: parsed_message.r#type,
         to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),
     };
-    let exchange_info = get_from_to_from_message(base_message)?;
+    let exchange_info = get_from_to_from_message(&base_message)?;
 
     let data =
         &serde_json::to_string(&parsed_message.body.ok_or("Credential data not provided.")?)?;
@@ -164,7 +167,7 @@ pub fn send_request_credential(message: &str) -> StepResult {
 }
 
 /// Protocol handler for direction: `receive`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/issue_credential`
-pub fn receive_issue_credential(message: &str) -> StepResult {
+pub fn receive_issue_credential(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<CredentialData> = serde_json::from_str(message)?;
 
     let base_message: BaseMessage = BaseMessage {
@@ -184,7 +187,7 @@ pub fn receive_issue_credential(message: &str) -> StepResult {
         .ok_or("Thread id can't be empty")?;
 
     let exchange_info = get_issue_credential_info_from_message(parsed_message)?;
-    let base_info = get_from_to_from_message(base_message)?;
+    let base_info = get_from_to_from_message(&base_message)?;
     let credential_data = exchange_info
         .credential_data
         .ok_or("Credential data not provided.")?;

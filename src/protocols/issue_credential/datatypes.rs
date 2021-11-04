@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
 use std::fmt;
+
+use serde::{Deserialize, Serialize};
 
 pub const ISSUE_CREDENTIAL_PROTOCOL_URL: &str = "https://didcomm.org/issue-credential/1.0";
 

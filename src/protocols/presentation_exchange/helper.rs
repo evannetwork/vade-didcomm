@@ -1,12 +1,16 @@
 extern crate jsonpath_lib as jsonpath;
-use crate::datatypes::MessageWithBody;
-use crate::protocols::presentation_exchange::datatypes::{
-    PresentationExchangeData,
-    PresentationExchangeInfo,
-    PRESENTATION_EXCHANGE_PROTOCOL_URL,
-};
 use std::collections::HashMap;
+
 use uuid::Uuid;
+
+use crate::{
+    datatypes::MessageWithBody,
+    protocols::presentation_exchange::datatypes::{
+        PresentationExchangeData,
+        PresentationExchangeInfo,
+        PRESENTATION_EXCHANGE_PROTOCOL_URL,
+    },
+};
 
 /// Specifies all possible message directions.
 #[derive(PartialEq)]

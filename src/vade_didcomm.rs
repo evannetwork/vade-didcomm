@@ -1,15 +1,25 @@
+use async_trait::async_trait;
+use didcomm_rs::Jwe;
+use ed25519_dalek::{Keypair, PublicKey, SecretKey};
+use vade::{VadePlugin, VadePluginResultValue};
+use x25519_dalek::StaticSecret;
+
 use crate::{
-    datatypes::{BaseMessage, DidCommOptions, EncryptedMessage},
-    fill_message_id_and_timestamps, get_from_to_from_message,
-    keypair::get_com_keypair,
+    datatypes::{
+        BaseMessage,
+        DidCommOptions,
+        EncryptionKeys,
+        ExtendedMessage,
+        MessageDirection,
+        ProtocolHandleOutput,
+    },
+    fill_message_id_and_timestamps,
+    get_from_to_from_message,
+    keypair::{get_com_keypair, get_key_agreement_key},
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
     utils::vec_to_array,
 };
-use async_trait::async_trait;
-use k256::elliptic_curve::rand_core::OsRng;
-use vade::{VadePlugin, VadePluginResultValue};
-use x25519_dalek::{PublicKey, StaticSecret};
 
 big_array! { BigArray; }
 
@@ -48,49 +58,95 @@ impl VadePlugin for VadeDidComm {
     ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
         log::debug!("preparing DIDComm message for being sent");
 
-        // run protocol specific logic
+        let options_parsed = serde_json::from_str::<DidCommOptions>(options)?;
         let message_with_id = fill_message_id_and_timestamps(message)?;
-        let protocol_result = ProtocolHandler::before_send(&message_with_id)?;
+
+        let mut protocol_result = match options_parsed.skip_protocol_handling {
+            None | Some(false) => {
+                // run protocol specific logic
+                ProtocolHandler::before_send(options, &message_with_id)?
+            }
+            _ => ProtocolHandleOutput {
+                direction: MessageDirection::Send,
+                encrypt: true,
+                protocol: "".to_string(),
+                metadata: "{}".to_string(),
+                message: message.to_owned(),
+                step: "".to_string(),
+            },
+        };
+
+        // keep a copy of unencrypted message
+        let message_raw = &message_with_id;
 
         // message string, that will be returned
         let final_message: String;
 
         if protocol_result.encrypt {
-            // generate random keypair for message encryption and signing to always have altering
-            // signatures
-            let sign_keypair: ed25519_dalek::Keypair = ed25519_dalek::Keypair::generate(&mut OsRng);
+            let encryption_keys: EncryptionKeys;
+            if options_parsed.encryption_keys.is_some() {
+                encryption_keys = options_parsed
+                    .encryption_keys
+                    .ok_or("encryption_keys is missing in options parameter")?;
+            } else {
+                // otherwise use keys from DID exchange
+                let parsed_message: BaseMessage = serde_json::from_str(message)?;
+                let from_to = get_from_to_from_message(&parsed_message)?;
+                let mut encoded_keypair = get_key_agreement_key(&from_to.from);
+                if encoded_keypair.is_err() {
+                    // when we dont find a  key agreement key, try to get the stored keypair
+                    encoded_keypair = get_com_keypair(&from_to.from, &from_to.to);
+                    if encoded_keypair.is_err() {
+                        return Err(Box::from("No keypair found"));
+                    }
+                    encoded_keypair = get_key_agreement_key(&encoded_keypair?.key_agreement_key);
+                }
+                let keypair = encoded_keypair?;
+                let secret_decoded = vec_to_array(hex::decode(keypair.secret_key)?)?;
+                let public_decoded = vec_to_array(hex::decode(keypair.target_pub_key)?)?;
 
-            // if shared secret was passed to the options, use this one
-            let options = serde_json::from_str::<DidCommOptions>(options)?;
-            let encryption_key: [u8; 32] = match options.key_information {
-                Some(crate::datatypes::KeyInformation::SharedSecret { shared_secret }) => {
-                    shared_secret
-                }
-                Some(crate::datatypes::KeyInformation::SecretPublic {
-                    my_secret,
-                    others_public,
-                }) => {
-                    let my_secret_deserialized = StaticSecret::from(my_secret);
-                    let other_public_deserialized = PublicKey::from(others_public);
-                    my_secret_deserialized
-                        .diffie_hellman(&other_public_deserialized)
-                        .to_bytes()
-                }
-                None => {
-                    // otherwise use keys from DID exchange
-                    let parsed_message: BaseMessage = serde_json::from_str(&message_with_id)?;
-                    let from_to = get_from_to_from_message(parsed_message)?;
-                    let encoded_keypair = get_com_keypair(&from_to.from, &from_to.to)?;
-                    let secret_decoded = vec_to_array(hex::decode(encoded_keypair.secret_key)?)?;
-                    let target_pub_decoded =
-                        vec_to_array(hex::decode(encoded_keypair.target_pub_key)?)?;
-                    let secret = StaticSecret::from(secret_decoded);
-                    let target_pub_key = PublicKey::from(target_pub_decoded);
-                    secret.diffie_hellman(&target_pub_key).to_bytes()
-                }
-            };
-            final_message =
-                encrypt_message(&protocol_result.message, &encryption_key, &sign_keypair)?;
+                // when we have a key agreement key, adjust the "to" field to the key agreement
+                let mut parsed_message: ExtendedMessage =
+                    serde_json::from_str(&protocol_result.message)?;
+
+                log::debug!(
+                    "adjusting from: {} to:{}",
+                    keypair.key_agreement_key,
+                    keypair.target_key_agreement_key
+                );
+                parsed_message.to = Some(vec![keypair.target_key_agreement_key]);
+                parsed_message.from = Some(keypair.key_agreement_key);
+                protocol_result.message = serde_json::to_string(&parsed_message)?;
+
+                encryption_keys = EncryptionKeys {
+                    encryption_my_secret: StaticSecret::from(secret_decoded).to_bytes(),
+                    encryption_others_public: Some(public_decoded),
+                };
+            }
+
+            let signing_keypair;
+            if let Some(signing_keys_input) = options_parsed.signing_keys {
+                let secret_key = SecretKey::from_bytes(
+                    &signing_keys_input
+                        .signing_my_secret
+                        .ok_or("No signing secret key provided")?,
+                )?;
+                signing_keypair = Some(Keypair {
+                    public: PublicKey::from(&secret_key),
+                    secret: secret_key,
+                });
+            } else {
+                signing_keypair = None;
+            }
+            final_message = encrypt_message(
+                &protocol_result.message,
+                &encryption_keys.encryption_my_secret,
+                encryption_keys
+                    .encryption_others_public
+                    .as_ref()
+                    .map(|v| &v[..]),
+                signing_keypair,
+            )?;
         } else {
             final_message = protocol_result.message;
         }
@@ -98,9 +154,10 @@ impl VadePlugin for VadeDidComm {
         let send_result = format!(
             r#"{{
                 "message": {},
+                "messageRaw": {},
                 "metadata": {}
             }}"#,
-            final_message, protocol_result.metadata,
+            final_message, message_raw, protocol_result.metadata,
         );
 
         return Ok(VadePluginResultValue::Success(Some(send_result)));
@@ -125,64 +182,91 @@ impl VadePlugin for VadeDidComm {
     ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
         log::debug!("handling incoming DIDComm message");
 
-        // run protocol specific logic
-        let parsed_message = serde_json::from_str::<EncryptedMessage>(message);
+        let options_parsed = serde_json::from_str::<DidCommOptions>(options)?;
+        let parsed_message = serde_json::from_str::<Jwe>(message);
 
         // message string, that will be returned
         let decrypted: String;
 
         // if the message is encrypted, try to decrypt it
         if parsed_message.is_ok() {
-            let encrypted_message = parsed_message?;
-            let signing_pub_key = encrypted_message
-                .kid
-                .ok_or("kid not set in encrypted message")?;
-
             // if shared secret was passed to the options, use this one
-            let options = serde_json::from_str::<DidCommOptions>(options)?;
-            let decryption_key: [u8; 32] = match options.key_information {
-                Some(crate::datatypes::KeyInformation::SharedSecret { shared_secret }) => {
-                    shared_secret
+            let decryption_keys: EncryptionKeys;
+            if options_parsed.encryption_keys.is_some() {
+                decryption_keys = options_parsed
+                    .encryption_keys
+                    .ok_or("encryption_keys is missing")?;
+            } else {
+                // otherwise use keys from DID exchange
+                let parsed_message = parsed_message?;
+                let from = parsed_message
+                    .protected
+                    .unwrap_or_default()
+                    .skid
+                    .unwrap_or_default();
+                let recipient = &parsed_message.recipients.unwrap_or_default()[0];
+                let to = recipient.header.kid.as_ref().unwrap();
+                log::debug!("fetching kak for from: {} to: {}", to, from);
+                let mut encoded_keypair = get_key_agreement_key(to);
+                if encoded_keypair.is_err() {
+                    // when we dont find a stored keypair, try to get the key agreement key
+                    log::debug!("fetching kak for {}", to);
+                    encoded_keypair = get_com_keypair(to, &from);
+                    if encoded_keypair.is_err() {
+                        return Err(Box::from("No keypair found"));
+                    }
                 }
-                Some(crate::datatypes::KeyInformation::SecretPublic {
-                    my_secret,
-                    others_public,
-                }) => {
-                    let my_secret_deserialized = StaticSecret::from(my_secret);
-                    let other_public_deserialized = PublicKey::from(others_public);
-                    my_secret_deserialized
-                        .diffie_hellman(&other_public_deserialized)
-                        .to_bytes()
+                let keypair = encoded_keypair?;
+                let mut target_pub_key = None;
+                if !keypair.target_pub_key.is_empty() {
+                    target_pub_key = Some(vec_to_array(hex::decode(keypair.target_pub_key)?)?);
                 }
-                None => {
-                    // otherwise use keys from DID exchange
-                    let base_message = serde_json::from_str::<BaseMessage>(message)?;
-                    let from_to = get_from_to_from_message(base_message)?;
-
-                    let encoded_keypair = get_com_keypair(&from_to.to, &from_to.from)?;
-                    let secret_decoded = vec_to_array(hex::decode(encoded_keypair.secret_key)?)?;
-                    let target_pub_decoded =
-                        vec_to_array(hex::decode(encoded_keypair.target_pub_key)?)?;
-                    let secret = StaticSecret::from(secret_decoded);
-                    let target_pub_key = PublicKey::from(target_pub_decoded);
-                    secret.diffie_hellman(&target_pub_key).to_bytes()
-                }
-            };
-            decrypted = decrypt_message(message, &decryption_key, &hex::decode(signing_pub_key)?)?;
+                decryption_keys = EncryptionKeys {
+                    encryption_my_secret: vec_to_array(hex::decode(keypair.secret_key)?)?,
+                    encryption_others_public: target_pub_key,
+                };
+            }
+            let signing_others_public = options_parsed
+                .signing_keys
+                .map(|keys| keys.signing_others_public)
+                .flatten();
+            decrypted = decrypt_message(
+                message,
+                Some(&decryption_keys.encryption_my_secret),
+                decryption_keys
+                    .encryption_others_public
+                    .as_ref()
+                    .map(|v| &v[..]),
+                signing_others_public.as_ref().map(|v| &v[..]),
+            )?;
         } else {
             decrypted = String::from(message);
         }
 
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(&decrypted)?;
-        let protocol_result = ProtocolHandler::after_receive(&message_with_id)?;
+        let protocol_result = match options_parsed.skip_protocol_handling {
+            None | Some(false) => {
+                // run protocol specific logic
+                ProtocolHandler::after_receive(options, &message_with_id)?
+            }
+            _ => ProtocolHandleOutput {
+                direction: MessageDirection::Receive,
+                encrypt: true,
+                protocol: "".to_string(),
+                metadata: "{}".to_string(),
+                message: message_with_id.to_string(),
+                step: "".to_string(),
+            },
+        };
 
         let receive_result = format!(
             r#"{{
                 "message": {},
+                "messageRaw": {},
                 "metadata": {}
             }}"#,
-            protocol_result.message, protocol_result.metadata,
+            protocol_result.message, message_with_id, protocol_result.metadata,
         );
 
         return Ok(VadePluginResultValue::Success(Some(receive_result)));

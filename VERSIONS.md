@@ -15,6 +15,8 @@
 
 ### Fixes
 
+- fix Linux and WASM build
+
 ### Deprecations
 
 ## v0.0.2

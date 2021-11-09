@@ -28,26 +28,34 @@ Currently supported protocols:
 
 The two functions [`didcomm_send`] and [`didcomm_receive`] can be called with two parameters, `options` and `message`:
 
-1. Options: Contains specific information for passing special configuration to the vade_didcomm. Currently its just used to inject specific encryption configuration, to overwrite the default DIDComm DID exchange key encryption.
+- Options: Contains specific information for passing special configuration to the vade_didcomm. Currently its just used to inject specific encryption configuration, to overwrite the default DIDComm DID exchange key encryption and signing.
 
 ```json
 {
-  "sharedSecret": "..."
+  "encryptionKeys": {
+    "encryptionMySecret": "...",
+    "encryptionOthersPublic": "..."
+  },
+  "signingKeys": {
+    "signingMySecret": "...",
+    "signingOthersPublic": "..."
+  }
 }
 ```
 
-2. Message: The plain message object, containing at least the type, to DID and from DID.
+- Message: The plain message object, containing at least the type, to DID and from DID.
 
 The result of both functions will have the same structure and will always return a stringified json, with the following pattern:
 
 ```json
 {
   "message": {},
+  "messageRaw": {},
   "metadata": {}
 }
 ```
 
-The data that is represented in `message` and `metadata` is protocol specific.
+The data that is represented in `message` and `metadata` is protocol specific. The message is also attached unencrypted as `messageRaw`.
 
 ### trust_ping
 
@@ -181,7 +189,6 @@ Presentation response format:
 
 Presentation proposal format:
 
-
 ```json
 {
     "@type": "https://didcomm.org/present-proof/1.0/presentation-preview",
@@ -200,17 +207,18 @@ Presentation proposal format:
             "name": "<attribute_name>",
             "cred_def_id": "<cred_def_id>",
             "predicate": "<predicate>",
-            "threshold": <threshold>
+            "threshold": "<threshold>"
         },
         // more predicates
     ]
 }
 ```
-Once the presentation exchange is complete, the verifier sends an ack message to the prover to confirm the receival and validity of the received Presentation data. 
+
+Once the presentation exchange is complete, the verifier sends an ack message to the prover to confirm the receival and validity of the received Presentation data.
 
 ### issue_credential protocol
 
-The [`Issue Credential Protocol`] consists of 5 steps. The whole flow is implemented in the [`issue-credential test`]. The general flow starts with a holder sending a `propose-credential` message to a issuer. The issuer has the option to answer with the `offer-credential` or terminate request with `problem-report` message. Holder receives `offer-credential` and decides to send `request-credential` message , Once issuer receives `request-credential`, he/she would respond with `issue-credential` and Holder will receive and send `ack` message to acknowledge the receipt of credential. 
+The [`Issue Credential Protocol`] consists of 5 steps. The whole flow is implemented in the [`issue-credential test`]. The general flow starts with a holder sending a `propose-credential` message to a issuer. The issuer has the option to answer with the `offer-credential` or terminate request with `problem-report` message. Holder receives `offer-credential` and decides to send `request-credential` message , Once issuer receives `request-credential`, he/she would respond with `issue-credential` and Holder will receive and send `ack` message to acknowledge the receipt of credential.
 
 Propose Credential message:
 
@@ -219,12 +227,12 @@ Propose Credential message:
     "@type": "https://didcomm.org/issue-credential/1.1/propose-credential",
     "@id": "<uuid-of-propose-message>",
     "comment": "some comment",
-    "credential_proposal": <json-ld object>,
+    "credential_proposal": "<json-ld object>",
     "schema_issuer_did": "DID of the proposed schema issuer",
     "schema_id": "Schema ID string",
     "schema_name": "Schema name string",
     "schema_version": "Schema version string",
-    "cred_def_id": "Credential Definition ID string"
+    "cred_def_id": "Credential Definition ID string",
     "issuer_did": "DID of the proposed issuer"
 }
 ```
@@ -236,7 +244,7 @@ Offer Credential message :
     "@type": "https://didcomm.org/issue-credential/1.0/offer-credential",
     "@id": "<uuid-of-offer-message>",
     "comment": "some comment",
-    "credential_preview": <json-ld object>,
+    "credential_preview": "<json-ld object>",
     "offers~attach": [
         {
             "@id": "libindy-cred-offer-0",
@@ -286,9 +294,10 @@ Issue Credential message:
     ]
 }
 ```
+
 ### presentation_exchange protocol
 
-The [`Presentation Exchange Protocol`] consists of 3 steps. The whole flow is implemented in the [`presentation-exchange test`]. The general flow starts with a verifier sending a `request-presentation` message to a holder. The holder has an option to answer with the `propose-presentation` or send `presentation` message. Once Verifier receives `presentation` message, he/she will match the received credential claims against `presentation-definition` request and validate the claims values with the contraints present in the `input-descriptors` array in `presentation-definition` 
+The [`Presentation Exchange Protocol`] consists of 3 steps. The whole flow is implemented in the [`presentation-exchange test`]. The general flow starts with a verifier sending a `request-presentation` message to a holder. The holder has an option to answer with the `propose-presentation` or send `presentation` message. Once Verifier receives `presentation` message, he/she will match the received credential claims against `presentation-definition` request and validate the claims values with the contraints present in the `input-descriptors` array in `presentation-definition`
 
 In the current implementation of presentation exchange protocol, the json schema constraints have to be verified by the client application which is using vade because the constraints are quite diverse and specific to application requirements, for details regarding constraints, please visit [`Presentation Exchange Protocol`].
 
@@ -397,7 +406,9 @@ presentation message example:
 
 Each protocol is represented by a set of steps. To register a new protocol, just follow the following steps:
 
-1. add new file into `src/protocols` with the following sample content:
+### 1. Add new file into `src/protocols`
+
+This file can look like following:
 
 ```rs
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -417,7 +428,7 @@ pub fn generate_my_custom_protocol() -> Protocol {
     return protocol;
 }
 
-pub fn send_step1(message: &str) -> StepResult {
+pub fn send_step1(_options: &str, message: &str) -> StepResult {
     let mut parsed_message: MessageWithBody<CustomBody> = serde_json::from_str(message)?;
     parsed_message.body = Some(CustomBody {
         response_requested: Some(true),
@@ -425,18 +436,18 @@ pub fn send_step1(message: &str) -> StepResult {
     return generate_step_output(&serde_json::to_string(&parsed_message)?, "{}");
 }
 
-pub fn receive_step1(message: &str) -> StepResult {
+pub fn receive_step1(_options: &str, message: &str) -> StepResult {
     return generate_step_output(message, "{}");
 }
 ```
 
-2. Import it into the protocols `mod.rs` file:
+### 2. Import it into the protocols `mod.rs` file
 
 ```rs
 pub(crate) mod my_custom_protocol;
 ```
 
-3. Register it within the `protocol_handler.rs`:
+### 3. Register it within the `protocol_handler.rs`
 
 ```rs
 let protocols: [&Protocol; 3] = [

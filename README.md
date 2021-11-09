@@ -14,8 +14,11 @@ It implements the following [`VadePlugin`] functions:
 
 Currently supported protocols:
 
-- [`did_exchange`]
 - [`trust_ping`]
+- [`did_exchange`]
+- [`present_proof`]
+- [`issue_credential`]
+- [`presentation_exchange`]
 
 ## Usage
 
@@ -283,7 +286,7 @@ Issue Credential message:
     ]
 }
 ```
-### presentation exchange protocol
+### presentation_exchange protocol
 
 The [`Presentation Exchange Protocol`] consists of 3 steps. The whole flow is implemented in the [`presentation-exchange test`]. The general flow starts with a verifier sending a `request-presentation` message to a holder. The holder has an option to answer with the `propose-presentation` or send `presentation` message. Once Verifier receives `presentation` message, he/she will match the received credential claims against `presentation-definition` request and validate the claims values with the contraints present in the `input-descriptors` array in `presentation-definition` 
 
@@ -453,15 +456,18 @@ Afterwards, you can just test your protocol by passing the following message to 
 }
 ```
 
-[`didcomm_send`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/src/vade_didcomm.rs#L37
-[`didcomm_receive`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/src/vade_didcomm.rs#L104
-[`did_exchange`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/src/protocols/did_exchange/did_exchange.rs
-[`trust_ping`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/src/protocols/pingpong.rs
+[`didcomm_send`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/main/src/vade_didcomm.rs#L44
+[`didcomm_receive`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/main/src/vade_didcomm.rs#L121
+[`did_exchange`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/tree/main/src/protocols/did_exchange
+[`trust_ping`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/main/src/protocols/pingpong.rs
 [`DID exchange protocol`]: https://github.com/hyperledger/aries-rfcs/tree/master/features/0023-did-exchange
-[`did-exchange test`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/SL-6-key-exchange/tests/did-exchange.rs
+[`did-exchange test`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/main/tests/did-exchange.rs
 [`Present Proof Protocol`]: https://github.com/hyperledger/aries-rfcs/tree/master/features/0037-present-proof
-[`present-proof test`]:https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/DID-46-implement-present-proof-protocol-in-vade/tests/present-proof.rs
+[`present-proof test`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/main/tests/present-proof.rs
 [`Issue Credential Protocol`]: https://github.com/hyperledger/aries-rfcs/tree/main/features/0036-issue-credential#preview-credential
-[`issue-credential test`]:https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/DID-54-implement-issue-credential-protocol-in-vade/tests/issue-credential.rs
-[`Presentation Exchange Protocol`]:https://identity.foundation/presentation-exchange/
-[`presentation-exchange test`]:https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/feature/DID-517-implement-presentation-exchange-protocol-in-vade/tests/presentation-exchange.rs
+[`issue-credential test`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/main/tests/issue-credential.rs
+[`Presentation Exchange Protocol`]: https://identity.foundation/presentation-exchange/
+[`presentation-exchange test`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/blob/main/tests/presentation-exchange.rs
+[`present_proof`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/tree/main/src/protocols/present_proof
+[`issue_credential`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/tree/main/src/protocols/issue_credential
+[`presentation_exchange`]: https://git.slock.it/equs/interop/vade/vade-didcomm/-/tree/main/src/protocols/presentation_exchange

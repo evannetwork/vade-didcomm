@@ -82,7 +82,7 @@ impl VadePlugin for VadeDidComm {
         // message string, that will be returned
         let final_message: String;
 
-        if protocol_result.encrypt {
+        if protocol_result.encrypt && !matches!(options_parsed.skip_message_packaging, Some(true)) {
             let encryption_keys: EncryptionKeys;
             if options_parsed.encryption_keys.is_some() {
                 encryption_keys = options_parsed

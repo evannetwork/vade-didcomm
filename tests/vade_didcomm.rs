@@ -5,14 +5,21 @@ use std::collections::HashMap;
 use common::get_vade;
 use didcomm_rs::Jwe;
 use serde::{Deserialize, Serialize};
+use serial_test::serial;
 use utilities::keypair::get_keypair_set;
-use vade_didcomm::datatypes::{
-    BaseMessage,
-    DidCommOptions,
-    ExtendedMessage,
-    MessageWithBody,
-    VadeDidCommPluginOutput,
+use vade_didcomm::{
+    datatypes::{
+        BaseMessage,
+        DidCommOptions,
+        ExtendedMessage,
+        MessageWithBody,
+        VadeDidCommPluginOutput,
+    },
+    protocols::did_exchange::DidExchangeOptions,
 };
+
+const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct PingBody {
     response_requested: bool,
@@ -250,5 +257,79 @@ async fn can_be_used_to_skip_protocol_handling_and_just_decrypt_data(
         return Err(Box::from("invalid result from didcomm_send"));
     }
 
+    Ok(())
+}
+
+#[tokio::test]
+#[serial]
+async fn can_prepare_encrypted_didcomm_messages() -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+
+    let sign_keypair = get_keypair_set();
+    let payload = format!(
+        r#"{{
+            "type": "{}/request",
+            "serviceEndpoint": "https://evan.network",
+            "from": "{}",
+            "to": ["{}"]
+        }}"#,
+        DID_EXCHANGE_PROTOCOL_URL, &sign_keypair.user1_did, &sign_keypair.user2_did,
+    );
+    let results = vade
+        .didcomm_send(&sign_keypair.sender_options_stringified, &payload)
+        .await?;
+    let result = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+    let result_parsed: serde_json::Value = serde_json::from_str(&result)?;
+    assert!(result_parsed["message"].is_object());
+
+    dbg!(&result_parsed);
+    let message = result_parsed["message"]
+        .as_object()
+        .ok_or("no message in result")?;
+    assert!(message.get("body").is_none());
+    assert!(message.get("ciphertext").is_some());
+    assert!(message["ciphertext"].is_string());
+    Ok(())
+}
+
+#[tokio::test]
+#[serial]
+async fn can_prepare_unencrypted_didcomm_messages() -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+
+    let sign_keypair = get_keypair_set();
+    let payload = format!(
+        r#"{{
+            "type": "{}/request",
+            "serviceEndpoint": "https://evan.network",
+            "from": "{}",
+            "to": ["{}"]
+        }}"#,
+        DID_EXCHANGE_PROTOCOL_URL, &sign_keypair.user1_did, &sign_keypair.user2_did,
+    );
+    let mut options_object: DidCommOptions =
+        serde_json::from_str(&sign_keypair.sender_options_stringified)?;
+    options_object.skip_message_packaging = Some(true);
+    let options_string = serde_json::to_string(&options_object)?;
+    let results = vade.didcomm_send(&options_string, &payload).await?;
+    let result = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+    let result_parsed: serde_json::Value = serde_json::from_str(&result)?;
+    assert!(result_parsed["message"].is_object());
+
+    dbg!(&result_parsed);
+    let message = result_parsed["message"]
+        .as_object()
+        .ok_or("no message in result")?;
+    assert!(message.get("ciphertext").is_none());
+    assert!(message.get("body").is_some());
+    assert!(message["body"].is_object());
     Ok(())
 }

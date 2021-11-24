@@ -7,15 +7,12 @@ use didcomm_rs::Jwe;
 use serde::{Deserialize, Serialize};
 use serial_test::serial;
 use utilities::keypair::get_keypair_set;
-use vade_didcomm::{
-    datatypes::{
-        BaseMessage,
-        DidCommOptions,
-        ExtendedMessage,
-        MessageWithBody,
-        VadeDidCommPluginOutput,
-    },
-    protocols::did_exchange::DidExchangeOptions,
+use vade_didcomm::datatypes::{
+    BaseMessage,
+    DidCommOptions,
+    ExtendedMessage,
+    MessageWithBody,
+    VadeDidCommPluginOutput,
 };
 
 const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";

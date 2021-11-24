@@ -209,7 +209,7 @@ impl VadePlugin for VadeDidComm {
                 log::debug!("fetching kak for from: {} to: {}", to, from);
                 let mut encoded_keypair = get_key_agreement_key(to);
                 if encoded_keypair.is_err() {
-                    // when we dont find a stored keypair, try to get the key agreement key
+                    // when we don't find a stored keypair, try to get the key agreement key
                     log::debug!("fetching kak for {}", to);
                     encoded_keypair = get_com_keypair(to, &from);
                     if encoded_keypair.is_err() {

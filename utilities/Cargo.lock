@@ -1473,6 +1473,7 @@ version = "0.0.2"
 dependencies = [
  "async-trait",
  "bs58",
+ "cfg-if",
  "data-encoding",
  "didcomm-rs",
  "ed25519-dalek",

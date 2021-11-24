@@ -10,13 +10,6 @@ use serde_json::json;
 
 const DEBUG_DB_PATH: &str = "./.didcomm_debug_db.json";
 
-fn ensure_db_file() -> Result<(), Box<dyn std::error::Error>> {
-    if !std::path::Path::new(DEBUG_DB_PATH).exists() {
-        fs::write(DEBUG_DB_PATH, "{}")?;
-    }
-    Ok(())
-}
-
 fn get_storage() -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     let json_text: String;
     if !std::path::Path::new(DEBUG_DB_PATH).exists() {

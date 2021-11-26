@@ -96,6 +96,7 @@ pub struct MessageWithType {
 /// Decrypted message format without dynamic body
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BaseMessage {
+    pub body: HashMap<String, Value>,
     pub from: Option<String>,
     pub r#type: String,
     pub to: Option<Vec<String>>,

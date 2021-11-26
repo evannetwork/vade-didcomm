@@ -38,7 +38,8 @@ async fn send_request(
             "type": "{}/request",
             "serviceEndpoint": "https://evan.network",
             "from": "{}",
-            "to": ["{}"]
+            "to": ["{}"],
+            "body": {{}}
         }}"#,
         DID_EXCHANGE_PROTOCOL_URL, sender, receiver
     );
@@ -129,7 +130,8 @@ async fn send_response(
             "type": "{}/response",
             "serviceEndpoint": "{}",
             "from": "{}",
-            "to": ["{}"]
+            "to": ["{}"],
+            "body": {{}}
         }}"#,
         DID_EXCHANGE_PROTOCOL_URL, DID_SERVICE_ENDPOINT, sender, receiver
     );
@@ -188,7 +190,8 @@ async fn send_complete(
         r#"{{
             "type": "{}/complete",
             "from": "{}",
-            "to": ["{}"]
+            "to": ["{}"],
+            "body": {{}}
         }}"#,
         DID_EXCHANGE_PROTOCOL_URL, sender, receiver
     );

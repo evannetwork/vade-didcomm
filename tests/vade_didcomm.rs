@@ -39,7 +39,8 @@ async fn can_prepare_didcomm_message_for_sending() -> Result<(), Box<dyn std::er
         "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ],
         "custom1": "ichi",
         "custom2": "ni",
-        "custom3": "san"
+        "custom3": "san",
+        "body": {}
     }"#;
     let results = vade
         .didcomm_send(&sign_keypair.sender_options_stringified, payload)
@@ -61,7 +62,8 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
         "type": "https://didcomm.org/trust_ping/1.0/ping",
         "from": "did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp",
         "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ],
-        "custom1": "nyuu"
+        "custom1": "nyuu",
+        "body": {}
     }"#;
     let results = vade
         .didcomm_send(&sign_keypair.sender_options_stringified, payload)
@@ -115,7 +117,8 @@ async fn can_receive_unencrypted() -> Result<(), Box<dyn std::error::Error>> {
         "type": "https://didcomm.org/trust_ping/1.0/ping",
         "from": "did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp",
         "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ],
-        "custom1": "nyuu"
+        "custom1": "nyuu",
+        "body": {}
     }"#;
 
     let results = vade
@@ -145,7 +148,8 @@ async fn should_fill_empty_id_and_created_time() -> Result<(), Box<dyn std::erro
     let payload = r#"{
         "type": "https://didcomm.org/trust_ping/1.0/ping",
         "from": "did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp",
-        "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ]
+        "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ],
+        "body": {}
     }"#;
 
     let results = vade
@@ -182,7 +186,8 @@ async fn can_can_be_used_to_skip_protocol_handling_and_just_encrypt_data(
     let payload = r#"{
         "type": "https://didcomm.org/type_does_not_matter_as_protocol_handling_is_skipped",
         "from": "did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp",
-        "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ]
+        "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ],
+        "body": {}
     }"#;
     let results = vade.didcomm_send(&sender_options_string, payload).await?;
 
@@ -214,7 +219,8 @@ async fn can_be_used_to_skip_protocol_handling_and_just_decrypt_data(
     let sender_options_string = serde_json::to_string(&sender_options)?;
     let payload = r#"{
         "type": "https://didcomm.org/type_does_not_matter_as_protocol_handling_is_skipped",
-        "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ]
+        "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ],
+        "body": {}
     }"#;
     let send_results = vade.didcomm_send(&sender_options_string, payload).await?;
 
@@ -268,7 +274,8 @@ async fn can_prepare_encrypted_didcomm_messages() -> Result<(), Box<dyn std::err
             "type": "{}/request",
             "serviceEndpoint": "https://evan.network",
             "from": "{}",
-            "to": ["{}"]
+            "to": ["{}"],
+            "body": {{}}
         }}"#,
         DID_EXCHANGE_PROTOCOL_URL, &sign_keypair.user1_did, &sign_keypair.user2_did,
     );
@@ -304,7 +311,8 @@ async fn can_prepare_unencrypted_didcomm_messages() -> Result<(), Box<dyn std::e
             "type": "{}/request",
             "serviceEndpoint": "https://evan.network",
             "from": "{}",
-            "to": ["{}"]
+            "to": ["{}"],
+            "body": {{}}
         }}"#,
         DID_EXCHANGE_PROTOCOL_URL, &sign_keypair.user1_did, &sign_keypair.user2_did,
     );

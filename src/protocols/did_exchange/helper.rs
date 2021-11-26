@@ -142,7 +142,7 @@ pub fn get_did_exchange_message(
                 .pthid
                 .or_else(|| Some(format!("{}#key-1", fallback_id))),
             r#type: format!("{}/{}", DID_EXCHANGE_PROTOCOL_URL, step_name),
-            thid: message.id.or(Some(service_id)),
+            thid: message.thid.or(Some(service_id)),
             to: Some([String::from(to_did)].to_vec()),
         };
 

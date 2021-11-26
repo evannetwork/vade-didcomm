@@ -27,9 +27,9 @@ pub fn send_response(options: &str, message: &str) -> StepResult {
     let pub_key_base58_string = &bs58::encode(pub_key_bytes).into_string();
     let request_message = get_did_exchange_message(
         DidExchangeType::Response,
+        &exchange_info.from,
+        &encoded_keypair.key_agreement_key,
         &encoded_keypair.target_key_agreement_key,
-        &encoded_keypair.key_agreement_key,
-        &encoded_keypair.key_agreement_key,
         &options.service_endpoint.unwrap_or_else(|| "".to_string()),
         pub_key_base58_string,
         &parsed_message,

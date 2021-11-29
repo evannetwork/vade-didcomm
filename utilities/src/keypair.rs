@@ -54,6 +54,7 @@ pub fn get_keypair_set() -> KeyPairSet {
             signing_my_secret: Some(sign_keypair.secret.to_bytes()),
             signing_others_public: Some(sign_keypair2.public.to_bytes()),
         }),
+        skip_message_packaging: Some(false),
         skip_protocol_handling: Some(false),
     };
     let sender_options_stringified =
@@ -65,6 +66,7 @@ pub fn get_keypair_set() -> KeyPairSet {
             signing_my_secret: Some(sign_keypair.secret.to_bytes()),
             signing_others_public: Some(sign_keypair2.public.to_bytes()),
         }),
+        skip_message_packaging: Some(false),
         skip_protocol_handling: Some(false),
     };
     let sender_signing_options_stringified =
@@ -79,6 +81,7 @@ pub fn get_keypair_set() -> KeyPairSet {
             signing_my_secret: Some(sign_keypair2.secret.to_bytes()),
             signing_others_public: Some(sign_keypair.public.to_bytes()),
         }),
+        skip_message_packaging: Some(false),
         skip_protocol_handling: Some(false),
     };
     let receiver_options_stringified =
@@ -90,6 +93,7 @@ pub fn get_keypair_set() -> KeyPairSet {
             signing_my_secret: Some(sign_keypair2.secret.to_bytes()),
             signing_others_public: Some(sign_keypair.public.to_bytes()),
         }),
+        skip_message_packaging: Some(false),
         skip_protocol_handling: Some(false),
     };
     let receiver_signing_options_stringified =

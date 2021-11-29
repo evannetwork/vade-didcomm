@@ -11,3 +11,4 @@
 
 .vscode/
 .DS_Store
+.didcomm_debug_db.json

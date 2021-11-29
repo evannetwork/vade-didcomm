@@ -12,6 +12,12 @@
   - make signing and encryption optional (can be both, one of both or none)
   - allow to import keys to db
   - add options to protocol arguments to allow passing data that is not included in message to protocol handlers
+- allow to pass private keys to DID exchange logic to import them if pre-generated externally,
+  can be done with `didExchangeMySecret` in options
+- allows to skip message packaging to work with unencrypted messages,
+  can be done with `skipMessagePackaging` in options
+- allows to skip protocol handling to only en- or decrypt DIDComm messages,
+  cna be cone with `skipProtocolHandling` in options
 
 ### Fixes
 

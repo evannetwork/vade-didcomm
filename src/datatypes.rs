@@ -192,6 +192,7 @@ pub struct SigningKeys {
 pub struct DidCommOptions {
     pub encryption_keys: Option<EncryptionKeys>,
     pub signing_keys: Option<SigningKeys>,
+    pub skip_message_packaging: Option<bool>,
     pub skip_protocol_handling: Option<bool>,
 }
 

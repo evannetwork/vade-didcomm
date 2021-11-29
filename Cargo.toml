@@ -18,6 +18,8 @@ crate-type = ["cdylib", "rlib"]
 [features]
 default = ["portable"]
 
+debug_db = []
+
 portable = [
     "didcomm-rs/raw-crypto",
     "didcomm-rs/resolve",
@@ -32,11 +34,15 @@ wasm = [
 
 [dependencies]
 async-trait = "0.1.50"
+bs58 = "0.4.0"
+cfg-if = "1.0.0"
+data-encoding = "2.3.2"
 didcomm-rs = { git = "https://github.com/evannetwork/didcomm-rs.git", branch = "main", version = "0.6.1", default-features = false }
 ed25519-dalek = "1.0.1"
 env_logger = "0.7.1"
 futures = "0.3.13"
 getrandom = { version = "0.2.3", default-features = false }
+hex = { version = "0.4.3", features = ["serde"] }
 jsonpath_lib = "0.3.0"
 k256 = "0.7.2"
 log = "0.4.8"
@@ -48,10 +54,7 @@ serde_json = { version = "1.0.53", features = ["preserve_order", "raw_value"] }
 serde-big-array = "0.3.2"
 uuid = { version = "0.8.2", features = ["v4"] }
 vade = { git = "https://git.slock.it/equs/interop/vade/vade.git", branch = "develop", version = "0.1.0" }
-hex = { version = "0.4.3", features = ["serde"] }
 x25519-dalek = "1.1.1"
-data-encoding = "2.3.2"
-bs58 = "0.4.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rocksdb = "0.17.0"

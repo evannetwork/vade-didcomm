@@ -3,6 +3,13 @@
 ## Next Version
 
 ### Features
+### Fixes
+### Deprecations
+
+
+## v0.1.0
+
+### Features
 
 - encrypt DID exchange message by default
 - allow to pass private/public keys for encryption
@@ -22,8 +29,6 @@
 ### Fixes
 
 - fix Linux and WASM build
-
-### Deprecations
 
 ## v0.0.2
 

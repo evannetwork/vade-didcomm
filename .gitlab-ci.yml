@@ -28,18 +28,18 @@ run_unit_tests:
     - apt-get install -y clang
     - mkdir -p .git/hooks
     - cargo install cargo2junit
-    - rm -rf unit-report && rm -f junit.xml
+    - rm -rf vade-didcomm-unit-report && rm -f junit.xml
     - cargo test --release --verbose -- -Z unstable-options --format json --report-time | cargo2junit > junit.xml
   after_script:
     - cat junit.xml
-    - mkdir unit-report
-    - mv junit.xml unit-report/
+    - mkdir vade-didcomm-unit-report
+    - mv junit.xml vade-didcomm-unit-report/
     - echo uploading results if \"$CI_COMMIT_REF_NAME\" equals \"develop\"
   cache:
     when: always
-    key: unit-report
+    key: vade-didcomm-unit-report
     paths:
-      - unit-report
+      - vade-didcomm-unit-report
 
 upload-xray-results:
   stage: test_unit
@@ -53,12 +53,12 @@ upload-xray-results:
     - when: never
   script:
     - 'export AUTHTOKEN=$(curl -X POST -H "Content-Type: application/json" -d "{ \"client_id\": \"${id_client}\", \"client_secret\": \"${id_secret}\" }" "https://xray.cloud.xpand-it.com/api/v2/authenticate" | sed -e "s/\"//g")'
-    - 'curl -X POST -H "Content-Type: text/xml" -H "Authorization: Bearer ${AUTHTOKEN}" -d @"unit-report/junit.xml" "https://xray.cloud.xpand-it.com/api/v2/import/execution/junit?projectKey=DID&testPlanKey=${test_plan}&testExecKey=${test_execution}"'
+    - 'curl -X POST -H "Content-Type: text/xml" -H "Authorization: Bearer ${AUTHTOKEN}" -d @"vade-didcomm-unit-report/junit.xml" "https://xray.cloud.xpand-it.com/api/v2/import/execution/junit?projectKey=DID&testPlanKey=${test_plan}&testExecKey=${test_execution}"'
   cache:
-    key: unit-report
+    key: vade-didcomm-unit-report
     paths:
-      - unit-report
+      - vade-didcomm-unit-report
   artifacts:
     paths:
-      - unit-report/junit.xml
+      - vade-didcomm-unit-report/junit.xml
     expire_in: 1 week

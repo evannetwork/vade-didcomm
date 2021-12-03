@@ -101,6 +101,7 @@ pub fn get_communication_did_doc(
 ///
 /// # Returns
 /// * `MessageWithBody<CommunicationDidDocument>` - constructed DIDComm object, ready to be sent
+#[allow(clippy::type_complexity)]
 pub fn get_did_exchange_message(
     step_type: DidExchangeType,
     from_did: &str,

@@ -59,7 +59,7 @@ pub fn receive_response(_options: &str, message: &str) -> StepResult {
     )?;
     // in case we received a DID document from a known DID and we might be using this documents
     // DID for communication in future, store key for documents DID as well
-    if &exchange_info.from != &exchange_info.did_id {
+    if exchange_info.from != exchange_info.did_id {
         save_com_keypair(
             &exchange_info.to,
             &exchange_info.from,

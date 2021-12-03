@@ -25,7 +25,7 @@ pub fn send_response(options: &str, message: &str) -> StepResult {
     let metadata = serde_json::to_string(&encoded_keypair)?;
     let pub_key_bytes = hex::decode(encoded_keypair.pub_key)?;
     let pub_key_base58_string = &bs58::encode(pub_key_bytes).into_string();
-    let request_message = get_did_exchange_message(
+    let (request_message, ..) = get_did_exchange_message(
         DidExchangeType::Response,
         &exchange_info.from,
         &encoded_keypair.key_agreement_key,
@@ -54,9 +54,23 @@ pub fn receive_response(_options: &str, message: &str) -> StepResult {
         &exchange_info.did_id,
         &encoded_keypair.pub_key,
         &encoded_keypair.secret_key,
-        Some(exchange_info.pub_key_hex),
-        Some(exchange_info.service_endpoint),
+        Some(exchange_info.pub_key_hex.to_owned()),
+        Some(exchange_info.service_endpoint.to_owned()),
     )?;
+    // in case we received a DID document from a known DID and we might be using this documents
+    // DID for communication in future, store key for documents DID as well
+    if &exchange_info.from != &exchange_info.did_id {
+        save_com_keypair(
+            &exchange_info.to,
+            &exchange_info.from,
+            &exchange_info.to,
+            &exchange_info.did_id,
+            &encoded_keypair.pub_key,
+            &encoded_keypair.secret_key,
+            Some(exchange_info.pub_key_hex),
+            Some(exchange_info.service_endpoint),
+        )?;
+    }
 
     let metadata = serde_json::to_string(&enhanced_encoded_keypair)?;
 

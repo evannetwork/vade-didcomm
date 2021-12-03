@@ -109,8 +109,13 @@ pub fn get_did_exchange_message(
     from_service_endpoint: &str,
     pub_key: &str,
     message: &DidExchangeBaseMessage,
-) -> Result<MessageWithBody<DidDocumentBodyAttachment<Base64Container>>, Box<dyn std::error::Error>>
-{
+) -> Result<
+    (
+        MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
+        CommunicationDidDocument,
+    ),
+    Box<dyn std::error::Error>,
+> {
     let message = message.clone();
     // convert this to doc attach with base 64 use data_encoding::BASE64;
     let did_document = get_communication_did_doc(key_agreement_did, pub_key, from_service_endpoint);
@@ -146,7 +151,7 @@ pub fn get_did_exchange_message(
             to: Some([String::from(to_did)].to_vec()),
         };
 
-    Ok(exchange_request)
+    Ok((exchange_request, did_document))
 }
 
 /// Takes an DIDComm message and extracts all necessary information to process it during request /

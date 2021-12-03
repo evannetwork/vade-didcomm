@@ -55,18 +55,18 @@ async fn send_request(
 
     let pub_key = prepared
         .metadata
-        .get("pub_key")
-        .ok_or("send DIDComm request does not return pub_key")?
+        .get("pubKey")
+        .ok_or("send DIDComm request does not return pubKey")?
         .to_owned();
     let secret_key = prepared
         .metadata
-        .get("secret_key")
-        .ok_or("send DIDComm request does not return secret_key")?
+        .get("secretKey")
+        .ok_or("send DIDComm request does not return secretKey")?
         .to_owned();
     let target_pub_key = prepared
         .metadata
-        .get("target_pub_key")
-        .ok_or("send DIDComm request does not return target_pub_key")?
+        .get("targetPubKey")
+        .ok_or("send DIDComm request does not return targetPubKey")?
         .to_owned();
 
     assert_eq!(target_pub_key, comm_keypair.target_pub_key);
@@ -92,24 +92,24 @@ async fn receive_request(
     > = serde_json::from_str(result)?;
     let target_did = received
         .metadata
-        .get("key_agreement_key")
-        .ok_or("no key_agreement_key")?;
+        .get("keyAgreementKey")
+        .ok_or("no keyAgreementKey")?;
     let comm_keypair = get_com_keypair(target_did)?;
 
     let pub_key = received
         .metadata
-        .get("pub_key")
-        .ok_or("send DIDComm request does not return pub_key")?
+        .get("pubKey")
+        .ok_or("send DIDComm request does not return pubKey")?
         .to_owned();
     let secret_key = received
         .metadata
-        .get("secret_key")
-        .ok_or("send DIDComm request does not return secret_key")?
+        .get("secretKey")
+        .ok_or("send DIDComm request does not return secretKey")?
         .to_owned();
     let target_pub_key = received
         .metadata
-        .get("target_pub_key")
-        .ok_or("send DIDComm request does not return target_pub_key")?
+        .get("targetPubKey")
+        .ok_or("send DIDComm request does not return targetPubKey")?
         .to_owned();
 
     assert_eq!(target_pub_key, comm_keypair.target_pub_key);
@@ -163,12 +163,12 @@ async fn receive_response(
     > = serde_json::from_str(result)?;
     let receiver_did = received
         .metadata
-        .get("key_agreement_key")
-        .ok_or("no key_agreement_key")?;
+        .get("keyAgreementKey")
+        .ok_or("no keyAgreementKey")?;
     let sender_did = received
         .metadata
-        .get("target_key_agreement_key")
-        .ok_or("no target_key_agreement_key")?;
+        .get("targetKeyAgreementKey")
+        .ok_or("no targetKeyAgreementKey")?;
     let comm_keypair_receiver = get_com_keypair(receiver_did)?;
     let comm_keypair_sender = get_com_keypair(sender_did)?;
 

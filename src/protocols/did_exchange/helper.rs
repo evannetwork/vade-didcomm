@@ -101,6 +101,7 @@ pub fn get_communication_did_doc(
 ///
 /// # Returns
 /// * `MessageWithBody<CommunicationDidDocument>` - constructed DIDComm object, ready to be sent
+#[allow(clippy::type_complexity)]
 pub fn get_did_exchange_message(
     step_type: DidExchangeType,
     from_did: &str,
@@ -109,8 +110,13 @@ pub fn get_did_exchange_message(
     from_service_endpoint: &str,
     pub_key: &str,
     message: &DidExchangeBaseMessage,
-) -> Result<MessageWithBody<DidDocumentBodyAttachment<Base64Container>>, Box<dyn std::error::Error>>
-{
+) -> Result<
+    (
+        MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
+        CommunicationDidDocument,
+    ),
+    Box<dyn std::error::Error>,
+> {
     let message = message.clone();
     // convert this to doc attach with base 64 use data_encoding::BASE64;
     let did_document = get_communication_did_doc(key_agreement_did, pub_key, from_service_endpoint);
@@ -142,11 +148,11 @@ pub fn get_did_exchange_message(
                 .pthid
                 .or_else(|| Some(format!("{}#key-1", fallback_id))),
             r#type: format!("{}/{}", DID_EXCHANGE_PROTOCOL_URL, step_name),
-            thid: message.id.or(Some(service_id)),
+            thid: message.thid.or(Some(service_id)),
             to: Some([String::from(to_did)].to_vec()),
         };
 
-    Ok(exchange_request)
+    Ok((exchange_request, did_document))
 }
 
 /// Takes an DIDComm message and extracts all necessary information to process it during request /

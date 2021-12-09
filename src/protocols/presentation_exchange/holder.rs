@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::helper::{
     get_presentation_exchange_info_from_message,
     get_presentation_exchange_message,
@@ -23,6 +25,7 @@ use crate::{
 pub fn send_propose_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
+        body: HashMap::new(),
         from: parsed_message.from,
         r#type: parsed_message.r#type,
         to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),
@@ -77,6 +80,7 @@ pub fn receive_request_presentation(_options: &str, message: &str) -> StepResult
     let parsed_message: MessageWithBody<PresentationExchangeData> = serde_json::from_str(message)?;
 
     let base_message: BaseMessage = BaseMessage {
+        body: HashMap::new(),
         from: parsed_message.from.clone(),
         r#type: parsed_message.r#type.clone(),
         to: Some(
@@ -128,6 +132,7 @@ pub fn receive_request_presentation(_options: &str, message: &str) -> StepResult
 pub fn send_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
+        body: HashMap::new(),
         from: parsed_message.from,
         r#type: parsed_message.r#type,
         to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),

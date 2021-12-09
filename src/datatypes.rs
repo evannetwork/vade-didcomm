@@ -46,7 +46,7 @@ pub struct FromTo {
 }
 
 /// Necessary information for a valid DID exchange request / response extracted from an DIDComm message
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ExchangeInfo {
     pub from: String,
@@ -60,6 +60,7 @@ pub struct ExchangeInfo {
 /// specific comm partner. Each key is saved as hex encoded u8 array. Please checkout vade_didcomm.rs
 /// and did_exchange/request.rs for reference implementations.
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct CommKeyPair {
     pub pub_key: String,
     pub secret_key: String,
@@ -96,6 +97,7 @@ pub struct MessageWithType {
 /// Decrypted message format without dynamic body
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BaseMessage {
+    pub body: HashMap<String, Value>,
     pub from: Option<String>,
     pub r#type: String,
     pub to: Option<Vec<String>>,

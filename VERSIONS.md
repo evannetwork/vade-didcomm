@@ -29,6 +29,13 @@
 ### Fixes
 
 - fix Linux and WASM build
+- `body` is now mandatory in for DIDComm messages according to spec
+- fixes DID exchange protocol handling:
+  - fix `thid` preservation between DID exchange messages
+  - fix `from` and `to` in DID exchange response
+  - keys may be saved twice if exchanging a DID document with a DID that differs from documents `id`
+  - DID exchange result metadata is now properly camel cased
+  - fix missing `thid` in DID exchange complete message
 
 ## v0.0.2
 

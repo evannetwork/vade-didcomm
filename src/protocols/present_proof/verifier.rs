@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::helper::{
     get_present_proof_info_from_message,
     get_present_proof_message,
@@ -19,6 +21,7 @@ use crate::{
 pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
+        body: HashMap::new(),
         from: parsed_message.from,
         r#type: parsed_message.r#type,
         to: Some(parsed_message.to.ok_or("To DID not provided.")?.to_vec()),
@@ -79,6 +82,7 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
 pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<PresentationData> = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
+        body: HashMap::new(),
         from: parsed_message.from.clone(),
         r#type: parsed_message.r#type.clone(),
         to: Some(
@@ -134,6 +138,7 @@ pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
 pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<PresentationData> = serde_json::from_str(message)?;
     let base_message: BaseMessage = BaseMessage {
+        body: HashMap::new(),
         from: parsed_message.from.clone(),
         r#type: parsed_message.r#type.clone(),
         to: Some(

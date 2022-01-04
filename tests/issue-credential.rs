@@ -9,16 +9,8 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::issue_credential::datatypes::{
-        Ack,
-        Attribute,
-        CredentialAttach,
-        CredentialData,
-        CredentialPreview,
-        CredentialProposal,
-        ProblemReport,
-        State,
-        UserType,
-        ISSUE_CREDENTIAL_PROTOCOL_URL,
+        Ack, Attribute, CredentialAttach, CredentialData, CredentialPreview, CredentialProposal,
+        ProblemReport, State, UserType, ISSUE_CREDENTIAL_PROTOCOL_URL,
     },
 };
 
@@ -415,7 +407,7 @@ async fn send_ack(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let ack = Ack {
-        r#type: String::from("https://didcomm.org/notification/1.0/ack"),
+        r#type: String::from("https://didcomm.org/issue-credential/1.0/ack"),
         from: Some(sender.to_string()),
         to: Some([receiver.to_string()].to_vec()),
         id: id.to_string(),

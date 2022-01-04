@@ -9,16 +9,8 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::present_proof::datatypes::{
-        Ack,
-        Attribute,
-        Predicate,
-        PresentationAttach,
-        PresentationData,
-        PresentationPreview,
-        ProblemReport,
-        State,
-        UserType,
-        PRESENT_PROOF_PROTOCOL_URL,
+        Ack, Attribute, Predicate, PresentationAttach, PresentationData, PresentationPreview,
+        ProblemReport, State, UserType, PRESENT_PROOF_PROTOCOL_URL,
     },
 };
 
@@ -329,7 +321,7 @@ async fn send_ack(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let ack = Ack {
-        r#type: String::from("https://didcomm.org/notification/1.0/ack"),
+        r#type: String::from("https://didcomm.org/present-proof/1.0/ack"),
         from: Some(sender.to_string()),
         to: Some([receiver.to_string()].to_vec()),
         id: id.to_string(),

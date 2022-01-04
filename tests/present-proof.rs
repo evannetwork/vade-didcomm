@@ -61,7 +61,6 @@ async fn send_request_presentation(
     let exchange_request = format!(
         r#"{{
             "type": "{}/request-presentation",
-            "service_endpoint": "https://evan.network",
             "from": "{}",
             "to": ["{}"],
             "body": {},

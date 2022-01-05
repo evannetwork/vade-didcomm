@@ -21,10 +21,12 @@ pub fn send_presentation_ack(_options: &str, message: &str) -> StepResult {
 
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid, &ack.user_type)?.parse()?;
+    let current_state: State = get_current_state(&thid, &ack.body.user_type)?.parse()?;
 
     match current_state {
-        State::PresentationReceived => save_state(&thid, &State::Acknowledged, &ack.user_type)?,
+        State::PresentationReceived => {
+            save_state(&thid, &State::Acknowledged, &ack.body.user_type)?
+        }
         _ => {
             return Err(Box::from(format!(
                 "Error while processing step: State from {} to {} not allowed",
@@ -42,7 +44,7 @@ pub fn receive_presentation_ack(_options: &str, message: &str) -> StepResult {
     let parsed_message: Ack = serde_json::from_str(message)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
-    if !matches!(&parsed_message.user_type, UserType::Verifier) {
+    if !matches!(&parsed_message.body.user_type, UserType::Verifier) {
         return Err(Box::from(
             "ACK for step 'done' message must be sent from verifier".to_string(),
         ));

@@ -95,6 +95,13 @@ pub struct ProblemReport {
     pub excalation_uri: Option<String>,
 }
 
+// properties for Ack messages that are not part of the default DIDComm message set
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AckData {
+    pub status: String,
+    pub user_type: UserType,
+}
+
 /// Ack structure contains fields which are sent as acknowledgment of received credential
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Ack {
@@ -102,9 +109,8 @@ pub struct Ack {
     pub to: Option<Vec<String>>,
     pub r#type: String,
     pub id: String,
-    pub status: String,
     pub thid: Option<String>,
-    pub user_type: UserType,
+    pub body: AckData,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

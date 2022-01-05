@@ -9,8 +9,8 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::issue_credential::datatypes::{
-        Ack, Attribute, CredentialAttach, CredentialData, CredentialPreview, CredentialProposal,
-        ProblemReport, State, UserType, ISSUE_CREDENTIAL_PROTOCOL_URL,
+        Ack, AckData, Attribute, CredentialAttach, CredentialData, CredentialPreview,
+        CredentialProposal, ProblemReport, State, UserType, ISSUE_CREDENTIAL_PROTOCOL_URL,
     },
 };
 
@@ -412,8 +412,10 @@ async fn send_ack(
         to: Some([receiver.to_string()].to_vec()),
         id: id.to_string(),
         thid: Some(id.to_string()),
-        status: String::from("Success"),
-        user_type: UserType::Holder,
+        body: AckData {
+            status: String::from("Success"),
+            user_type: UserType::Holder,
+        },
     };
 
     let exchange_complete = format!(

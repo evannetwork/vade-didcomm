@@ -9,7 +9,7 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::present_proof::datatypes::{
-        Ack, AckData, Attribute, Predicate, PresentationAttach, PresentationData,
+        Ack, AckData, AckStatus, Attribute, Predicate, PresentationAttach, PresentationData,
         PresentationPreview, ProblemReport, State, UserType, PRESENT_PROOF_PROTOCOL_URL,
     },
 };
@@ -328,7 +328,7 @@ async fn send_ack(
         id: Uuid::new_v4().to_simple().to_string(),
         thid: Some(thid.to_string()),
         body: AckData {
-            status: String::from("Success"),
+            status: AckStatus::OK,
             user_type: UserType::Verifier,
         },
     };

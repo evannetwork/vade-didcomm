@@ -9,7 +9,7 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::issue_credential::datatypes::{
-        Ack, AckData, Attribute, CredentialAttach, CredentialData, CredentialPreview,
+        Ack, AckData, AckStatus, Attribute, CredentialAttach, CredentialData, CredentialPreview,
         CredentialProposal, ProblemReport, State, UserType, ISSUE_CREDENTIAL_PROTOCOL_URL,
     },
 };
@@ -413,7 +413,7 @@ async fn send_ack(
         id: id.to_string(),
         thid: Some(id.to_string()),
         body: AckData {
-            status: String::from("Success"),
+            status: AckStatus::OK,
             user_type: UserType::Holder,
         },
     };

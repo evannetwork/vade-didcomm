@@ -98,7 +98,7 @@ pub struct ProblemReport {
 // properties for Ack messages that are not part of the default DIDComm message set
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AckData {
-    pub status: String,
+    pub status: AckStatus,
     pub user_type: UserType,
 }
 
@@ -111,6 +111,13 @@ pub struct Ack {
     pub id: String,
     pub thid: Option<String>,
     pub body: AckData,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum AckStatus {
+    OK,
+    FAIL,
+    PENDING,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

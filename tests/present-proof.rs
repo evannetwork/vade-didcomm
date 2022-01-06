@@ -333,22 +333,9 @@ async fn send_ack(
             user_type: UserType::Verifier,
         },
     };
+    let message_string = serde_json::to_string(&ack).map_err(|e| e.to_string())?;
 
-    let exchange_complete = format!(
-        r#"{{
-            "type": "{}/ack",
-            "from": "{}",
-            "to": ["{}"],
-            "body": {},
-            "thid": "{}"
-        }}"#,
-        PRESENT_PROOF_PROTOCOL_URL,
-        sender,
-        receiver,
-        &serde_json::to_string(&ack)?,
-        thid
-    );
-    let results = vade.didcomm_send(options, &exchange_complete).await?;
+    let results = vade.didcomm_send(options, &message_string).await?;
     let result = results
         .get(0)
         .ok_or("no result")?

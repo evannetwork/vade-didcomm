@@ -40,7 +40,7 @@ async fn send_request_presentation(
         state: State::PresentationRequested,
         presentation_attach: Some(
             [PresentationAttach {
-                r#type: String::from("https://didcomm.org/present-proof/1.0/request-presentation"),
+                r#type: format!("{}/request-presentation", PRESENT_PROOF_PROTOCOL_URL),
                 id: Uuid::new_v4().to_simple().to_string(),
                 mime_type: String::from("application/json"),
                 data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
@@ -126,7 +126,7 @@ async fn send_presentation(
         state: State::PresentationSent,
         presentation_attach: Some(
             [PresentationAttach {
-                r#type: String::from("https://didcomm.org/present-proof/1.0/presentation"),
+                r#type: format!("{}/presentation", PRESENT_PROOF_PROTOCOL_URL),
                 id: Uuid::new_v4().to_simple().to_string(),
                 mime_type: String::from("application/json"),
                 data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
@@ -323,7 +323,7 @@ async fn send_ack(
     thid: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let ack = Ack {
-        r#type: String::from("https://didcomm.org/present-proof/1.0/ack"),
+        r#type: format!("{}/ack", PRESENT_PROOF_PROTOCOL_URL),
         from: Some(sender.to_string()),
         to: Some([receiver.to_string()].to_vec()),
         id: Uuid::new_v4().to_simple().to_string(),
@@ -409,22 +409,8 @@ async fn send_problem_report(
             user_type: UserType::Prover,
         },
     };
-
-    let exchange_message = format!(
-        r#"{{
-            "type": "{}/problem-report",
-            "from": "{}",
-            "to": ["{}"],
-            "body": {},
-            "thid": "{}"
-        }}"#,
-        PRESENT_PROOF_PROTOCOL_URL,
-        sender,
-        receiver,
-        &serde_json::to_string(&problem)?,
-        thid
-    );
     let message_string = serde_json::to_string(&problem).map_err(|e| e.to_string())?;
+
     let results = vade.didcomm_send(options, &message_string).await?;
     let result = results
         .get(0)

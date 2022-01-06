@@ -41,17 +41,17 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/problem-report`
 pub fn receive_problem_report(_options: &str, message: &str) -> StepResult {
-    let parsed_message: ProblemReport = serde_json::from_str(message)?;
-    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
+    let problem_report: ProblemReport = serde_json::from_str(message)?;
+    let thid = problem_report.thid.ok_or("Thread id can't be empty")?;
 
     // flip sides to get current users type
-    let current_user_type = match &parsed_message.body.user_type {
+    let current_user_type = match &problem_report.body.user_type {
         UserType::Prover => UserType::Verifier,
         UserType::Verifier => UserType::Prover,
         _ => {
             return Err(Box::from(format!(
                 "invalid user type for problem report: {}",
-                &parsed_message.body.user_type
+                &problem_report.body.user_type
             )))
         }
     };

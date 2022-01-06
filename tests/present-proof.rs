@@ -391,7 +391,7 @@ async fn send_problem_report(
     thid: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let problem = ProblemReport {
-        r#type: String::from("https://didcomm.org/report-problem/1.0/problem-report"),
+        r#type: format!("{}/problem-report", &PRESENT_PROOF_PROTOCOL_URL),
         from: Some(sender.to_string()),
         to: Some([receiver.to_string()].to_vec()),
         id: Uuid::new_v4().to_simple().to_string(),
@@ -424,7 +424,8 @@ async fn send_problem_report(
         &serde_json::to_string(&problem)?,
         thid
     );
-    let results = vade.didcomm_send(options, &exchange_message).await?;
+    let message_string = serde_json::to_string(&problem).map_err(|e| e.to_string())?;
+    let results = vade.didcomm_send(options, &message_string).await?;
     let result = results
         .get(0)
         .ok_or("no result")?

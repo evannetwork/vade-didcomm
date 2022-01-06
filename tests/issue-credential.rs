@@ -302,7 +302,7 @@ async fn receive_request_credential(
 
     let proposal_data_saved = get_credential(sender, receiver, id, state)?.data_attach;
     let proposal_data_saved_attributes =
-        proposal_data_saved.ok_or("Request crendential data not saved in db")?;
+        proposal_data_saved.ok_or("Request credential data not saved in db")?;
 
     let attribute_saved = proposal_data_saved_attributes
         .get(0)
@@ -408,7 +408,7 @@ async fn send_ack(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let ack = Ack {
-        r#type: String::from("https://didcomm.org/issue-credential/1.0/ack"),
+        r#type: format!("{}/ack", ISSUE_CREDENTIAL_PROTOCOL_URL),
         from: Some(sender.to_string()),
         to: Some([receiver.to_string()].to_vec()),
         id: id.to_string(),
@@ -476,7 +476,7 @@ async fn send_problem_report(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let problem = ProblemReport {
-        r#type: String::from("https://didcomm.org/report-problem/1.0/problem-report"),
+        r#type: format!("{}/problem-report", ISSUE_CREDENTIAL_PROTOCOL_URL),
         from: Some(sender.to_string()),
         to: Some([receiver.to_string()].to_vec()),
         id: id.to_string(),
@@ -494,22 +494,9 @@ async fn send_problem_report(
             user_type: UserType::Issuer,
         },
     };
+    let message_string = serde_json::to_string(&problem).map_err(|e| e.to_string())?;
 
-    let exchange_message = format!(
-        r#"{{
-            "type": "{}/problem-report",
-            "from": "{}",
-            "to": ["{}"],
-            "body": {},
-            "thid": "{}"
-        }}"#,
-        ISSUE_CREDENTIAL_PROTOCOL_URL,
-        sender,
-        receiver,
-        &serde_json::to_string(&problem)?,
-        id
-    );
-    let results = vade.didcomm_send(options, &exchange_message).await?;
+    let results = vade.didcomm_send(options, &message_string).await?;
     let result = results
         .get(0)
         .ok_or("no result")?

@@ -1,25 +1,20 @@
-use crate::{
-    datatypes::ExtendedMessage,
-    protocols::{
-        present_proof::{
-            datatypes::{ProblemReport, State},
-            presentation::{get_current_state, save_state},
-        },
-        protocol::{generate_step_output, StepResult},
+use crate::protocols::{
+    present_proof::{
+        datatypes::{ProblemReport, State, UserType},
+        presentation::{get_current_state, save_state},
     },
+    protocol::{generate_step_output, StepResult},
 };
 
 /// Protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/problem-report`
 pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
-    let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
-    let data = &serde_json::to_string(
-        &parsed_message
-            .body
-            .ok_or("Presentation data not provided.")?,
-    )?;
-    let problem_report: ProblemReport = serde_json::from_str(data)?;
-    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
-    let current_state: State = get_current_state(&thid, &problem_report.body.user_type)?.parse()?;
+    let problem_report: ProblemReport = serde_json::from_str(message)?;
+    let problem_report_data = &problem_report.body.clone();
+    let thid = &problem_report
+        .thid
+        .as_ref()
+        .ok_or("Thread id can't be empty")?;
+    let current_state: State = get_current_state(&thid, &problem_report_data.user_type)?.parse()?;
 
     match current_state {
         State::PresentationRequested
@@ -30,7 +25,7 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
         | State::PresentationProposed => save_state(
             &thid,
             &State::ProblemReported,
-            &problem_report.body.user_type,
+            &problem_report_data.user_type,
         )?,
         _ => {
             return Err(Box::from(format!(
@@ -48,7 +43,19 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
 pub fn receive_problem_report(_options: &str, message: &str) -> StepResult {
     let parsed_message: ProblemReport = serde_json::from_str(message)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
-    let current_state: State = get_current_state(&thid, &parsed_message.body.user_type)?.parse()?;
+
+    // flip sides to get current users type
+    let current_user_type = match &parsed_message.body.user_type {
+        UserType::Prover => UserType::Verifier,
+        UserType::Verifier => UserType::Prover,
+        _ => {
+            return Err(Box::from(format!(
+                "invalid user type for problem report: {}",
+                &parsed_message.body.user_type
+            )))
+        }
+    };
+    let current_state: State = get_current_state(&thid, &current_user_type)?.parse()?;
 
     match current_state {
         State::PresentationRequested
@@ -56,11 +63,9 @@ pub fn receive_problem_report(_options: &str, message: &str) -> StepResult {
         | State::PresentationSent
         | State::PresentationReceived
         | State::PresentationProposalReceived
-        | State::PresentationProposed => save_state(
-            &thid,
-            &State::ProblemReported,
-            &parsed_message.body.user_type,
-        )?,
+        | State::PresentationProposed => {
+            save_state(&thid, &State::ProblemReported, &current_user_type)?
+        }
         _ => {
             return Err(Box::from(format!(
                 "Error while processing step: State from {} to {} not allowed",

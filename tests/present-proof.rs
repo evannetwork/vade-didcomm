@@ -10,7 +10,8 @@ use vade_didcomm::{
     datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::present_proof::datatypes::{
         Ack, AckData, AckStatus, Attribute, Predicate, PresentationAttach, PresentationData,
-        PresentationPreview, ProblemReport, State, UserType, PRESENT_PROOF_PROTOCOL_URL,
+        PresentationPreview, ProblemReport, ProblemReportData, State, UserType,
+        PRESENT_PROOF_PROTOCOL_URL,
     },
 };
 
@@ -395,16 +396,18 @@ async fn send_problem_report(
         to: Some([receiver.to_string()].to_vec()),
         id: Uuid::new_v4().to_simple().to_string(),
         thid: Some(thid.to_string()),
-        description: Some(String::from("Request Rejected.")),
-        problem_items: None,
-        who_retries: None,
-        fix_hint: None,
-        impact: None,
-        r#where: None,
-        noticed_time: None,
-        tracking_uri: None,
-        excalation_uri: None,
-        user_type: UserType::Prover,
+        body: ProblemReportData {
+            description: Some(String::from("Request Rejected.")),
+            problem_items: None,
+            who_retries: None,
+            fix_hint: None,
+            impact: None,
+            r#where: None,
+            noticed_time: None,
+            tracking_uri: None,
+            escalation_uri: None,
+            user_type: UserType::Prover,
+        },
     };
 
     let exchange_message = format!(

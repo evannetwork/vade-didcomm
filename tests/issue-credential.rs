@@ -10,7 +10,8 @@ use vade_didcomm::{
     datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::issue_credential::datatypes::{
         Ack, AckData, AckStatus, Attribute, CredentialAttach, CredentialData, CredentialPreview,
-        CredentialProposal, ProblemReport, State, UserType, ISSUE_CREDENTIAL_PROTOCOL_URL,
+        CredentialProposal, ProblemReport, ProblemReportData, State, UserType,
+        ISSUE_CREDENTIAL_PROTOCOL_URL,
     },
 };
 
@@ -480,16 +481,18 @@ async fn send_problem_report(
         to: Some([receiver.to_string()].to_vec()),
         id: id.to_string(),
         thid: Some(id.to_string()),
-        description: Some(String::from("Request Rejected.")),
-        problem_items: None,
-        who_retries: None,
-        fix_hint: None,
-        impact: None,
-        r#where: None,
-        noticed_time: None,
-        tracking_uri: None,
-        excalation_uri: None,
-        user_type: UserType::Issuer,
+        body: ProblemReportData {
+            description: Some(String::from("Request Rejected.")),
+            problem_items: None,
+            who_retries: None,
+            fix_hint: None,
+            impact: None,
+            r#where: None,
+            noticed_time: None,
+            tracking_uri: None,
+            escalation_uri: None,
+            user_type: UserType::Issuer,
+        },
     };
 
     let exchange_message = format!(

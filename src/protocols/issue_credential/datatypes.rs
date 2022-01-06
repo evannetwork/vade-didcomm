@@ -66,14 +66,9 @@ pub struct CredentialData {
     pub credential_proposal: Option<CredentialProposal>,
 }
 
-/// Problem report structure contains fields which are required for reporting problem
+// properties for ProblemReport messages that are not part of the default DIDComm message set
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ProblemReport {
-    pub r#type: String,
-    pub from: Option<String>,
-    pub to: Option<Vec<String>>,
-    pub id: String,
-    pub thid: Option<String>,
+pub struct ProblemReportData {
     pub user_type: UserType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
@@ -92,7 +87,18 @@ pub struct ProblemReport {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tracking_uri: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub excalation_uri: Option<String>,
+    pub escalation_uri: Option<String>,
+}
+
+/// Problem report structure contains fields which are required for reporting problem
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ProblemReport {
+    pub r#type: String,
+    pub from: Option<String>,
+    pub to: Option<Vec<String>>,
+    pub id: String,
+    pub thid: Option<String>,
+    pub body: ProblemReportData,
 }
 
 // properties for Ack messages that are not part of the default DIDComm message set

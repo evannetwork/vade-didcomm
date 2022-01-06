@@ -19,6 +19,7 @@ pub struct PresentProofReq {
 pub struct PresentationAttach {
     pub r#type: String,
     pub id: String,
+    #[serde(rename = "mime-type")]
     pub mime_type: String,
     pub data: String,
 }
@@ -37,6 +38,7 @@ pub struct PresentationPreview {
 pub struct Attribute {
     pub name: String,
     pub cred_def_id: String,
+    #[serde(rename = "mime-type")]
     pub mime_type: String,
     pub value: String,
     pub referent: String,

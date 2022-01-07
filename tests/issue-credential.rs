@@ -37,7 +37,6 @@ async fn send_propose_credential(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let credential_data = CredentialData {
-        state: State::SendProposeCredential,
         credential_proposal: Some(CredentialProposal {
             id: id.to_string(),
             comment: String::from("No comment"),
@@ -115,7 +114,7 @@ async fn receive_propose_credential(
         .credential_proposal
         .ok_or("Proposal not attached")?;
 
-    let req_data_saved = get_credential(sender, receiver, id, propose_credential.state)?;
+    let req_data_saved = get_credential(sender, receiver, id, State::SendProposeCredential)?;
     let attached_req_saved = req_data_saved
         .credential_proposal
         .ok_or("Proposal data not attached")?;
@@ -133,7 +132,6 @@ async fn send_offer_credential(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let credential_data = CredentialData {
-        state: State::SendOfferCredential,
         credential_proposal: None,
         credential_preview: Some(CredentialPreview {
             r#type: String::from(""),
@@ -203,13 +201,12 @@ async fn receive_offer_credential(
         "send DIDComm request does not return offer credential request".to_string()
     })?;
 
-    let state = received_offer.state;
     let attached_data = received_offer
         .data_attach
         .ok_or("Offer credential request not attached")?;
     let credential_data = attached_data.get(0).ok_or("Request body is invalid")?;
 
-    let req_data_saved = get_credential(sender, receiver, id, state)?;
+    let req_data_saved = get_credential(sender, receiver, id, State::SendOfferCredential)?;
     let attached_credential_saved = req_data_saved
         .data_attach
         .ok_or("Offer Credential request not saved in DB")?;
@@ -230,7 +227,6 @@ async fn send_request_credential(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let credential_data = CredentialData {
-        state: State::SendRequestCredential,
         credential_proposal: None,
         credential_preview: None,
         data_attach: Some(
@@ -292,15 +288,14 @@ async fn receive_request_credential(
         "send DIDComm request does not return request credential request".to_string()
     })?;
 
-    let state = received_proposal.state;
-
     let proposal_data = received_proposal
         .data_attach
         .ok_or("Request crendential data not attached")?;
 
     let attribute = proposal_data.get(0).ok_or("Attachment is invalid")?;
 
-    let proposal_data_saved = get_credential(sender, receiver, id, state)?.data_attach;
+    let proposal_data_saved =
+        get_credential(sender, receiver, id, State::SendRequestCredential)?.data_attach;
     let proposal_data_saved_attributes =
         proposal_data_saved.ok_or("Request credential data not saved in db")?;
 
@@ -319,7 +314,6 @@ async fn send_issue_credential(
     id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let credential_data = CredentialData {
-        state: State::SendIssueCredential,
         credential_proposal: None,
         credential_preview: None,
         data_attach: Some(
@@ -381,15 +375,14 @@ async fn receive_issue_credential(
         "send DIDComm request does not return issue credential request".to_string()
     })?;
 
-    let state = received_proposal.state;
-
     let proposal_data = received_proposal
         .data_attach
         .ok_or("Issue Credential data not attached")?;
 
     let attachment = proposal_data.get(0).ok_or("Attachment is invalid")?;
 
-    let proposal_data_saved = get_credential(sender, receiver, id, state)?.data_attach;
+    let proposal_data_saved =
+        get_credential(sender, receiver, id, State::SendIssueCredential)?.data_attach;
     let proposal_data_saved_attributes =
         proposal_data_saved.ok_or("Issue Credential not saved in db")?;
 

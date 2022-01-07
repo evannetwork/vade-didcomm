@@ -54,7 +54,6 @@ pub struct CredentialPreview {
 /// required for all messages of Issue Credential protocol.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CredentialData {
-    pub state: State,
     #[serde(skip_serializing_if = "Option::is_none")]
     // credential_preview is sent only with offer-credential, propose-credential
     pub credential_preview: Option<CredentialPreview>,

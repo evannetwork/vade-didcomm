@@ -56,7 +56,6 @@ pub struct Predicate {
 /// PresentationData structure contains optional fields to be exchanged for all the steps of Present-Proof steps.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PresentationData {
-    pub state: State,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

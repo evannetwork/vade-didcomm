@@ -37,7 +37,6 @@ async fn send_request_presentation(
     thid: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let presentation_data = PresentationData {
-        state: State::PresentationRequested,
         presentation_attach: Some(
             [PresentationAttach {
                 r#type: format!("{}/request-presentation", PRESENT_PROOF_PROTOCOL_URL),
@@ -104,7 +103,7 @@ async fn receive_request_presentation(
         .presentation_attach
         .ok_or("Presentation request not attached")?;
     let presentation_data = attached_req.get(0).ok_or("Request body is invalid")?;
-    let req_data_saved = get_presentation(sender, receiver, thid, request_presentation.state)?;
+    let req_data_saved = get_presentation(sender, receiver, thid, State::PresentationRequested)?;
     let attached_req_saved = req_data_saved
         .presentation_attach
         .ok_or("Presentation request not attached")?;
@@ -123,7 +122,6 @@ async fn send_presentation(
     thid: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let presentation_data = PresentationData {
-        state: State::PresentationSent,
         presentation_attach: Some(
             [PresentationAttach {
                 r#type: format!("{}/presentation", PRESENT_PROOF_PROTOCOL_URL),
@@ -186,7 +184,6 @@ async fn receive_presentation(
         .body
         .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
-    let state = received_presentation.state;
     let attached_presentation = received_presentation
         .presentation_attach
         .ok_or("Presentation request not attached")?;
@@ -194,7 +191,7 @@ async fn receive_presentation(
         .get(0)
         .ok_or("Request body is invalid")?;
 
-    let req_data_saved = get_presentation(sender, receiver, thid, state)?;
+    let req_data_saved = get_presentation(sender, receiver, thid, State::PresentationSent)?;
     let attached_presentation_saved = req_data_saved
         .presentation_attach
         .ok_or("Presentation request not attached")?;
@@ -215,7 +212,6 @@ async fn send_presentation_proposal(
     thid: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let presentation_data = PresentationData {
-        state: State::PresentationProposed,
         presentation_proposal: Some(PresentationPreview {
             attribute: Some(
                 [Attribute {
@@ -291,8 +287,6 @@ async fn receive_presentation_proposal(
         .body
         .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
-    let state = received_proposal.state;
-
     let proposal_data = received_proposal
         .presentation_proposal
         .ok_or("Proposal data not attached")?;
@@ -302,7 +296,8 @@ async fn receive_presentation_proposal(
     let attribute = attribute_data.get(0).ok_or("Attribute is invalid")?;
 
     let proposal_data_saved =
-        get_presentation(sender, receiver, thid, state)?.presentation_proposal;
+        get_presentation(sender, receiver, thid, State::PresentationProposed)?
+            .presentation_proposal;
     let proposal_data_saved_attributes =
         proposal_data_saved.ok_or("Proposal data not saved in db")?;
     let attribute_data_saved = proposal_data_saved_attributes

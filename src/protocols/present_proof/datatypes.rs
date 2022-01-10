@@ -3,6 +3,8 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 pub const PRESENT_PROOF_PROTOCOL_URL: &str = "https://didcomm.org/present-proof/1.0";
+pub const PROPOSAL_PROTOCOL_URL: &str =
+    "https://didcomm.org/present-proof/1.0/presentation-preview";
 
 pub trait MessageData {}
 
@@ -81,6 +83,9 @@ pub struct PresentationAttach {
 /// Presentation preview structure is sent by prover to propose alternate presentation.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PresentationPreview {
+    /// assumed as always PROPOSAL_PROTOCOL_URL
+    /// ("https://didcomm.org/present-proof/1.0/presentation-preview")
+    pub r#type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attribute: Option<Vec<Attribute>>,
     #[serde(skip_serializing_if = "Option::is_none")]

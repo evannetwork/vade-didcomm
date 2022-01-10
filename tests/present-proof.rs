@@ -227,6 +227,8 @@ async fn send_presentation_proposal(
         "propose-presentation",
         ProposalData {
             presentation_proposal: PresentationPreview {
+                r#type: format!("{}/presentation-preview", PRESENT_PROOF_PROTOCOL_URL),
+
                 attribute: Some(
                     [Attribute {
                         name: thid.to_string(),

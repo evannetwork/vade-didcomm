@@ -1,3 +1,4 @@
+use super::datatypes::PROPOSAL_PROTOCOL_URL;
 use crate::{
     datatypes::{HasFromAndTo, MessageWithBody},
     protocols::{
@@ -102,6 +103,12 @@ pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult
         .body
         .as_ref()
         .ok_or_else(|| "missing proposal data in body")?;
+    if proposal_data.presentation_proposal.r#type != PROPOSAL_PROTOCOL_URL {
+        return Err(Box::from(format!(
+            r#"invalid type in proposal: "{}", must be "{}"#,
+            &proposal_data.presentation_proposal.r#type, PROPOSAL_PROTOCOL_URL
+        )));
+    }
     let from_to = proposal_message.get_from_to()?;
     let thid = proposal_message
         .thid

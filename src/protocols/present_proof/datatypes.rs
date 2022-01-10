@@ -4,17 +4,71 @@ use serde::{Deserialize, Serialize};
 
 pub const PRESENT_PROOF_PROTOCOL_URL: &str = "https://didcomm.org/present-proof/1.0";
 
-/// This structure is required to be present in all the steps of Present-Proof protocol for send and receive directions.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct PresentProofReq {
-    pub r#type: String,
-    pub from: Option<String>,
-    pub to: Option<String>,
-    pub presentation_data: Option<PresentationData>,
-}
+pub trait MessageData {}
 
-/// PresentationAttach contains all the fields required for request-presentation and presentation steps.
+/// data structure for presentation request
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct RequestData {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    #[serde(rename = "request_presentations~attach")]
+    pub request_presentations_attach: Vec<PresentationAttach>,
+}
+impl MessageData for RequestData {}
+
+/// data structure with actual presentation
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PresentationData {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    #[serde(rename = "presentation~attach")]
+    pub presentation_attach: Vec<PresentationAttach>,
+}
+impl MessageData for PresentationData {}
+
+/// data structure for proposing a new presentation request
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ProposalData {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    pub presentation_proposal: PresentationPreview,
+}
+impl MessageData for ProposalData {}
+
+// properties for ProblemReport messages that are not part of the default DIDComm message set
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ProblemReportData {
+    pub user_type: UserType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub problem_items: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub who_retries: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fix_hint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub impact: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub r#where: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub noticed_time: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tracking_uri: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub escalation_uri: Option<String>,
+}
+impl MessageData for ProblemReportData {}
+
+// properties for Ack messages that are not part of the default DIDComm message set
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AckData {
+    pub status: AckStatus,
+}
+impl MessageData for AckData {}
+
+/// PresentationAttach contains all the fields required for
+/// request-presentation and presentation steps.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PresentationAttach {
     pub r#type: String,
@@ -51,70 +105,6 @@ pub struct Predicate {
     pub cred_def_id: String,
     pub predicate: String,
     pub threshold: u64,
-}
-
-/// PresentationData structure contains optional fields to be exchanged for all the steps of Present-Proof steps.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PresentationData {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub comment: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub presentation_attach: Option<Vec<PresentationAttach>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub presentation_proposal: Option<PresentationPreview>,
-}
-
-// properties for ProblemReport messages that are not part of the default DIDComm message set
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ProblemReportData {
-    pub user_type: UserType,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub problem_items: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub who_retries: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fix_hint: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub impact: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub r#where: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub noticed_time: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tracking_uri: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub escalation_uri: Option<String>,
-}
-
-/// Problem report structure contains fields which are required for reporting problem
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ProblemReport {
-    pub r#type: String,
-    pub from: Option<String>,
-    pub to: Option<Vec<String>>,
-    pub id: String,
-    pub thid: Option<String>,
-    pub body: ProblemReportData,
-}
-
-// properties for Ack messages that are not part of the default DIDComm message set
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct AckData {
-    pub status: AckStatus,
-    pub user_type: UserType,
-}
-
-/// Ack structure contains fields which are sent to
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Ack {
-    pub from: Option<String>,
-    pub to: Option<Vec<String>>,
-    pub r#type: String,
-    pub id: String,
-    pub thid: Option<String>,
-    pub body: AckData,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

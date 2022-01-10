@@ -9,8 +9,18 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::issue_credential::datatypes::{
-        Ack, AckData, AckStatus, Attribute, CredentialAttach, CredentialData, CredentialPreview,
-        CredentialProposal, ProblemReport, ProblemReportData, State, UserType,
+        Ack,
+        AckData,
+        AckStatus,
+        Attribute,
+        CredentialAttach,
+        CredentialData,
+        CredentialPreview,
+        CredentialProposal,
+        ProblemReport,
+        ProblemReportData,
+        State,
+        UserType,
         ISSUE_CREDENTIAL_PROTOCOL_URL,
     },
 };

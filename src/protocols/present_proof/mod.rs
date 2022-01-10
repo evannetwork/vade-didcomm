@@ -1,6 +1,5 @@
 pub mod datatypes;
 mod done;
-mod helper;
 mod presentation;
 mod problem_report;
 mod prover;

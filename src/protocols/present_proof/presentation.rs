@@ -1,6 +1,6 @@
 use crate::{
     db::{read_db, write_db},
-    protocols::present_proof::datatypes::{PresentationData, State, UserType},
+    protocols::present_proof::datatypes::{State, UserType},
 };
 
 /// Saves a request-presentation/presentation in db for two DIDs (from -> to). Entry key will be
@@ -25,32 +25,6 @@ pub fn save_presentation(
     )?;
 
     Ok(())
-}
-
-/// Retrieves state presentation data from the db for two DIDs (from -> to). Entry key will be
-/// present_proof_{from}_{to}_{state}_{thid}.
-///
-/// # Arguments
-/// * `from_did` - from DID
-/// * `to_did` - to DID as string
-/// * `thid` - thread id
-/// * `state` - state
-///
-/// # Returns
-/// * `Presentation` - presetation data stored in db.
-#[allow(dead_code)]
-pub fn get_presentation(
-    from_did: &str,
-    to_did: &str,
-    thid: &str,
-    state: &State,
-) -> Result<PresentationData, Box<dyn std::error::Error>> {
-    let presentation = read_db(&format!(
-        "present_proof_{}_{}_{}_{}",
-        from_did, to_did, state, thid
-    ))?;
-    let presentation_data: PresentationData = serde_json::from_str(&presentation)?;
-    Ok(presentation_data)
 }
 
 /// Saves state of Present_Proof protocol for given thid. Entry key will be

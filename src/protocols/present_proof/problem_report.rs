@@ -1,16 +1,22 @@
-use crate::protocols::{
-    present_proof::{
-        datatypes::{ProblemReport, State, UserType},
-        presentation::{get_current_state, save_state},
+use crate::{
+    datatypes::MessageWithBody,
+    protocols::{
+        present_proof::{
+            datatypes::{ProblemReportData, State, UserType},
+            presentation::{get_current_state, save_state},
+        },
+        protocol::{generate_step_output, StepResult},
     },
-    protocol::{generate_step_output, StepResult},
 };
 
 /// Protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/problem-report`
 pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
-    let problem_report: ProblemReport = serde_json::from_str(message)?;
-    let problem_report_data = &problem_report.body.clone();
-    let thid = &problem_report
+    let problem_report_message: MessageWithBody<ProblemReportData> = serde_json::from_str(message)?;
+    let problem_report_data = problem_report_message
+        .body
+        .as_ref()
+        .ok_or_else(|| "missing problem report data in body")?;
+    let thid = &problem_report_message
         .thid
         .as_ref()
         .ok_or("Thread id can't be empty")?;
@@ -36,22 +42,28 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
         }
     };
 
-    generate_step_output(&serde_json::to_string(&problem_report)?, "{}")
+    generate_step_output(&serde_json::to_string(&problem_report_message)?, "{}")
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/problem-report`
 pub fn receive_problem_report(_options: &str, message: &str) -> StepResult {
-    let problem_report: ProblemReport = serde_json::from_str(message)?;
-    let thid = problem_report.thid.ok_or("Thread id can't be empty")?;
+    let problem_report_message: MessageWithBody<ProblemReportData> = serde_json::from_str(message)?;
+    let problem_report_data = problem_report_message
+        .body
+        .as_ref()
+        .ok_or_else(|| "missing problem report data in body")?;
+    let thid = problem_report_message
+        .thid
+        .ok_or("Thread id can't be empty")?;
 
     // flip sides to get current users type
-    let current_user_type = match &problem_report.body.user_type {
+    let current_user_type = match &problem_report_data.user_type {
         UserType::Prover => UserType::Verifier,
         UserType::Verifier => UserType::Prover,
         _ => {
             return Err(Box::from(format!(
                 "invalid user type for problem report: {}",
-                &problem_report.body.user_type
+                &problem_report_data.user_type
             )))
         }
     };

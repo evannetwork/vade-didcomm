@@ -1,5 +1,7 @@
 mod common;
 
+use std::collections::HashMap;
+
 use common::{get_vade, read_db};
 use didcomm_rs::Jwe;
 use serial_test::serial;
@@ -9,23 +11,55 @@ use vade::Vade;
 use vade_didcomm::{
     datatypes::{MessageWithBody, VadeDidCommPluginOutput},
     protocols::present_proof::datatypes::{
-        Ack, AckData, AckStatus, Attribute, Predicate, PresentationAttach, PresentationData,
-        PresentationPreview, ProblemReport, ProblemReportData, State, UserType,
+        AckData,
+        AckStatus,
+        Attribute,
+        MessageData,
+        Predicate,
+        PresentationAttach,
+        PresentationData,
+        PresentationPreview,
+        ProblemReportData,
+        ProposalData,
+        RequestData,
+        State,
+        UserType,
         PRESENT_PROOF_PROTOCOL_URL,
     },
 };
 
-pub fn get_presentation(
+pub fn create_new_message<T: MessageData>(
+    from: &str,
+    to: &str,
+    thid: &str,
+    type_suffix: &str,
+    body: T,
+) -> Result<MessageWithBody<T>, Box<dyn std::error::Error>> {
+    Ok(MessageWithBody::<T> {
+        r#type: format!("{}/{}", PRESENT_PROOF_PROTOCOL_URL, &type_suffix),
+        from: Some(from.to_string()),
+        to: Some(vec![to.to_string()]),
+        thid: Some(thid.to_string()),
+        body: Some(body),
+        created_time: None,
+        expires_time: None,
+        id: None,
+        pthid: None,
+        other: HashMap::new(),
+    })
+}
+
+pub fn get_presentation_data<T: MessageData + serde::de::DeserializeOwned>(
     from_did: &str,
     to_did: &str,
     thid: &str,
     state: State,
-) -> Result<PresentationData, Box<dyn std::error::Error>> {
+) -> Result<T, Box<dyn std::error::Error>> {
     let presentation = read_db(&format!(
         "present_proof_{}_{}_{}_{}",
         from_did, to_did, state, thid
     ))?;
-    let presentation_data: PresentationData = serde_json::from_str(&presentation)?;
+    let presentation_data: T = serde_json::from_str(&presentation)?;
     Ok(presentation_data)
 }
 
@@ -36,36 +70,26 @@ async fn send_request_presentation(
     options: &str,
     thid: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let presentation_data = PresentationData {
-        presentation_attach: Some(
-            [PresentationAttach {
+    let exchange_request = create_new_message(
+        sender,
+        receiver,
+        thid,
+        "request-presentation",
+        RequestData {
+            request_presentations_attach: [PresentationAttach {
                 r#type: format!("{}/request-presentation", PRESENT_PROOF_PROTOCOL_URL),
                 id: Uuid::new_v4().to_simple().to_string(),
                 mime_type: String::from("application/json"),
                 data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
             }]
             .to_vec(),
-        ),
-        comment: None,
-        presentation_proposal: None,
-    };
+            comment: None,
+        },
+    )?;
 
-    let exchange_request = format!(
-        r#"{{
-            "type": "{}/request-presentation",
-            "from": "{}",
-            "to": ["{}"],
-            "body": {},
-            "thid": "{}"
-        }}"#,
-        PRESENT_PROOF_PROTOCOL_URL,
-        sender,
-        receiver,
-        &serde_json::to_string(&presentation_data)?,
-        thid
-    );
-
-    let results = vade.didcomm_send(options, &exchange_request).await?;
+    let results = vade
+        .didcomm_send(options, &serde_json::to_string(&exchange_request)?)
+        .await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -91,7 +115,7 @@ async fn receive_request_presentation(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let received: VadeDidCommPluginOutput<MessageWithBody<PresentationData>> =
+    let received: VadeDidCommPluginOutput<MessageWithBody<RequestData>> =
         serde_json::from_str(result)?;
 
     let request_presentation = received
@@ -99,14 +123,11 @@ async fn receive_request_presentation(
         .body
         .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
-    let attached_req = request_presentation
-        .presentation_attach
-        .ok_or("Presentation request not attached")?;
+    let attached_req = request_presentation.request_presentations_attach;
     let presentation_data = attached_req.get(0).ok_or("Request body is invalid")?;
-    let req_data_saved = get_presentation(sender, receiver, thid, State::PresentationRequested)?;
-    let attached_req_saved = req_data_saved
-        .presentation_attach
-        .ok_or("Presentation request not attached")?;
+    let req_data_saved: RequestData =
+        get_presentation_data(sender, receiver, thid, State::PresentationRequested)?;
+    let attached_req_saved = req_data_saved.request_presentations_attach;
     let presentation_data_saved = attached_req_saved.get(0).ok_or("Request body is invalid")?;
 
     assert_eq!(presentation_data.data, presentation_data_saved.data);
@@ -121,36 +142,27 @@ async fn send_presentation(
     options: &str,
     thid: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let presentation_data = PresentationData {
-        presentation_attach: Some(
-            [PresentationAttach {
+    let exchange_response = create_new_message(
+        sender,
+        receiver,
+        thid,
+        "presentation",
+        PresentationData {
+            presentation_attach: [PresentationAttach {
                 r#type: format!("{}/presentation", PRESENT_PROOF_PROTOCOL_URL),
                 id: Uuid::new_v4().to_simple().to_string(),
                 mime_type: String::from("application/json"),
                 data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
             }]
             .to_vec(),
-        ),
-        comment: None,
-        presentation_proposal: None,
-    };
 
-    let exchange_response = format!(
-        r#"{{
-            "type": "{}/presentation",
-            "service_endpoint": "https://evan.network",
-            "from": "{}",
-            "to": ["{}"],
-            "body": {},
-            "thid": "{}"
-        }}"#,
-        PRESENT_PROOF_PROTOCOL_URL,
-        sender,
-        receiver,
-        &serde_json::to_string(&presentation_data)?,
-        thid
-    );
-    let results = vade.didcomm_send(options, &exchange_response).await?;
+            comment: None,
+        },
+    )?;
+
+    let results = vade
+        .didcomm_send(options, &serde_json::to_string(&exchange_response)?)
+        .await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -182,22 +194,19 @@ async fn receive_presentation(
     let received_presentation = received
         .message
         .body
-        .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
+        .ok_or_else(|| "send DIDComm request does not return presentation".to_string())?;
 
-    let attached_presentation = received_presentation
-        .presentation_attach
-        .ok_or("Presentation request not attached")?;
+    let attached_presentation = received_presentation.presentation_attach;
     let presentation_data = attached_presentation
         .get(0)
-        .ok_or("Request body is invalid")?;
+        .ok_or("Presentation body is invalid")?;
 
-    let req_data_saved = get_presentation(sender, receiver, thid, State::PresentationSent)?;
-    let attached_presentation_saved = req_data_saved
-        .presentation_attach
-        .ok_or("Presentation request not attached")?;
+    let req_data_saved: PresentationData =
+        get_presentation_data(sender, receiver, thid, State::PresentationSent)?;
+    let attached_presentation_saved = req_data_saved.presentation_attach;
     let presentation_data_saved = attached_presentation_saved
         .get(0)
-        .ok_or("Request body is invalid")?;
+        .ok_or("Presentation body is invalid")?;
 
     assert_eq!(presentation_data.data, presentation_data_saved.data);
 
@@ -211,49 +220,41 @@ async fn send_presentation_proposal(
     options: &str,
     thid: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let presentation_data = PresentationData {
-        presentation_proposal: Some(PresentationPreview {
-            attribute: Some(
-                [Attribute {
-                    name: thid.to_string(),
-                    cred_def_id: String::from("cred_def_id"),
-                    mime_type: String::from("application/json"),
-                    value: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
-                    referent: String::from("referent"),
-                }]
-                .to_vec(),
-            ),
-
-            predicate: Some(
-                [Predicate {
-                    name: String::from("some name"),
-                    cred_def_id: String::from("cred_def_id"),
-                    predicate: String::from("application/json"),
-                    threshold: 5,
-                }]
-                .to_vec(),
-            ),
-        }),
-        comment: None,
-        presentation_attach: None,
-    };
-
-    let exchange_response = format!(
-        r#"{{
-            "type": "{}/propose-presentation",
-            "service_endpoint": "https://evan.network",
-            "from": "{}",
-            "to": ["{}"],
-            "body": {},
-            "thid": "{}"
-        }}"#,
-        PRESENT_PROOF_PROTOCOL_URL,
+    let proposal = create_new_message(
         sender,
         receiver,
-        &serde_json::to_string(&presentation_data)?,
-        thid
-    );
-    let results = vade.didcomm_send(options, &exchange_response).await?;
+        thid,
+        "propose-presentation",
+        ProposalData {
+            presentation_proposal: PresentationPreview {
+                attribute: Some(
+                    [Attribute {
+                        name: thid.to_string(),
+                        cred_def_id: String::from("cred_def_id"),
+                        mime_type: String::from("application/json"),
+                        value: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
+                        referent: String::from("referent"),
+                    }]
+                    .to_vec(),
+                ),
+
+                predicate: Some(
+                    [Predicate {
+                        name: String::from("some name"),
+                        cred_def_id: String::from("cred_def_id"),
+                        predicate: String::from("application/json"),
+                        threshold: 5,
+                    }]
+                    .to_vec(),
+                ),
+            },
+            comment: None,
+        },
+    )?;
+
+    let results = vade
+        .didcomm_send(options, &serde_json::to_string(&proposal)?)
+        .await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -279,7 +280,7 @@ async fn receive_presentation_proposal(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<MessageWithBody<PresentationData>> =
+    let received: VadeDidCommPluginOutput<MessageWithBody<ProposalData>> =
         serde_json::from_str(result)?;
 
     let received_proposal = received
@@ -287,20 +288,16 @@ async fn receive_presentation_proposal(
         .body
         .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
-    let proposal_data = received_proposal
+    let attribute_data = received_proposal
         .presentation_proposal
-        .ok_or("Proposal data not attached")?;
-    let attribute_data = proposal_data
         .attribute
         .ok_or("Attributes not provided with proposal")?;
     let attribute = attribute_data.get(0).ok_or("Attribute is invalid")?;
 
-    let proposal_data_saved =
-        get_presentation(sender, receiver, thid, State::PresentationProposed)?
-            .presentation_proposal;
-    let proposal_data_saved_attributes =
-        proposal_data_saved.ok_or("Proposal data not saved in db")?;
-    let attribute_data_saved = proposal_data_saved_attributes
+    let proposal_data_saved: ProposalData =
+        get_presentation_data(sender, receiver, thid, State::PresentationProposed)?;
+    let attribute_data_saved = proposal_data_saved
+        .presentation_proposal
         .attribute
         .ok_or("Attributes not saved in db")?;
     let attribute_saved = attribute_data_saved
@@ -317,20 +314,19 @@ async fn send_ack(
     options: &str,
     thid: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let ack = Ack {
-        r#type: format!("{}/ack", PRESENT_PROOF_PROTOCOL_URL),
-        from: Some(sender.to_string()),
-        to: Some([receiver.to_string()].to_vec()),
-        id: Uuid::new_v4().to_simple().to_string(),
-        thid: Some(thid.to_string()),
-        body: AckData {
+    let ack = create_new_message(
+        sender,
+        receiver,
+        thid,
+        "ack",
+        AckData {
             status: AckStatus::OK,
-            user_type: UserType::Verifier,
         },
-    };
-    let message_string = serde_json::to_string(&ack).map_err(|e| e.to_string())?;
+    )?;
 
-    let results = vade.didcomm_send(options, &message_string).await?;
+    let results = vade
+        .didcomm_send(options, &serde_json::to_string(&ack)?)
+        .await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -356,7 +352,7 @@ async fn receive_ack(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<Ack> = serde_json::from_str(result)?;
+    let received: VadeDidCommPluginOutput<MessageWithBody<AckData>> = serde_json::from_str(result)?;
 
     let received_ack = received.message;
 
@@ -372,13 +368,12 @@ async fn send_problem_report(
     options: &str,
     thid: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let problem = ProblemReport {
-        r#type: format!("{}/problem-report", &PRESENT_PROOF_PROTOCOL_URL),
-        from: Some(sender.to_string()),
-        to: Some([receiver.to_string()].to_vec()),
-        id: Uuid::new_v4().to_simple().to_string(),
-        thid: Some(thid.to_string()),
-        body: ProblemReportData {
+    let problem_report = create_new_message(
+        sender,
+        receiver,
+        thid,
+        "problem-report",
+        ProblemReportData {
             description: Some(String::from("Request Rejected.")),
             problem_items: None,
             who_retries: None,
@@ -390,10 +385,11 @@ async fn send_problem_report(
             escalation_uri: None,
             user_type: UserType::Prover,
         },
-    };
-    let message_string = serde_json::to_string(&problem).map_err(|e| e.to_string())?;
+    )?;
 
-    let results = vade.didcomm_send(options, &message_string).await?;
+    let results = vade
+        .didcomm_send(options, &serde_json::to_string(&problem_report)?)
+        .await?;
     let result = results
         .get(0)
         .ok_or("no result")?
@@ -419,7 +415,8 @@ async fn receive_problem_report(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<ProblemReport> = serde_json::from_str(result)?;
+    let received: VadeDidCommPluginOutput<MessageWithBody<ProblemReportData>> =
+        serde_json::from_str(result)?;
 
     let received_problem = received.message;
 

@@ -77,7 +77,6 @@ async fn send_request_presentation(
         "request-presentation",
         RequestData {
             request_presentations_attach: [PresentationAttach {
-                r#type: format!("{}/request-presentation", PRESENT_PROOF_PROTOCOL_URL),
                 id: Uuid::new_v4().to_simple().to_string(),
                 mime_type: String::from("application/json"),
                 data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
@@ -149,7 +148,6 @@ async fn send_presentation(
         "presentation",
         PresentationData {
             presentation_attach: [PresentationAttach {
-                r#type: format!("{}/presentation", PRESENT_PROOF_PROTOCOL_URL),
                 id: Uuid::new_v4().to_simple().to_string(),
                 mime_type: String::from("application/json"),
                 data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),

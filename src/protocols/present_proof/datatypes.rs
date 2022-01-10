@@ -73,7 +73,6 @@ impl MessageData for AckData {}
 /// request-presentation and presentation steps.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PresentationAttach {
-    pub r#type: String,
     pub id: String,
     #[serde(rename = "mime-type")]
     pub mime_type: String,

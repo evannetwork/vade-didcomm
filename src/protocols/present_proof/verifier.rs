@@ -90,7 +90,7 @@ pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
         &State::PresentationReceived,
     )?;
     let metadata = presentation_data
-        .presentation_attach
+        .presentations_attach
         .get(0)
         .ok_or("Presentation data not attached")?;
     generate_step_output(message, &serde_json::to_string(&metadata)?)

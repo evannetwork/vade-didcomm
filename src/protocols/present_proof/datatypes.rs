@@ -23,8 +23,8 @@ impl MessageData for RequestData {}
 pub struct PresentationData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
-    #[serde(rename = "presentation~attach")]
-    pub presentation_attach: Vec<PresentationAttach>,
+    #[serde(rename = "presentations~attach")]
+    pub presentations_attach: Vec<PresentationAttach>,
 }
 impl MessageData for PresentationData {}
 

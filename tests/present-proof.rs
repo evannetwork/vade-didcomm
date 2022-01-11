@@ -147,7 +147,7 @@ async fn send_presentation(
         thid,
         "presentation",
         PresentationData {
-            presentation_attach: [PresentationAttach {
+            presentations_attach: [PresentationAttach {
                 id: Uuid::new_v4().to_simple().to_string(),
                 mime_type: String::from("application/json"),
                 data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
@@ -194,14 +194,14 @@ async fn receive_presentation(
         .body
         .ok_or_else(|| "send DIDComm request does not return presentation".to_string())?;
 
-    let attached_presentation = received_presentation.presentation_attach;
+    let attached_presentation = received_presentation.presentations_attach;
     let presentation_data = attached_presentation
         .get(0)
         .ok_or("Presentation body is invalid")?;
 
     let req_data_saved: PresentationData =
         get_presentation_data(sender, receiver, thid, State::PresentationSent)?;
-    let attached_presentation_saved = req_data_saved.presentation_attach;
+    let attached_presentation_saved = req_data_saved.presentations_attach;
     let presentation_data_saved = attached_presentation_saved
         .get(0)
         .ok_or("Presentation body is invalid")?;

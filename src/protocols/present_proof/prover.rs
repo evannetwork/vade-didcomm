@@ -46,7 +46,7 @@ pub fn send_presentation(_options: &str, message: &str) -> StepResult {
     )?;
 
     let metadata = presentation_data
-        .presentation_attach
+        .presentations_attach
         .get(0)
         .ok_or("Presentation data not attached")?;
 

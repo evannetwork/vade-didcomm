@@ -106,7 +106,7 @@ pub fn send_propose_presentation(_options: &str, message: &str) -> StepResult {
     let proposal_data = proposal_message
         .body
         .as_ref()
-        .ok_or_else(|| "missing presentation data in body")?;
+        .ok_or_else(|| "missing proposal data in body")?;
     if proposal_data.presentation_proposal.r#type != PROPOSAL_PROTOCOL_URL {
         return Err(Box::from(format!(
             r#"invalid type in proposal: "{}", must be "{}"#,

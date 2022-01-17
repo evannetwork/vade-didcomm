@@ -290,7 +290,6 @@ async fn can_prepare_encrypted_didcomm_messages() -> Result<(), Box<dyn std::err
     let result_parsed: serde_json::Value = serde_json::from_str(&result)?;
     assert!(result_parsed["message"].is_object());
 
-    dbg!(&result_parsed);
     let message = result_parsed["message"]
         .as_object()
         .ok_or("no message in result")?;
@@ -329,7 +328,6 @@ async fn can_prepare_unencrypted_didcomm_messages() -> Result<(), Box<dyn std::e
     let result_parsed: serde_json::Value = serde_json::from_str(&result)?;
     assert!(result_parsed["message"].is_object());
 
-    dbg!(&result_parsed);
     let message = result_parsed["message"]
         .as_object()
         .ok_or("no message in result")?;

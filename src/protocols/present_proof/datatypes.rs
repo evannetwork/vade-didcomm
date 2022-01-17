@@ -3,74 +3,43 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 pub const PRESENT_PROOF_PROTOCOL_URL: &str = "https://didcomm.org/present-proof/1.0";
+pub const PROPOSAL_PROTOCOL_URL: &str =
+    "https://didcomm.org/present-proof/1.0/presentation-preview";
 
-/// This structure is required to be present in all the steps of Present-Proof protocol for send and receive directions.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct PresentProofReq {
-    pub r#type: String,
-    pub from: Option<String>,
-    pub to: Option<String>,
-    pub presentation_data: Option<PresentationData>,
-}
+pub trait MessageData {}
 
-/// PresentationAttach contains all the fields required for request-presentation and presentation steps.
+/// data structure for presentation request
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PresentationAttach {
-    pub r#type: String,
-    pub id: String,
-    pub mime_type: String,
-    pub data: String,
-}
-
-/// Presentation preview structure is sent by prover to propose alternate presentation.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PresentationPreview {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub attribute: Option<Vec<Attribute>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub predicate: Option<Vec<Predicate>>,
-}
-
-/// Attributes structure for PresentationPreview request.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Attribute {
-    pub name: String,
-    pub cred_def_id: String,
-    pub mime_type: String,
-    pub value: String,
-    pub referent: String,
-}
-
-/// Predicate structure for PresentationPreview request.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Predicate {
-    pub name: String,
-    pub cred_def_id: String,
-    pub predicate: String,
-    pub threshold: u64,
-}
-
-/// PresentationData structure contains optional fields to be exchanged for all the steps of Present-Proof steps.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PresentationData {
-    pub state: State,
+pub struct RequestData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub presentation_attach: Option<Vec<PresentationAttach>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub presentation_proposal: Option<PresentationPreview>,
+    #[serde(rename = "request_presentations~attach")]
+    pub request_presentations_attach: Vec<PresentationAttach>,
 }
+impl MessageData for RequestData {}
 
-/// Problem report structure contains fields which are required for reporting problem
+/// data structure with actual presentation
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ProblemReport {
-    pub r#type: String,
-    pub from: Option<String>,
-    pub to: Option<Vec<String>>,
-    pub id: String,
-    pub thid: Option<String>,
+pub struct PresentationData {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    #[serde(rename = "presentations~attach")]
+    pub presentations_attach: Vec<PresentationAttach>,
+}
+impl MessageData for PresentationData {}
+
+/// data structure for proposing a new presentation request
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ProposalData {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    pub presentation_proposal: PresentationPreview,
+}
+impl MessageData for ProposalData {}
+
+// properties for ProblemReport messages that are not part of the default DIDComm message set
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ProblemReportData {
     pub user_type: UserType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
@@ -89,19 +58,64 @@ pub struct ProblemReport {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tracking_uri: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub excalation_uri: Option<String>,
+    pub escalation_uri: Option<String>,
+}
+impl MessageData for ProblemReportData {}
+
+// properties for Ack messages that are not part of the default DIDComm message set
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AckData {
+    pub status: AckStatus,
+}
+impl MessageData for AckData {}
+
+/// PresentationAttach contains all the fields required for
+/// request-presentation and presentation steps.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PresentationAttach {
+    pub id: String,
+    #[serde(rename = "mime-type")]
+    pub mime_type: String,
+    pub data: String,
 }
 
-/// Ack structure contains fields which are sent to
+/// Presentation preview structure is sent by prover to propose alternate presentation.
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Ack {
-    pub from: Option<String>,
-    pub to: Option<Vec<String>>,
+pub struct PresentationPreview {
+    /// assumed as always PROPOSAL_PROTOCOL_URL
+    /// ("https://didcomm.org/present-proof/1.0/presentation-preview")
     pub r#type: String,
-    pub id: String,
-    pub status: String,
-    pub thid: Option<String>,
-    pub user_type: UserType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attribute: Option<Vec<Attribute>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub predicate: Option<Vec<Predicate>>,
+}
+
+/// Attributes structure for PresentationPreview request.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Attribute {
+    pub name: String,
+    pub cred_def_id: String,
+    #[serde(rename = "mime-type")]
+    pub mime_type: String,
+    pub value: String,
+    pub referent: String,
+}
+
+/// Predicate structure for PresentationPreview request.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Predicate {
+    pub name: String,
+    pub cred_def_id: String,
+    pub predicate: String,
+    pub threshold: u64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum AckStatus {
+    OK,
+    FAIL,
+    PENDING,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

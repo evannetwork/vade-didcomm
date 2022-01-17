@@ -3,7 +3,11 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::utils::hex_option;
+use crate::{get_from_to_from_message, utils::hex_option};
+
+pub trait HasFromAndTo {
+    fn get_from_to(&self) -> Result<FromTo, Box<dyn std::error::Error>>;
+}
 
 /// Struct for a pub key that will be sent during DID exchange with the users communication DID document.
 #[derive(Serialize, Deserialize)]
@@ -146,6 +150,18 @@ pub struct MessageWithBody<T> {
     pub to: Option<Vec<String>>,
     #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
     pub other: HashMap<String, String>,
+}
+impl<T> HasFromAndTo for MessageWithBody<T> {
+    fn get_from_to(&self) -> Result<FromTo, Box<dyn std::error::Error>> {
+        let base_message: BaseMessage = BaseMessage {
+            body: HashMap::new(),
+            from: self.from.to_owned(),
+            r#type: self.r#type.to_owned(),
+            to: Some(self.to.clone().ok_or("To DID not provided.")?.to_vec()),
+        };
+
+        get_from_to_from_message(&base_message)
+    }
 }
 
 /// Message format, when a message was encrypted with DIDComm rs.

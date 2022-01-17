@@ -3,9 +3,13 @@
 ## Next Version
 
 ### Features
-### Fixes
-### Deprecations
 
+- refactor Present Proof protocol handling - refactor data structure according to spec
+- refactor Issue Credential protocol handling - refactor data structure according to spec
+
+### Fixes
+
+### Deprecations
 
 ## v0.1.0
 

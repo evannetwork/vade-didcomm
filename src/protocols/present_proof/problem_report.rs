@@ -15,7 +15,7 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
     let problem_report_data = problem_report_message
         .body
         .as_ref()
-        .ok_or_else(|| "missing problem report data in body")?;
+        .ok_or("missing problem report data in body")?;
     let thid = &problem_report_message
         .thid
         .as_ref()
@@ -51,7 +51,7 @@ pub fn receive_problem_report(_options: &str, message: &str) -> StepResult {
     let problem_report_data = problem_report_message
         .body
         .as_ref()
-        .ok_or_else(|| "missing problem report data in body")?;
+        .ok_or("missing problem report data in body")?;
     let thid = problem_report_message
         .thid
         .ok_or("Thread id can't be empty")?;

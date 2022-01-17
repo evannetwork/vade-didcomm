@@ -16,7 +16,7 @@ pub fn send_presentation(_options: &str, message: &str) -> StepResult {
     let presentation_data = presentation_message
         .body
         .as_ref()
-        .ok_or_else(|| "missing presentation data in body")?;
+        .ok_or("missing presentation data in body")?;
     let from_to = presentation_message.get_from_to()?;
     let thid = presentation_message
         .thid
@@ -62,7 +62,7 @@ pub fn receive_request_presentation(_options: &str, message: &str) -> StepResult
     let request_data = request_message
         .body
         .as_ref()
-        .ok_or_else(|| "missing request data in body")?;
+        .ok_or("missing request data in body")?;
     let from_to = request_message.get_from_to()?;
     let thid = request_message
         .thid
@@ -106,7 +106,7 @@ pub fn send_propose_presentation(_options: &str, message: &str) -> StepResult {
     let proposal_data = proposal_message
         .body
         .as_ref()
-        .ok_or_else(|| "missing proposal data in body")?;
+        .ok_or("missing proposal data in body")?;
     if proposal_data.presentation_proposal.r#type != PROPOSAL_PROTOCOL_URL {
         return Err(Box::from(format!(
             r#"invalid type in proposal: "{}", must be "{}"#,

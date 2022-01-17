@@ -192,7 +192,7 @@ async fn receive_presentation(
     let received_presentation = received
         .message
         .body
-        .ok_or_else(|| "send DIDComm request does not return presentation".to_string())?;
+        .ok_or("send DIDComm request does not return presentation".to_string())?;
 
     let attached_presentation = received_presentation.presentations_attach;
     let presentation_data = attached_presentation

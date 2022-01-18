@@ -11,14 +11,13 @@ use crate::{
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/ack`
 pub fn send_credential_ack(_options: &str, message: &str) -> StepResult {
-    let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
-    let data =
-        &serde_json::to_string(&parsed_message.body.ok_or("Credential data not provided.")?)?;
-    let ack: Ack = serde_json::from_str(data)?;
+    let parsed_message: Ack = serde_json::from_str(message)?;
+    let thid = parsed_message
+        .thid
+        .as_ref()
+        .ok_or("Thread id can't be empty")?;
 
-    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
-
-    let current_state: State = get_current_state(&thid, &ack.body.user_type)?.parse()?;
+    let current_state: State = get_current_state(&thid, &parsed_message.body.user_type)?.parse()?;
 
     match current_state {
         State::ReceiveIssueCredential => {
@@ -33,7 +32,7 @@ pub fn send_credential_ack(_options: &str, message: &str) -> StepResult {
         }
     };
 
-    generate_step_output(&serde_json::to_string(&ack)?, "{}")
+    generate_step_output(&serde_json::to_string(&parsed_message)?, "{}")
 }
 
 /// Protocol handler for direction: `receive`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/ack`

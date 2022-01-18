@@ -242,7 +242,7 @@ async fn send_request_credential(
         data_attach: Some(
             [CredentialAttach {
                 id: String::from("id"),
-                mime_type: String::from("text"),
+                mime_type: String::from("application/json"),
                 data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
             }]
             .to_vec(),

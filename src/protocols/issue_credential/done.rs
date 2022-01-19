@@ -1,12 +1,9 @@
-use crate::{
-    datatypes::ExtendedMessage,
-    protocols::{
-        issue_credential::{
-            credential::{get_current_state, save_state},
-            datatypes::{Ack, State, UserType},
-        },
-        protocol::{generate_step_output, StepResult},
+use crate::protocols::{
+    issue_credential::{
+        credential::{get_current_state, save_state},
+        datatypes::{Ack, State, UserType},
     },
+    protocol::{generate_step_output, StepResult},
 };
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/ack`
@@ -21,7 +18,7 @@ pub fn send_credential_ack(_options: &str, message: &str) -> StepResult {
 
     match current_state {
         State::ReceiveIssueCredential => {
-            save_state(&thid, &State::Acknowledged, &ack.body.user_type)?
+            save_state(&thid, &State::Acknowledged, &parsed_message.body.user_type)?
         }
         _ => {
             return Err(Box::from(format!(

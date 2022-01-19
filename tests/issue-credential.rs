@@ -422,21 +422,8 @@ async fn send_ack(
         },
     };
 
-    let exchange_complete = format!(
-        r#"{{
-            "type": "{}/ack",
-            "from": "{}",
-            "to": ["{}"],
-            "body": {},
-            "thid": "{}"
-        }}"#,
-        ISSUE_CREDENTIAL_PROTOCOL_URL,
-        sender,
-        receiver,
-        &serde_json::to_string(&ack)?,
-        id
-    );
-    let results = vade.didcomm_send(options, &exchange_complete).await?;
+    let ack_string = serde_json::to_string(&ack)?;
+    let results = vade.didcomm_send(options, &ack_string).await?;
     let result = results
         .get(0)
         .ok_or("no result")?

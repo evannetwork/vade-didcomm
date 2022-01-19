@@ -9,6 +9,11 @@
 
 ### Fixes
 
+- fix smaller things in Issue Credential flow
+  - move ack message out of DIDComm nesting in body and use a single DIDComm message for this
+  - allow issuer to enter the flow upon receiving a request
+  - fix mime type in test
+
 ### Deprecations
 
 ## v0.1.0

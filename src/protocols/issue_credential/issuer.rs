@@ -90,7 +90,7 @@ pub fn receive_request_credential(_options: &str, message: &str) -> StepResult {
     let current_state: State = get_current_state(&thid, &UserType::Issuer)?.parse()?;
 
     match current_state {
-        State::SendOfferCredential => {
+        State::SendOfferCredential | State::Unknown => {
             save_state(&thid, &State::ReceiveRequestCredential, &UserType::Issuer)?
         }
         _ => {

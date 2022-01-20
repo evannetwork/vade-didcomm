@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use didcomm_rs::Jwe;
 use ed25519_dalek::{Keypair, PublicKey, SecretKey};
+use k256::elliptic_curve::rand_core::OsRng;
 use vade::{VadePlugin, VadePluginResultValue};
 use x25519_dalek::StaticSecret;
 
@@ -8,6 +9,7 @@ use crate::{
     datatypes::{
         BaseMessage,
         DidCommOptions,
+        EncryptionKeyPair,
         EncryptionKeys,
         ExtendedMessage,
         MessageDirection,
@@ -38,6 +40,41 @@ impl VadeDidComm {
 
 #[async_trait(?Send)]
 impl VadePlugin for VadeDidComm {
+    /// Runs a custom function, currently supports
+    ///
+    /// - `create_new_keys` to create a new key pair to be used for DIDCOMM communication.
+    ///
+    /// # Arguments
+    ///
+    /// * `_method` - not required, can be left empty
+    /// * `function` - currently supports `create_new_keys`
+    /// * `_options` - not required, can be left empty
+    /// * `_payload` - not required, can be left empty
+    /// 
+    /// # Returns
+    /// * `Option<String>>` - created key pair
+    async fn run_custom_function(
+        &mut self,
+        _method: &str,
+        function: &str,
+        _options: &str,
+        _payload: &str,
+    ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
+        match function {
+            "create_keys" => {
+                let secret_key = StaticSecret::new(OsRng);
+                let pub_key = x25519_dalek::PublicKey::from(&secret_key);
+            
+                let enc_key_pair = EncryptionKeyPair {
+                    secret: secret_key.to_bytes(),
+                    public: pub_key.to_bytes(),
+                };
+                Ok(VadePluginResultValue::Success(Some(serde_json::to_string(&enc_key_pair)?)))
+            }
+            _ => Ok(VadePluginResultValue::Ignored),
+        }
+    }
+
     /// Prepare a plain DIDComm json message to be sent, including encryption and protocol specific
     /// message enhancement.
     /// The DIDComm options can include a shared secret to encrypt the message with a specific key.

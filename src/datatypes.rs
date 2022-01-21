@@ -180,7 +180,6 @@ pub struct EncryptedMessage {
 
 /// Generated KeyPair for encryption
 #[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct EncryptionKeyPair {
     #[serde(with = "hex")]
     pub secret: [u8; 32],

@@ -184,6 +184,7 @@ pub struct EncryptedMessage {
 pub struct EncryptionKeyPair {
     #[serde(with = "hex")]
     pub secret: [u8; 32],
+    #[serde(with = "hex")]
     pub public: [u8; 32],
 }
 

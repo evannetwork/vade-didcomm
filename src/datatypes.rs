@@ -178,6 +178,15 @@ pub struct EncryptedMessage {
     pub other: HashMap<String, String>,
 }
 
+/// Generated KeyPair for encryption
+#[derive(Serialize, Deserialize)]
+pub struct EncryptionKeyPair {
+    #[serde(with = "hex")]
+    pub secret: [u8; 32],
+    #[serde(with = "hex")]
+    pub public: [u8; 32],
+}
+
 /// Either a computed shared secret or a (local) private key plus a contacts public key
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

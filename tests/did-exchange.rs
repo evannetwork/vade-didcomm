@@ -10,7 +10,10 @@ use vade_didcomm::{
         Base64Container,
         BaseMessage,
         CommKeyPair,
+        DidCommOptions,
         DidDocumentBodyAttachment,
+        EncryptionKeyPair,
+        EncryptionKeys,
         MessageWithBody,
         VadeDidCommPluginOutput,
     },
@@ -228,6 +231,21 @@ async fn receive_complete(
     Ok(())
 }
 
+async fn create_keys(
+    vade: &mut Vade,
+) -> Result<EncryptionKeyPair, Box<dyn std::error::Error>> {
+    let results = vade.run_custom_function("{}","create_keys","{}","{}").await?;
+    let received = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+
+    let keys: EncryptionKeyPair = serde_json::from_str(received)?;
+
+    Ok(keys)
+}
+
 #[tokio::test]
 #[serial]
 async fn can_do_key_exchange_with_auto_generated_keys() -> Result<(), Box<dyn std::error::Error>> {
@@ -347,6 +365,87 @@ async fn can_do_key_exchange_pregenerated_keys() -> Result<(), Box<dyn std::erro
     ))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
     assert_eq!(comm_keypair.secret_key, hex::encode(receiver_secret_key));
+
+    Ok(())
+}
+
+
+#[tokio::test]
+#[serial]
+async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+    let alice_keys = create_keys(&mut vade).await?;
+    let bob_keys = create_keys(&mut vade).await?;
+
+    let didcomm_options_alice = DidCommOptions {
+        encryption_keys: Some(EncryptionKeys {
+            encryption_my_secret: alice_keys.secret,
+            encryption_others_public: Some(bob_keys.public),
+        }),
+        signing_keys: None,
+        skip_message_packaging: Some(false),
+        skip_protocol_handling: Some(false),
+    };
+
+    let didcomm_options_bob = DidCommOptions {
+        encryption_keys: Some(EncryptionKeys {
+            encryption_my_secret: bob_keys.secret,
+            encryption_others_public: Some(alice_keys.public),
+        }),
+        signing_keys: None,
+        skip_message_packaging: Some(false),
+        skip_protocol_handling: Some(false),
+    };
+
+    let sender_options_stringified =
+    serde_json::to_string(&didcomm_options_bob).unwrap_or_else(|_| "{}".to_string());
+
+    let receiver_options_stringified =
+    serde_json::to_string(&didcomm_options_alice).unwrap_or_else(|_| "{}".to_string());
+
+    let test_setup = get_keypair_set();
+
+    let request_message = send_request(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &sender_options_stringified,
+    )
+    .await?;
+    receive_request(
+        &mut vade,
+        request_message,
+        &receiver_options_stringified,
+    )
+    .await?;
+
+    let response_message = send_response(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        &receiver_options_stringified,
+    )
+    .await?;
+    receive_response(
+        &mut vade,
+        response_message,
+        &sender_options_stringified,
+    )
+    .await?;
+
+    let complete_message = send_complete(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &sender_options_stringified,
+    )
+    .await?;
+    receive_complete(
+        &mut vade,
+        complete_message,
+        &receiver_options_stringified,
+    )
+    .await?;
 
     Ok(())
 }

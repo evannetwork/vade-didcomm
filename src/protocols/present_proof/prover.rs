@@ -23,10 +23,10 @@ pub fn send_presentation(_options: &str, message: &str) -> StepResult {
         .as_ref()
         .ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Prover)?.parse()?;
+    let current_state: State = get_current_state(thid, &UserType::Prover)?.parse()?;
     match current_state {
         State::PresentationRequestReceived => {
-            save_state(&thid, &State::PresentationSent, &UserType::Prover)?
+            save_state(thid, &State::PresentationSent, &UserType::Prover)?
         }
         _ => {
             return Err(Box::from(format!(
@@ -40,7 +40,7 @@ pub fn send_presentation(_options: &str, message: &str) -> StepResult {
     save_presentation(
         &from_to.from,
         &from_to.to,
-        &thid,
+        thid,
         &serde_json::to_string(&presentation_data)?,
         &State::PresentationSent,
     )?;
@@ -107,7 +107,7 @@ pub fn send_propose_presentation(_options: &str, message: &str) -> StepResult {
         .as_ref()
         .ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Prover)?.parse()?;
+    let current_state: State = get_current_state(thid, &UserType::Prover)?.parse()?;
 
     match current_state {
         State::PresentationRequestReceived | State::Unknown => {
@@ -125,7 +125,7 @@ pub fn send_propose_presentation(_options: &str, message: &str) -> StepResult {
     save_presentation(
         &from_to.from,
         &from_to.to,
-        &thid,
+        thid,
         &serde_json::to_string(&proposal_data)?,
         &State::PresentationProposed,
     )?;

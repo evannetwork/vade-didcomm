@@ -9,16 +9,16 @@ use crate::protocols::{
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/problem-report`
 pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
     let problem_report: ProblemReport = serde_json::from_str(message)?;
-    let problem_report_data = &problem_report.body.clone();
+    let problem_report_data = &problem_report.body;
     let thid = problem_report
         .thid
         .as_ref()
         .ok_or("Thread id can't be empty")?;
-    let current_state: State = get_current_state(&thid, &problem_report_data.user_type)?.parse()?;
+    let current_state: State = get_current_state(thid, &problem_report_data.user_type)?.parse()?;
 
     match current_state {
         State::ReceiveProposeCredential | State::ReceiveOfferCredential => save_state(
-            &thid,
+            thid,
             &State::ProblemReported,
             &problem_report_data.user_type,
         )?,

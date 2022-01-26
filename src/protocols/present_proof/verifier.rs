@@ -26,7 +26,7 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
     let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
     match current_state {
         State::PresentationProposalReceived | State::Unknown => {
-            save_state(&thid, &State::PresentationRequested, &UserType::Verifier)?
+            save_state(thid, &State::PresentationRequested, &UserType::Verifier)?
         }
         _ => {
             return Err(Box::from(format!(
@@ -40,7 +40,7 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
     save_presentation(
         &from_to.from,
         &from_to.to,
-        &thid,
+        thid,
         &serde_json::to_string(&request_data)?,
         &State::PresentationRequested,
     )?;
@@ -61,10 +61,10 @@ pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
         .as_ref()
         .ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
+    let current_state: State = get_current_state(thid, &UserType::Verifier)?.parse()?;
     match current_state {
         State::PresentationRequested => {
-            save_state(&thid, &State::PresentationReceived, &UserType::Verifier)?
+            save_state(thid, &State::PresentationReceived, &UserType::Verifier)?
         }
         _ => {
             return Err(Box::from(format!(
@@ -78,7 +78,7 @@ pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
     save_presentation(
         &from_to.from,
         &from_to.to,
-        &thid,
+        thid,
         &serde_json::to_string(&presentation_data)?,
         &State::PresentationReceived,
     )?;
@@ -106,10 +106,10 @@ pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult
         .to_owned()
         .ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
+    let current_state: State = get_current_state(thid, &UserType::Verifier)?.parse()?;
     match current_state {
         State::PresentationRequested | State::Unknown => save_state(
-            &thid,
+            thid,
             &State::PresentationProposalReceived,
             &UserType::Verifier,
         )?,
@@ -125,7 +125,7 @@ pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult
     save_presentation(
         &from_to.from,
         &from_to.to,
-        &thid,
+        thid,
         &serde_json::to_string(&proposal_data)?,
         &State::PresentationProposalReceived,
     )?;

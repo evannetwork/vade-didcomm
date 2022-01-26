@@ -2,6 +2,8 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
+use crate::datatypes::Data;
+
 pub const ISSUE_CREDENTIAL_PROTOCOL_URL: &str = "https://didcomm.org/issue-credential/1.0";
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -19,7 +21,7 @@ pub struct IssuerCredentialReq {
 pub struct CredentialAttach {
     pub id: String,
     pub mime_type: String,
-    pub data: String,
+    pub data: Data,
 }
 
 /// CredentialProposal struct contains fields required by propose-credential message.

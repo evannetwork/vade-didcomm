@@ -9,7 +9,7 @@ use utilities::keypair::get_keypair_set;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{MessageWithBody, VadeDidCommPluginOutput},
+    datatypes::{Data, MessageWithBody, VadeDidCommPluginOutput},
     protocols::present_proof::datatypes::{
         AckData,
         AckStatus,
@@ -79,7 +79,10 @@ async fn send_request_presentation(
             request_presentations_attach: [PresentationAttach {
                 id: Uuid::new_v4().to_simple().to_string(),
                 mime_type: String::from("application/json"),
-                data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
+                data: Data {
+                    json: None,
+                    base64: Some(String::from("YmFzZSA2NCBkYXRhIHN0cmluZw")),
+                },
             }]
             .to_vec(),
             comment: None,
@@ -129,7 +132,10 @@ async fn receive_request_presentation(
     let attached_req_saved = req_data_saved.request_presentations_attach;
     let presentation_data_saved = attached_req_saved.get(0).ok_or("Request body is invalid")?;
 
-    assert_eq!(presentation_data.data, presentation_data_saved.data);
+    assert_eq!(
+        presentation_data.data.base64,
+        presentation_data_saved.data.base64
+    );
 
     Ok(())
 }
@@ -150,7 +156,10 @@ async fn send_presentation(
             presentations_attach: [PresentationAttach {
                 id: Uuid::new_v4().to_simple().to_string(),
                 mime_type: String::from("application/json"),
-                data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
+                data: Data {
+                    json: None,
+                    base64: Some(String::from("YmFzZSA2NCBkYXRhIHN0cmluZw")),
+                },
             }]
             .to_vec(),
 
@@ -206,7 +215,10 @@ async fn receive_presentation(
         .get(0)
         .ok_or("Presentation body is invalid")?;
 
-    assert_eq!(presentation_data.data, presentation_data_saved.data);
+    assert_eq!(
+        presentation_data.data.base64,
+        presentation_data_saved.data.base64
+    );
 
     Ok(())
 }

@@ -45,14 +45,7 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
         &State::PresentationRequested,
     )?;
 
-    let metadata = request_data
-        .request_presentations_attach
-        .get(0)
-        .ok_or("Request data not attached")?;
-    generate_step_output(
-        &serde_json::to_string(&request_message)?,
-        &serde_json::to_string(&metadata)?,
-    )
+    generate_step_output(&serde_json::to_string(&request_message)?, "{}")
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/presentation`
@@ -89,11 +82,8 @@ pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
         &serde_json::to_string(&presentation_data)?,
         &State::PresentationReceived,
     )?;
-    let metadata = presentation_data
-        .presentations_attach
-        .get(0)
-        .ok_or("Presentation data not attached")?;
-    generate_step_output(message, &serde_json::to_string(&metadata)?)
+
+    generate_step_output(message, "{}")
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/propose-presentation`
@@ -140,13 +130,5 @@ pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult
         &State::PresentationProposalReceived,
     )?;
 
-    let attribute = proposal_data
-        .presentation_proposal
-        .attribute
-        .as_ref()
-        .ok_or("No Attributes provided")?;
-    let metadata = attribute
-        .get(0)
-        .ok_or("Attribute data should be provided")?;
-    generate_step_output(message, &serde_json::to_string(metadata)?)
+    generate_step_output(message, "{}")
 }

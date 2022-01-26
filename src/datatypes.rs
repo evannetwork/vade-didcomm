@@ -213,6 +213,16 @@ pub struct SigningKeys {
     pub signing_others_public: Option<[u8; 32]>,
 }
 
+/// Data contains optional field which have to filled as per
+/// attached data requirement (json/base64) as per protocol
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Data {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub json: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base64: Option<String>,
+}
+
 /// Optional parameter that can be passed to vade DIDComm functions to enforce a specific encryption key
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -217,8 +217,9 @@ pub struct SigningKeys {
 /// attached data requirement (json/base64) as per protocol
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Data {
+    #[serde(flatten)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub json: Option<String>,
+    pub json: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub base64: Option<String>,
 }

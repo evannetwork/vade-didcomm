@@ -337,7 +337,7 @@ async fn send_issue_credential(
                 id: String::from("id"),
                 mime_type: String::from("text"),
                 data: Data {
-                    json: None,
+                    json: Some(serde_json::json!({"name": "name", "mime_type": "text/text", "value": "vineet"})),
                     base64: Some(String::from("YmFzZSA2NCBkYXRhIHN0cmluZw")),
                 },
             }]
@@ -380,6 +380,9 @@ async fn receive_issue_credential(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let json_data = r#"{"name": "name", "mime_type": "text/text", "value": "vineet"}"#;
+    let json_value: serde_json::Value =  serde_json::from_str(json_data)?;
+
     let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
@@ -408,7 +411,9 @@ async fn receive_issue_credential(
     let attachment_saved = proposal_data_saved_attributes
         .get(0)
         .ok_or("Saved Attachment is invalid")?;
+
     assert_eq!(attachment.data.base64, attachment_saved.data.base64);
+    assert_eq!(attachment.data.json.as_ref().ok_or("json value not present")?, &json_value);
     Ok(())
 }
 

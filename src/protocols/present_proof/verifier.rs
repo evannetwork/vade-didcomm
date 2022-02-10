@@ -26,7 +26,7 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
     let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
     match current_state {
         State::PresentationProposalReceived | State::Unknown => {
-            save_state(&thid, &State::PresentationRequested, &UserType::Verifier)?
+            save_state(thid, &State::PresentationRequested, &UserType::Verifier)?
         }
         _ => {
             return Err(Box::from(format!(
@@ -40,19 +40,12 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
     save_presentation(
         &from_to.from,
         &from_to.to,
-        &thid,
+        thid,
         &serde_json::to_string(&request_data)?,
         &State::PresentationRequested,
     )?;
 
-    let metadata = request_data
-        .request_presentations_attach
-        .get(0)
-        .ok_or("Request data not attached")?;
-    generate_step_output(
-        &serde_json::to_string(&request_message)?,
-        &serde_json::to_string(&metadata)?,
-    )
+    generate_step_output(&serde_json::to_string(&request_message)?, "{}")
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/presentation`
@@ -68,10 +61,10 @@ pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
         .as_ref()
         .ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
+    let current_state: State = get_current_state(thid, &UserType::Verifier)?.parse()?;
     match current_state {
         State::PresentationRequested => {
-            save_state(&thid, &State::PresentationReceived, &UserType::Verifier)?
+            save_state(thid, &State::PresentationReceived, &UserType::Verifier)?
         }
         _ => {
             return Err(Box::from(format!(
@@ -85,15 +78,12 @@ pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
     save_presentation(
         &from_to.from,
         &from_to.to,
-        &thid,
+        thid,
         &serde_json::to_string(&presentation_data)?,
         &State::PresentationReceived,
     )?;
-    let metadata = presentation_data
-        .presentations_attach
-        .get(0)
-        .ok_or("Presentation data not attached")?;
-    generate_step_output(message, &serde_json::to_string(&metadata)?)
+
+    generate_step_output(message, "{}")
 }
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/propose-presentation`
@@ -116,10 +106,10 @@ pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult
         .to_owned()
         .ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
+    let current_state: State = get_current_state(thid, &UserType::Verifier)?.parse()?;
     match current_state {
         State::PresentationRequested | State::Unknown => save_state(
-            &thid,
+            thid,
             &State::PresentationProposalReceived,
             &UserType::Verifier,
         )?,
@@ -135,18 +125,10 @@ pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult
     save_presentation(
         &from_to.from,
         &from_to.to,
-        &thid,
+        thid,
         &serde_json::to_string(&proposal_data)?,
         &State::PresentationProposalReceived,
     )?;
 
-    let attribute = proposal_data
-        .presentation_proposal
-        .attribute
-        .as_ref()
-        .ok_or("No Attributes provided")?;
-    let metadata = attribute
-        .get(0)
-        .ok_or("Attribute data should be provided")?;
-    generate_step_output(message, &serde_json::to_string(metadata)?)
+    generate_step_output(message, "{}")
 }

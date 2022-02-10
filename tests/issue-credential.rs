@@ -7,7 +7,7 @@ use utilities::keypair::get_keypair_set;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{MessageWithBody, VadeDidCommPluginOutput},
+    datatypes::{Data, MessageWithBody, VadeDidCommPluginOutput},
     protocols::issue_credential::datatypes::{
         Ack,
         AckData,
@@ -156,7 +156,10 @@ async fn send_offer_credential(
             [CredentialAttach {
                 id: String::from("id"),
                 mime_type: String::from("text"),
-                data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
+                data: Data {
+                    json: None,
+                    base64: Some(String::from("YmFzZSA2NCBkYXRhIHN0cmluZw")),
+                },
             }]
             .to_vec(),
         ),
@@ -224,7 +227,7 @@ async fn receive_offer_credential(
         .get(0)
         .ok_or("Request body is invalid")?;
 
-    assert_eq!(credential_data.data, attached_data_saved.data);
+    assert_eq!(credential_data.data.base64, attached_data_saved.data.base64);
 
     Ok(())
 }
@@ -243,7 +246,10 @@ async fn send_request_credential(
             [CredentialAttach {
                 id: String::from("id"),
                 mime_type: String::from("application/json"),
-                data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
+                data: Data {
+                    json: None,
+                    base64: Some(String::from("YmFzZSA2NCBkYXRhIHN0cmluZw")),
+                },
             }]
             .to_vec(),
         ),
@@ -312,7 +318,7 @@ async fn receive_request_credential(
     let attribute_saved = proposal_data_saved_attributes
         .get(0)
         .ok_or("Saved Attachment is invalid")?;
-    assert_eq!(attribute.data, attribute_saved.data);
+    assert_eq!(attribute.data.base64, attribute_saved.data.base64);
     Ok(())
 }
 
@@ -330,7 +336,10 @@ async fn send_issue_credential(
             [CredentialAttach {
                 id: String::from("id"),
                 mime_type: String::from("text"),
-                data: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
+                data: Data {
+                    json: Some(serde_json::json!({"name": "name", "mime_type": "text/text", "value": "vineet"})),
+                    base64: Some(String::from("YmFzZSA2NCBkYXRhIHN0cmluZw")),
+                },
             }]
             .to_vec(),
         ),
@@ -371,6 +380,9 @@ async fn receive_issue_credential(
     options: &str,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let json_data = r#"{"name": "name", "mime_type": "text/text", "value": "vineet"}"#;
+    let json_value: serde_json::Value =  serde_json::from_str(json_data)?;
+
     let results = vade.didcomm_receive(options, &message).await?;
     let result = results
         .get(0)
@@ -399,7 +411,9 @@ async fn receive_issue_credential(
     let attachment_saved = proposal_data_saved_attributes
         .get(0)
         .ok_or("Saved Attachment is invalid")?;
-    assert_eq!(attachment.data, attachment_saved.data);
+
+    assert_eq!(attachment.data.base64, attachment_saved.data.base64);
+    assert_eq!(attachment.data.json.as_ref().ok_or("json value not present")?, &json_value);
     Ok(())
 }
 

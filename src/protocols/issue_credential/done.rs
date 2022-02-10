@@ -14,11 +14,11 @@ pub fn send_credential_ack(_options: &str, message: &str) -> StepResult {
         .as_ref()
         .ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid, &parsed_message.body.user_type)?.parse()?;
+    let current_state: State = get_current_state(thid, &parsed_message.body.user_type)?.parse()?;
 
     match current_state {
         State::ReceiveIssueCredential => {
-            save_state(&thid, &State::Acknowledged, &parsed_message.body.user_type)?
+            save_state(thid, &State::Acknowledged, &parsed_message.body.user_type)?
         }
         _ => {
             return Err(Box::from(format!(

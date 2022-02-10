@@ -20,7 +20,7 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
         .thid
         .as_ref()
         .ok_or("Thread id can't be empty")?;
-    let current_state: State = get_current_state(&thid, &problem_report_data.user_type)?.parse()?;
+    let current_state: State = get_current_state(thid, &problem_report_data.user_type)?.parse()?;
 
     match current_state {
         State::PresentationRequested
@@ -29,7 +29,7 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
         | State::PresentationReceived
         | State::PresentationProposalReceived
         | State::PresentationProposed => save_state(
-            &thid,
+            thid,
             &State::ProblemReported,
             &problem_report_data.user_type,
         )?,

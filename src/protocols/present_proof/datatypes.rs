@@ -2,6 +2,8 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
+use crate::datatypes::Data;
+
 pub const PRESENT_PROOF_PROTOCOL_URL: &str = "https://didcomm.org/present-proof/1.0";
 pub const PROPOSAL_PROTOCOL_URL: &str =
     "https://didcomm.org/present-proof/1.0/presentation-preview";
@@ -76,7 +78,7 @@ pub struct PresentationAttach {
     pub id: String,
     #[serde(rename = "mime-type")]
     pub mime_type: String,
-    pub data: String,
+    pub data: Data,
 }
 
 /// Presentation preview structure is sent by prover to propose alternate presentation.

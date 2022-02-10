@@ -17,11 +17,11 @@ pub fn send_presentation_ack(_options: &str, message: &str) -> StepResult {
         .as_ref()
         .ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
+    let current_state: State = get_current_state(thid, &UserType::Verifier)?.parse()?;
 
     match current_state {
         State::PresentationReceived => {
-            save_state(&thid, &State::Acknowledged, &UserType::Verifier)?
+            save_state(thid, &State::Acknowledged, &UserType::Verifier)?
         }
         _ => {
             return Err(Box::from(format!(

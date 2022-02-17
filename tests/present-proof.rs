@@ -9,7 +9,12 @@ use utilities::keypair::get_keypair_set;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{Data, MessageWithBody, VadeDidCommPluginOutput},
+    datatypes::{
+        Data,
+        MessageWithBody,
+        VadeDidCommPluginReceiveOutput,
+        VadeDidCommPluginSendOutput,
+    },
     protocols::present_proof::datatypes::{
         AckData,
         AckStatus,
@@ -98,7 +103,7 @@ async fn send_request_presentation(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -117,7 +122,7 @@ async fn receive_request_presentation(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let received: VadeDidCommPluginOutput<MessageWithBody<RequestData>> =
+    let received: VadeDidCommPluginReceiveOutput<MessageWithBody<RequestData>> =
         serde_json::from_str(result)?;
 
     let request_presentation = received
@@ -175,7 +180,7 @@ async fn send_presentation(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -195,7 +200,7 @@ async fn receive_presentation(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<MessageWithBody<PresentationData>> =
+    let received: VadeDidCommPluginReceiveOutput<MessageWithBody<PresentationData>> =
         serde_json::from_str(result)?;
 
     let received_presentation = received
@@ -272,7 +277,7 @@ async fn send_presentation_proposal(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -292,7 +297,7 @@ async fn receive_presentation_proposal(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<MessageWithBody<ProposalData>> =
+    let received: VadeDidCommPluginReceiveOutput<MessageWithBody<ProposalData>> =
         serde_json::from_str(result)?;
 
     let received_proposal = received
@@ -344,7 +349,7 @@ async fn send_ack(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -364,7 +369,8 @@ async fn receive_ack(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<MessageWithBody<AckData>> = serde_json::from_str(result)?;
+    let received: VadeDidCommPluginReceiveOutput<MessageWithBody<AckData>> =
+        serde_json::from_str(result)?;
 
     let received_ack = received.message;
 
@@ -407,7 +413,7 @@ async fn send_problem_report(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -427,7 +433,7 @@ async fn receive_problem_report(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<MessageWithBody<ProblemReportData>> =
+    let received: VadeDidCommPluginReceiveOutput<MessageWithBody<ProblemReportData>> =
         serde_json::from_str(result)?;
 
     let received_problem = received.message;

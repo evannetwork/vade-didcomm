@@ -15,7 +15,8 @@ use vade_didcomm::{
         EncryptionKeyPair,
         EncryptionKeys,
         MessageWithBody,
-        VadeDidCommPluginOutput,
+        VadeDidCommPluginReceiveOutput,
+        VadeDidCommPluginSendOutput,
     },
     protocols::did_exchange::DidExchangeOptions,
 };
@@ -52,7 +53,7 @@ async fn send_request(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
     let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver))?;
     let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
@@ -90,7 +91,7 @@ async fn receive_request(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let received: VadeDidCommPluginOutput<
+    let received: VadeDidCommPluginReceiveOutput<
         MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
     > = serde_json::from_str(result)?;
     let target_did = received
@@ -144,7 +145,7 @@ async fn send_response(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -161,7 +162,7 @@ async fn receive_response(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<
+    let received: VadeDidCommPluginReceiveOutput<
         MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
     > = serde_json::from_str(result)?;
     let receiver_did = received
@@ -205,7 +206,7 @@ async fn send_complete(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -221,7 +222,8 @@ async fn receive_complete(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let complete_message: VadeDidCommPluginOutput<BaseMessage> = serde_json::from_str(received)?;
+    let complete_message: VadeDidCommPluginReceiveOutput<BaseMessage> =
+        serde_json::from_str(received)?;
 
     assert_eq!(
         complete_message.message.r#type,
@@ -231,10 +233,10 @@ async fn receive_complete(
     Ok(())
 }
 
-async fn create_keys(
-    vade: &mut Vade,
-) -> Result<EncryptionKeyPair, Box<dyn std::error::Error>> {
-    let results = vade.run_custom_function("{}","create_keys","{}","{}").await?;
+async fn create_keys(vade: &mut Vade) -> Result<EncryptionKeyPair, Box<dyn std::error::Error>> {
+    let results = vade
+        .run_custom_function("{}", "create_keys", "{}", "{}")
+        .await?;
     let received = results
         .get(0)
         .ok_or("no result")?
@@ -369,7 +371,6 @@ async fn can_do_key_exchange_pregenerated_keys() -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
-
 #[tokio::test]
 #[serial]
 async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error::Error>> {
@@ -398,10 +399,10 @@ async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error
     };
 
     let sender_options_stringified =
-    serde_json::to_string(&didcomm_options_bob).unwrap_or_else(|_| "{}".to_string());
+        serde_json::to_string(&didcomm_options_bob).unwrap_or_else(|_| "{}".to_string());
 
     let receiver_options_stringified =
-    serde_json::to_string(&didcomm_options_alice).unwrap_or_else(|_| "{}".to_string());
+        serde_json::to_string(&didcomm_options_alice).unwrap_or_else(|_| "{}".to_string());
 
     let test_setup = get_keypair_set();
 
@@ -412,12 +413,7 @@ async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error
         &sender_options_stringified,
     )
     .await?;
-    receive_request(
-        &mut vade,
-        request_message,
-        &receiver_options_stringified,
-    )
-    .await?;
+    receive_request(&mut vade, request_message, &receiver_options_stringified).await?;
 
     let response_message = send_response(
         &mut vade,
@@ -426,12 +422,7 @@ async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error
         &receiver_options_stringified,
     )
     .await?;
-    receive_response(
-        &mut vade,
-        response_message,
-        &sender_options_stringified,
-    )
-    .await?;
+    receive_response(&mut vade, response_message, &sender_options_stringified).await?;
 
     let complete_message = send_complete(
         &mut vade,
@@ -440,12 +431,7 @@ async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error
         &sender_options_stringified,
     )
     .await?;
-    receive_complete(
-        &mut vade,
-        complete_message,
-        &receiver_options_stringified,
-    )
-    .await?;
+    receive_complete(&mut vade, complete_message, &receiver_options_stringified).await?;
 
     Ok(())
 }

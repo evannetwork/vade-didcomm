@@ -7,7 +7,12 @@ use utilities::keypair::get_keypair_set;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{Data, MessageWithBody, VadeDidCommPluginOutput},
+    datatypes::{
+        Data,
+        MessageWithBody,
+        VadeDidCommPluginReceiveOutput,
+        VadeDidCommPluginSendOutput,
+    },
     protocols::issue_credential::datatypes::{
         Ack,
         AckData,
@@ -93,7 +98,7 @@ async fn send_propose_credential(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -112,7 +117,7 @@ async fn receive_propose_credential(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
+    let received: VadeDidCommPluginReceiveOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
     let propose_credential = received
@@ -187,7 +192,7 @@ async fn send_offer_credential(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -207,7 +212,7 @@ async fn receive_offer_credential(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
+    let received: VadeDidCommPluginReceiveOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
     let received_offer = received.message.body.ok_or_else(|| {
@@ -277,7 +282,7 @@ async fn send_request_credential(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -297,7 +302,7 @@ async fn receive_request_credential(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
+    let received: VadeDidCommPluginReceiveOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
     let received_proposal = received.message.body.ok_or_else(|| {
@@ -367,7 +372,7 @@ async fn send_issue_credential(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -381,7 +386,7 @@ async fn receive_issue_credential(
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let json_data = r#"{"name": "name", "mime_type": "text/text", "value": "vineet"}"#;
-    let json_value: serde_json::Value =  serde_json::from_str(json_data)?;
+    let json_value: serde_json::Value = serde_json::from_str(json_data)?;
 
     let results = vade.didcomm_receive(options, &message).await?;
     let result = results
@@ -390,7 +395,7 @@ async fn receive_issue_credential(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<MessageWithBody<CredentialData>> =
+    let received: VadeDidCommPluginReceiveOutput<MessageWithBody<CredentialData>> =
         serde_json::from_str(result)?;
 
     let received_proposal = received.message.body.ok_or_else(|| {
@@ -413,7 +418,14 @@ async fn receive_issue_credential(
         .ok_or("Saved Attachment is invalid")?;
 
     assert_eq!(attachment.data.base64, attachment_saved.data.base64);
-    assert_eq!(attachment.data.json.as_ref().ok_or("json value not present")?, &json_value);
+    assert_eq!(
+        attachment
+            .data
+            .json
+            .as_ref()
+            .ok_or("json value not present")?,
+        &json_value
+    );
     Ok(())
 }
 
@@ -443,7 +455,7 @@ async fn send_ack(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -463,7 +475,7 @@ async fn receive_ack(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<Ack> = serde_json::from_str(result)?;
+    let received: VadeDidCommPluginReceiveOutput<Ack> = serde_json::from_str(result)?;
 
     let received_ack = received.message;
 
@@ -506,7 +518,7 @@ async fn send_problem_report(
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let prepared: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(result)?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -526,7 +538,7 @@ async fn receive_problem_report(
         .as_ref()
         .ok_or("no value in result")?;
 
-    let received: VadeDidCommPluginOutput<ProblemReport> = serde_json::from_str(result)?;
+    let received: VadeDidCommPluginReceiveOutput<ProblemReport> = serde_json::from_str(result)?;
 
     let received_problem = received.message;
 

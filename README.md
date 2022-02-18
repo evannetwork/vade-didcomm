@@ -45,12 +45,23 @@ The two functions [`didcomm_send`] and [`didcomm_receive`] can be called with tw
 
 - Message: The plain message object, containing at least the type, to DID and from DID.
 
-The result of both functions will have the same structure and will always return a stringified json, with the following pattern:
+The result of both functions will always return a stringified json with almost same structure, only difference is that `didcomm_receive` doesn't return `messageRaw` property, the return has following pattern:
+
+#### didcomm_send
 
 ```json
 {
   "message": {},
   "messageRaw": {},
+  "metadata": {}
+}
+```
+
+#### didcomm_receive
+
+```json
+{
+  "message": {},
   "metadata": {}
 }
 ```

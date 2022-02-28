@@ -315,10 +315,9 @@ impl VadePlugin for VadeDidComm {
         let receive_result = format!(
             r#"{{
                 "message": {},
-                "messageRaw": {},
                 "metadata": {}
             }}"#,
-            protocol_result.message, message_with_id, protocol_result.metadata,
+            protocol_result.message, protocol_result.metadata,
         );
 
         return Ok(VadePluginResultValue::Success(Some(receive_result)));

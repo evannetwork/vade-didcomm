@@ -5,7 +5,10 @@ use std::{
 
 use uuid::Uuid;
 
-use crate::datatypes::{BaseMessage, ExtendedMessage, FromTo};
+use crate::{
+    datatypes::{BaseMessage, ExtendedMessage, FromTo},
+    db::write_db,
+};
 
 /// Formats an vector into an array dynamically.
 ///
@@ -43,6 +46,24 @@ pub fn get_from_to_from_message(
         from: from_did.to_owned(),
         to: String::from(to_did),
     })
+}
+
+/// Write a didcomm_send/didcomm_receive raw message to rocks_db
+///
+/// # Arguments
+/// * `message` - Raw message
+///
+pub fn write_raw_message_to_db(message: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let parsed_raw_message: ExtendedMessage = serde_json::from_str(message)?;
+    
+    write_db(
+        &format!(
+            "message_{}_{}",
+            parsed_raw_message.thid.ok_or("")?,
+            parsed_raw_message.id.ok_or("")?
+        ),
+        message,
+    )
 }
 
 /// Adds an id and create_time to stringified DIDComm message.

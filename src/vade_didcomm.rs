@@ -20,7 +20,7 @@ use crate::{
     keypair::{get_com_keypair, get_key_agreement_key},
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
-    utils::vec_to_array,
+    utils::{vec_to_array, write_raw_message_to_db},
 };
 
 big_array! { BigArray; }
@@ -50,7 +50,7 @@ impl VadePlugin for VadeDidComm {
     /// * `function` - currently supports `create_new_keys`
     /// * `_options` - not required, can be left empty
     /// * `_payload` - not required, can be left empty
-    /// 
+    ///
     /// # Returns
     /// * `Option<String>>` - created key pair
     async fn run_custom_function(
@@ -64,12 +64,14 @@ impl VadePlugin for VadeDidComm {
             "create_keys" => {
                 let secret_key = StaticSecret::new(OsRng);
                 let pub_key = x25519_dalek::PublicKey::from(&secret_key);
-            
+
                 let enc_key_pair = EncryptionKeyPair {
                     secret: secret_key.to_bytes(),
                     public: pub_key.to_bytes(),
                 };
-                Ok(VadePluginResultValue::Success(Some(serde_json::to_string(&enc_key_pair)?)))
+                Ok(VadePluginResultValue::Success(Some(serde_json::to_string(
+                    &enc_key_pair,
+                )?)))
             }
             _ => Ok(VadePluginResultValue::Ignored),
         }
@@ -115,6 +117,12 @@ impl VadePlugin for VadeDidComm {
 
         // keep a copy of unencrypted message
         let message_raw = &message_with_id;
+        // store unencrypted raw message in db
+        let db_write_result = write_raw_message_to_db(message_raw);
+        match db_write_result {
+            Err(e) => return Err(e),
+            _ => (),
+        };
 
         // message string, that will be returned
         let final_message: String;
@@ -282,6 +290,13 @@ impl VadePlugin for VadeDidComm {
 
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(&decrypted)?;
+        // store unencrypted raw message in db
+        let db_write_result = write_raw_message_to_db(&message_with_id);
+        match db_write_result {
+            Err(e) => return Err(e),
+            _ => (),
+        };
+
         let protocol_result = match options_parsed.skip_protocol_handling {
             None | Some(false) => {
                 // run protocol specific logic

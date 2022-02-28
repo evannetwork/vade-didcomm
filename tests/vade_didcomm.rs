@@ -33,6 +33,7 @@ async fn can_be_registered_as_plugin() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[tokio::test]
+#[serial]
 async fn can_prepare_didcomm_message_for_sending() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
 
@@ -57,6 +58,7 @@ async fn can_prepare_didcomm_message_for_sending() -> Result<(), Box<dyn std::er
 }
 
 #[tokio::test]
+#[serial]
 async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
 
@@ -111,6 +113,7 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
 }
 
 #[tokio::test]
+#[serial]
 async fn can_receive_unencrypted() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
 
@@ -143,6 +146,7 @@ async fn can_receive_unencrypted() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
+#[serial]
 async fn should_fill_empty_id_and_created_time() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
 
@@ -177,6 +181,7 @@ async fn should_fill_empty_id_and_created_time() -> Result<(), Box<dyn std::erro
 }
 
 #[tokio::test]
+#[serial]
 async fn can_can_be_used_to_skip_protocol_handling_and_just_encrypt_data(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
@@ -211,6 +216,7 @@ async fn can_can_be_used_to_skip_protocol_handling_and_just_encrypt_data(
 }
 
 #[tokio::test]
+#[serial]
 async fn can_be_used_to_skip_protocol_handling_and_just_decrypt_data(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
@@ -339,6 +345,7 @@ async fn can_prepare_unencrypted_didcomm_messages() -> Result<(), Box<dyn std::e
 }
 
 #[tokio::test]
+#[serial]
 async fn should_store_messages_in_rocks_db() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
 

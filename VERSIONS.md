@@ -8,7 +8,7 @@
 - refactor Issue Credential protocol handling - refactor data structure according to spec
 - add create_keys function to generate X25519 secret/public keys for encryption
 - remove messageRaw property from the output of didcomm_receive
-
+- store raw messages in rocks db for didcomm send/receive
 ### Fixes
 
 - fix smaller things in Issue Credential flow

@@ -2,18 +2,20 @@ mod common;
 
 use std::collections::HashMap;
 
-use common::get_vade;
+use common::{get_vade, read_db};
 use didcomm_rs::Jwe;
 use serde::{Deserialize, Serialize};
 use serial_test::serial;
 use utilities::keypair::get_keypair_set;
-use vade_didcomm::datatypes::{
-    BaseMessage,
-    DidCommOptions,
-    ExtendedMessage,
-    MessageWithBody,
-    VadeDidCommPluginReceiveOutput,
-    VadeDidCommPluginSendOutput,
+use vade_didcomm::{
+    datatypes::{
+        BaseMessage,
+        DidCommOptions,
+        ExtendedMessage,
+        MessageWithBody,
+        VadeDidCommPluginReceiveOutput,
+        VadeDidCommPluginSendOutput,
+    },
 };
 
 const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
@@ -333,5 +335,62 @@ async fn can_prepare_unencrypted_didcomm_messages() -> Result<(), Box<dyn std::e
     assert!(message.get("ciphertext").is_none());
     assert!(message.get("body").is_some());
     assert!(message["body"].is_object());
+    Ok(())
+}
+
+#[tokio::test]
+async fn should_store_messages_in_rocks_db() -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+
+    let sign_keypair = get_keypair_set();
+    let payload = r#"{
+        "type": "https://didcomm.org/trust_ping/1.0/ping",
+        "from": "did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp",
+        "to": [ "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG" ],
+        "body": {}
+    }"#;
+    let results = vade
+        .didcomm_send(&sign_keypair.sender_options_stringified, payload)
+        .await?;
+
+    match results.get(0) {
+        Some(Some(value)) => {
+            let encrypted: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(value)?;
+            let encrypted_message = serde_json::to_string(&encrypted.message)?;
+            let results = vade
+                .didcomm_receive(
+                    &sign_keypair.receiver_options_stringified,
+                    &encrypted_message,
+                )
+                .await?;
+            let result = results
+                .get(0)
+                .ok_or("no result")?
+                .as_ref()
+                .ok_or("no value in result")?;
+
+            let parsed: VadeDidCommPluginReceiveOutput<MessageWithBody<PingBody>> =
+                serde_json::from_str(result)?;
+            
+           let stored_message = read_db(&format!(
+                "message_{}_{}",
+                parsed.message.thid.unwrap_or_else(|| "".to_string()), // in some cases thid is supplied as null as it is optional.
+                parsed.message.id.ok_or("id is invalid")?
+            ))?;
+
+            let parsed_stored_message: ExtendedMessage = serde_json::from_str(&stored_message)?;
+
+            // check the stored message with received message
+            assert_eq!(
+                parsed_stored_message.r#type,
+                parsed.message.r#type,
+            );
+
+        }
+        _ => {
+            return Err(Box::from("invalid result from DIDcomm_send"));
+        }
+    };
+
     Ok(())
 }

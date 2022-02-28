@@ -7,15 +7,13 @@ use didcomm_rs::Jwe;
 use serde::{Deserialize, Serialize};
 use serial_test::serial;
 use utilities::keypair::get_keypair_set;
-use vade_didcomm::{
-    datatypes::{
-        BaseMessage,
-        DidCommOptions,
-        ExtendedMessage,
-        MessageWithBody,
-        VadeDidCommPluginReceiveOutput,
-        VadeDidCommPluginSendOutput,
-    },
+use vade_didcomm::datatypes::{
+    BaseMessage,
+    DidCommOptions,
+    ExtendedMessage,
+    MessageWithBody,
+    VadeDidCommPluginReceiveOutput,
+    VadeDidCommPluginSendOutput,
 };
 
 const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
@@ -378,8 +376,8 @@ async fn should_store_messages_in_rocks_db() -> Result<(), Box<dyn std::error::E
 
             let parsed: VadeDidCommPluginReceiveOutput<MessageWithBody<PingBody>> =
                 serde_json::from_str(result)?;
-            
-           let stored_message = read_db(&format!(
+
+            let stored_message = read_db(&format!(
                 "message_{}_{}",
                 parsed.message.thid.unwrap_or_else(|| "".to_string()), // in some cases thid is supplied as null as it is optional.
                 parsed.message.id.ok_or("id is invalid")?
@@ -388,11 +386,7 @@ async fn should_store_messages_in_rocks_db() -> Result<(), Box<dyn std::error::E
             let parsed_stored_message: ExtendedMessage = serde_json::from_str(&stored_message)?;
 
             // check the stored message with received message
-            assert_eq!(
-                parsed_stored_message.r#type,
-                parsed.message.r#type,
-            );
-
+            assert_eq!(parsed_stored_message.r#type, parsed.message.r#type,);
         }
         _ => {
             return Err(Box::from("invalid result from DIDcomm_send"));

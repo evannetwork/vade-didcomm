@@ -7,6 +7,7 @@
 - refactor Present Proof protocol handling - refactor data structure according to spec
 - refactor Issue Credential protocol handling - refactor data structure according to spec
 - add create_keys function to generate X25519 secret/public keys for encryption
+- remove messageRaw property from the output of didcomm_receive
 
 ### Fixes
 

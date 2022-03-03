@@ -50,7 +50,7 @@ impl VadePlugin for VadeDidComm {
     /// * `function` - currently supports `create_new_keys`
     /// * `_options` - not required, can be left empty
     /// * `_payload` - not required, can be left empty
-    /// 
+    ///
     /// # Returns
     /// * `Option<String>>` - created key pair
     async fn run_custom_function(
@@ -64,12 +64,14 @@ impl VadePlugin for VadeDidComm {
             "create_keys" => {
                 let secret_key = StaticSecret::new(OsRng);
                 let pub_key = x25519_dalek::PublicKey::from(&secret_key);
-            
+
                 let enc_key_pair = EncryptionKeyPair {
                     secret: secret_key.to_bytes(),
                     public: pub_key.to_bytes(),
                 };
-                Ok(VadePluginResultValue::Success(Some(serde_json::to_string(&enc_key_pair)?)))
+                Ok(VadePluginResultValue::Success(Some(serde_json::to_string(
+                    &enc_key_pair,
+                )?)))
             }
             _ => Ok(VadePluginResultValue::Ignored),
         }
@@ -300,10 +302,9 @@ impl VadePlugin for VadeDidComm {
         let receive_result = format!(
             r#"{{
                 "message": {},
-                "messageRaw": {},
                 "metadata": {}
             }}"#,
-            protocol_result.message, message_with_id, protocol_result.metadata,
+            protocol_result.message, protocol_result.metadata,
         );
 
         return Ok(VadePluginResultValue::Success(Some(receive_result)));

@@ -12,7 +12,8 @@ use vade_didcomm::datatypes::{
     DidCommOptions,
     ExtendedMessage,
     MessageWithBody,
-    VadeDidCommPluginOutput,
+    VadeDidCommPluginReceiveOutput,
+    VadeDidCommPluginSendOutput,
 };
 
 const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
@@ -71,7 +72,7 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
 
     match results.get(0) {
         Some(Some(value)) => {
-            let encrypted: VadeDidCommPluginOutput<Jwe> = serde_json::from_str(value)?;
+            let encrypted: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(value)?;
             let encrypted_message = serde_json::to_string(&encrypted.message)?;
             let results = vade
                 .didcomm_receive(
@@ -84,7 +85,7 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
                 .ok_or("no result")?
                 .as_ref()
                 .ok_or("no value in result")?;
-            let parsed: VadeDidCommPluginOutput<MessageWithBody<PingBody>> =
+            let parsed: VadeDidCommPluginReceiveOutput<MessageWithBody<PingBody>> =
                 serde_json::from_str(result)?;
             assert_eq!(
                 "https://didcomm.org/trust_ping/1.0/ping",
@@ -129,7 +130,7 @@ async fn can_receive_unencrypted() -> Result<(), Box<dyn std::error::Error>> {
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let parsed: VadeDidCommPluginOutput<BaseMessage> = serde_json::from_str(result)?;
+    let parsed: VadeDidCommPluginReceiveOutput<BaseMessage> = serde_json::from_str(result)?;
 
     assert_eq!(
         "https://didcomm.org/trust_ping/1.0/ping",
@@ -160,7 +161,7 @@ async fn should_fill_empty_id_and_created_time() -> Result<(), Box<dyn std::erro
         .ok_or("no result")?
         .as_ref()
         .ok_or("no value in result")?;
-    let parsed: VadeDidCommPluginOutput<ExtendedMessage> = serde_json::from_str(result)?;
+    let parsed: VadeDidCommPluginReceiveOutput<ExtendedMessage> = serde_json::from_str(result)?;
 
     if parsed.message.id.is_none() {
         return Err(Box::from("Default id was not generated!"));
@@ -192,7 +193,7 @@ async fn can_can_be_used_to_skip_protocol_handling_and_just_encrypt_data(
     let results = vade.didcomm_send(&sender_options_string, payload).await?;
 
     if let Some(Some(result_string)) = results.get(0) {
-        let result: VadeDidCommPluginOutput<Jwe, serde_json::Value> =
+        let result: VadeDidCommPluginSendOutput<Jwe, serde_json::Value> =
             serde_json::from_str(result_string)?;
 
         // invoking vade_didcomm works and we get an encrypted message
@@ -225,7 +226,7 @@ async fn can_be_used_to_skip_protocol_handling_and_just_decrypt_data(
     let send_results = vade.didcomm_send(&sender_options_string, payload).await?;
 
     if let Some(Some(send_result_string)) = send_results.get(0) {
-        let send_result_object: VadeDidCommPluginOutput<Jwe, serde_json::Value> =
+        let send_result_object: VadeDidCommPluginSendOutput<Jwe, serde_json::Value> =
             serde_json::from_str(send_result_string)?;
         let encrypted_message_string = serde_json::to_string(&send_result_object.message)?;
         let mut receiver_options: DidCommOptions =
@@ -237,22 +238,20 @@ async fn can_be_used_to_skip_protocol_handling_and_just_decrypt_data(
             .await?;
 
         if let Some(Some(receive_result_string)) = receive_results.get(0) {
-            let receive_result_object: VadeDidCommPluginOutput<
+            let receive_result_object: VadeDidCommPluginReceiveOutput<
                 MessageWithBody<HashMap<String, String>>,
-                serde_json::Value,
             > = serde_json::from_str(receive_result_string)?;
             assert_eq!(
                 "https://didcomm.org/type_does_not_matter_as_protocol_handling_is_skipped",
                 receive_result_object.message.r#type,
             );
-            let serialized_raw_message = serde_json::to_string(&receive_result_object.message_raw)?;
-            let deserialized_raw_message: MessageWithBody<HashMap<String, String>> =
-                serde_json::from_str(&serialized_raw_message)?;
-            let reserialized_raw_message = serde_json::to_string(&deserialized_raw_message)?;
+
             let serialized_receive_message = serde_json::to_string(&receive_result_object.message)?;
 
-            // ensure that send processor was executed
-            assert_eq!(&reserialized_raw_message, &serialized_receive_message);
+            assert!(
+                !serialized_receive_message.is_empty(),
+                "received message is empty"
+            );
         } else {
             return Err(Box::from("invalid result from didcomm_receive"));
         }

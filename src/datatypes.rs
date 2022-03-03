@@ -234,11 +234,19 @@ pub struct DidCommOptions {
     pub skip_protocol_handling: Option<bool>,
 }
 
-/// Output of didcomm_send or didcomm_receive.
+/// Output of didcomm_send.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct VadeDidCommPluginOutput<T, TRaw = serde_json::Value> {
+pub struct VadeDidCommPluginSendOutput<T, TRaw = serde_json::Value> {
     pub message: T,
     pub message_raw: TRaw,
+    pub metadata: HashMap<String, String>,
+}
+
+/// Output of didcomm_receive.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct VadeDidCommPluginReceiveOutput<T> {
+    pub message: T,
     pub metadata: HashMap<String, String>,
 }

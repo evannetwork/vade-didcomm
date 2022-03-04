@@ -55,11 +55,11 @@ pub fn get_from_to_from_message(
 ///
 pub fn write_raw_message_to_db(message: &str) -> Result<(), Box<dyn std::error::Error>> {
     let parsed_raw_message: ExtendedMessage = serde_json::from_str(message)?;
-
+    
     write_db(
         &format!(
             "message_{}_{}",
-            parsed_raw_message.thid.unwrap_or(parsed_raw_message.id),
+            parsed_raw_message.thid.unwrap_or(parsed_raw_message.id.clone().ok_or("id is missing")?),
             parsed_raw_message.id.ok_or("id is missing")?
         ),
         message,

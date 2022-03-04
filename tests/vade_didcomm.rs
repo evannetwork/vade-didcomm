@@ -379,14 +379,26 @@ async fn should_store_messages_in_rocks_db() -> Result<(), Box<dyn std::error::E
 
             let stored_message = read_db(&format!(
                 "message_{}_{}",
-                parsed.message.thid.unwrap_or(parsed.message),
+                parsed.message.thid.unwrap_or(parsed.message.id.clone().ok_or("id is missing")?),
                 parsed.message.id.ok_or("id is missing")?
             ))?;
 
             let parsed_stored_message: ExtendedMessage = serde_json::from_str(&stored_message)?;
 
             // check the stored message with received message
-            assert_eq!(parsed_stored_message.r#type, parsed.message.r#type,);
+            assert_eq!(parsed_stored_message.r#type, parsed.message.r#type);
+            // ensure that send processor was executed
+            assert!(
+                parsed
+                    .message
+                    .body
+                    .ok_or("no body filled")?
+                    .response_requested
+            );
+            
+            if parsed.message.created_time.is_none() {
+                return Err(Box::from("Default created_time was not generated!"));
+            }
         }
         _ => {
             return Err(Box::from("invalid result from DIDcomm_send"));

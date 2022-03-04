@@ -379,7 +379,7 @@ async fn should_store_messages_in_rocks_db() -> Result<(), Box<dyn std::error::E
 
             let stored_message = read_db(&format!(
                 "message_{}_{}",
-                parsed.message.thid.unwrap_or_else(|| "".to_string()), // in some cases thid is supplied as null as it is optional.
+                parsed.message.thid.unwrap_or(parsed.message),
                 parsed.message.id.ok_or("id is missing")?
             ))?;
 

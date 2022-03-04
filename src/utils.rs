@@ -59,7 +59,7 @@ pub fn write_raw_message_to_db(message: &str) -> Result<(), Box<dyn std::error::
     write_db(
         &format!(
             "message_{}_{}",
-            parsed_raw_message.thid.unwrap_or_else(|| "".to_string()), // in some cases thid is supplied as null as it is optional.
+            parsed_raw_message.thid.unwrap_or(parsed_raw_message.id),
             parsed_raw_message.id.ok_or("id is missing")?
         ),
         message,

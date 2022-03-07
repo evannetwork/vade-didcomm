@@ -52,7 +52,6 @@ pub fn get_from_to_from_message(
 ///
 /// # Arguments
 /// * `message` - Raw message
-///
 pub fn write_raw_message_to_db(message: &str) -> Result<(), Box<dyn std::error::Error>> {
     let parsed_raw_message: ExtendedMessage = serde_json::from_str(message)?;
     

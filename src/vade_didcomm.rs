@@ -118,11 +118,7 @@ impl VadePlugin for VadeDidComm {
         // keep a copy of unencrypted message
         let message_raw = &message_with_id;
         // store unencrypted raw message in db
-        let db_write_result = write_raw_message_to_db(message_raw);
-        match db_write_result {
-            Err(e) => return Err(e),
-            _ => (),
-        };
+        write_raw_message_to_db(message_raw)?;
 
         // message string, that will be returned
         let final_message: String;
@@ -291,11 +287,7 @@ impl VadePlugin for VadeDidComm {
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(&decrypted)?;
         // store unencrypted raw message in db
-        let db_write_result = write_raw_message_to_db(&message_with_id);
-        match db_write_result {
-            Err(e) => return Err(e),
-            _ => (),
-        };
+        write_raw_message_to_db(&message_with_id)?;
 
         let protocol_result = match options_parsed.skip_protocol_handling {
             None | Some(false) => {

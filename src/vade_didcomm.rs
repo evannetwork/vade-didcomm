@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use didcomm_rs::Jwe;
 use ed25519_dalek::{Keypair, PublicKey, SecretKey};
-use k256::elliptic_curve::rand_core::OsRng;
+use rand_core::OsRng;
 use vade::{VadePlugin, VadePluginResultValue};
 use x25519_dalek::StaticSecret;
 

@@ -37,16 +37,17 @@ async-trait = "0.1.50"
 bs58 = "0.4.0"
 cfg-if = "1.0.0"
 data-encoding = "2.3.2"
-didcomm-rs = { git = "https://github.com/evannetwork/didcomm-rs.git", branch = "main", version = "0.6.1", default-features = false }
+didcomm-rs = { git = "https://github.com/evannetwork/didcomm-rs.git", branch = "main", version = "0.7.0", default-features = false }
 ed25519-dalek = "1.0.1"
 env_logger = "0.7.1"
 futures = "0.3.13"
 getrandom = { version = "0.2.3", default-features = false }
 hex = { version = "0.4.3", features = ["serde"] }
 jsonpath_lib = "0.3.0"
-k256 = "0.7.2"
+k256 = "0.9.4"
 log = "0.4.8"
 rand = "0.8.3"
+rand_core = "0.5.1"
 redis = "0.20.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.124"

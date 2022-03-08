@@ -20,7 +20,7 @@ use crate::{
     keypair::{get_com_keypair, get_key_agreement_key},
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
-    utils::vec_to_array,
+    utils::{vec_to_array, write_raw_message_to_db},
 };
 
 big_array! { BigArray; }
@@ -117,6 +117,8 @@ impl VadePlugin for VadeDidComm {
 
         // keep a copy of unencrypted message
         let message_raw = &message_with_id;
+        // store unencrypted raw message in db
+        write_raw_message_to_db(message_raw)?;
 
         // message string, that will be returned
         let final_message: String;
@@ -284,6 +286,9 @@ impl VadePlugin for VadeDidComm {
 
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(&decrypted)?;
+        // store unencrypted raw message in db
+        write_raw_message_to_db(&message_with_id)?;
+
         let protocol_result = match options_parsed.skip_protocol_handling {
             None | Some(false) => {
                 // run protocol specific logic

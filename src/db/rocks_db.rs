@@ -1,4 +1,4 @@
-use rocksdb::{DBWithThreadMode, SingleThreaded, DB};
+use rocksdb::{DBWithThreadMode, IteratorMode, SingleThreaded, DB};
 
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
 
@@ -37,6 +37,28 @@ pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
         Ok(None) => Err(format!("{0} not found", key).into()),
         Err(e) => Err(format!("Error while loading key: {0}, {1}", key, e).into()),
     }
+}
+
+/// Gets a list of values matching with key from the rocks db.
+///
+/// # Arguments
+/// * `key` - key to match values for
+///
+/// # Returns
+/// * `Vec<String>` - stored values
+pub fn search_db_keys(key: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let mut values: Vec<String> = Vec::new();
+    let db = get_db()?;
+    let mode = IteratorMode::From(key.as_bytes(), rocksdb::Direction::Forward);
+
+    let result = db
+        .iterator(mode)
+        .take_while(|(k, _)| k.starts_with(key.as_bytes()));
+    for (_, val) in result {
+        let value = String::from_utf8((*val).to_vec())?;
+        values.push(value);
+    }
+    return Ok(values);
 }
 
 #[cfg(test)]

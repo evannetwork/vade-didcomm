@@ -20,7 +20,7 @@ use crate::{
     keypair::{get_com_keypair, get_key_agreement_key},
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
-    utils::{vec_to_array, write_raw_message_to_db},
+    utils::{read_raw_message_from_db, vec_to_array, write_raw_message_to_db},
 };
 
 big_array! { BigArray; }
@@ -58,7 +58,7 @@ impl VadePlugin for VadeDidComm {
         _method: &str,
         function: &str,
         _options: &str,
-        _payload: &str,
+        payload: &str,
     ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
         match function {
             "create_keys" => {
@@ -72,6 +72,17 @@ impl VadePlugin for VadeDidComm {
                 Ok(VadePluginResultValue::Success(Some(serde_json::to_string(
                     &enc_key_pair,
                 )?)))
+            }
+            "query_didcomm_messages" => {
+                let mut message_values = payload.split('_');
+                let _prefix = message_values.next().ok_or("Invalid message prefix")?;
+                let thid = message_values.next().ok_or("Invalid message thid")?;
+                let message_id = message_values.next().ok_or("Invalid message id")?;
+
+                let db_result = read_raw_message_from_db(thid, message_id)?;
+                let result = serde_json::to_string(&db_result)?;
+
+                Ok(VadePluginResultValue::Success(Some(result)))
             }
             _ => Ok(VadePluginResultValue::Ignored),
         }

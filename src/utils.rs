@@ -72,13 +72,14 @@ pub fn write_raw_message_to_db(message: &str) -> Result<(), Box<dyn std::error::
 /// # Arguments
 /// * `message` - Raw message
 pub fn read_raw_message_from_db(
+    prefix: &str,
     thid: &str,
     msg_id: &str,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let mut key = format!("message_{}_{}", thid, msg_id);
+    let mut key = format!("{}_{}_{}", prefix, thid, msg_id);
 
     if msg_id == "*" {
-        key = format!("message_{}", thid);
+        key = format!("{}_{}", prefix, thid);
         search_db_keys(&key)
     } else {
         let value = read_db(&key)?;

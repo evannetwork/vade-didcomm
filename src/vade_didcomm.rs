@@ -75,11 +75,11 @@ impl VadePlugin for VadeDidComm {
             }
             "query_didcomm_messages" => {
                 let mut message_values = payload.split('_');
-                let _prefix = message_values.next().ok_or("Invalid message prefix")?;
+                let prefix = message_values.next().ok_or("Invalid message prefix")?;
                 let thid = message_values.next().ok_or("Invalid message thid")?;
                 let message_id = message_values.next().ok_or("Invalid message id")?;
 
-                let db_result = read_raw_message_from_db(thid, message_id)?;
+                let db_result = read_raw_message_from_db(prefix, thid, message_id)?;
                 let result = serde_json::to_string(&db_result)?;
 
                 Ok(VadePluginResultValue::Success(Some(result)))

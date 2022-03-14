@@ -825,7 +825,7 @@ async fn can_do_presentation_exchange_and_fetch_all_messages_from_didcomm_by_thi
     // Total 4 messages should be fetched
     assert!(
         messages.len() == 4,
-        "All messages for {} thid not found in rocks db",
+        "Invalid message count for thid {} found in rocks db",
         id
     );
 

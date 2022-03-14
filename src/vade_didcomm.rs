@@ -43,6 +43,7 @@ impl VadePlugin for VadeDidComm {
     /// Runs a custom function, currently supports
     ///
     /// - `create_new_keys` to create a new key pair to be used for DIDCOMM communication.
+    /// - `query_didcomm_messages` to fetch stored didcomm messaged by thid(e.g: "message_{thid}_*") and complete messageid(e.g: "message_{thid}_{msgid}")
     ///
     /// # Arguments
     ///

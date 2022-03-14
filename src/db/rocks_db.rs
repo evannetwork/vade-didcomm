@@ -39,21 +39,21 @@ pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
     }
 }
 
-/// Gets a list of values matching with key from the rocks db.
+/// Gets a list of values matching with key prefix from the rocks db.
 ///
 /// # Arguments
-/// * `key` - key to match values for
+/// * `prefix` - key prefix to match values for
 ///
 /// # Returns
 /// * `Vec<String>` - stored values
-pub fn search_db_keys(key: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+pub fn search_db_keys(prefix: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let mut values: Vec<String> = Vec::new();
     let db = get_db()?;
-    let mode = IteratorMode::From(key.as_bytes(), rocksdb::Direction::Forward);
+    let mode = IteratorMode::From(prefix.as_bytes(), rocksdb::Direction::Forward);
 
     let result = db
         .iterator(mode)
-        .take_while(|(k, _)| k.starts_with(key.as_bytes()));
+        .take_while(|(k, _)| k.starts_with(prefix.as_bytes()));
     for (_, val) in result {
         let value = String::from_utf8((*val).to_vec())?;
         values.push(value);

@@ -11,7 +11,12 @@ use utilities::keypair::get_keypair_set;
 use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
-    datatypes::{MessageWithBody, VadeDidCommPluginReceiveOutput, VadeDidCommPluginSendOutput},
+    datatypes::{
+        ExtendedMessage,
+        MessageWithBody,
+        VadeDidCommPluginReceiveOutput,
+        VadeDidCommPluginSendOutput,
+    },
     protocols::presentation_exchange::datatypes::{
         Attachment,
         Constraints,
@@ -640,6 +645,41 @@ async fn receive_presentation_proposal(
     Ok(())
 }
 
+async fn get_messages_by_thid(thid: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+    let message_id = format!("message_{}_*", thid);
+
+    let results = vade
+        .run_custom_function("{}", "query_didcomm_messages", "{}", &message_id)
+        .await?;
+    let received = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+
+    Ok(received.to_string())
+}
+
+async fn get_messages_by_msgid(
+    thid: &str,
+    msg_id: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+    let key = format!("message_{}_{}", thid, msg_id);
+
+    let results = vade
+        .run_custom_function("{}", "query_didcomm_messages", "{}", &key)
+        .await?;
+    let received = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+
+    Ok(received.to_string())
+}
+
 #[tokio::test]
 #[serial]
 async fn can_do_presentation_exchange_for_presentation_exchange(
@@ -729,6 +769,86 @@ async fn can_do_proposal_exchange_for_presentation_exchange(
         &id,
     )
     .await?;
+
+    Ok(())
+}
+
+#[tokio::test]
+#[serial]
+async fn can_do_presentation_exchange_and_fetch_all_messages_from_didcomm_by_thid(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+    let test_setup = get_keypair_set();
+    let id = Uuid::new_v4().to_simple().to_string();
+
+    let request_message = send_request_presentation(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
+    receive_request_presentation(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        request_message,
+        &test_setup.receiver_options_stringified,
+        &id,
+    )
+    .await?;
+
+    let response_message = send_presentation(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
+    receive_presentation(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        response_message,
+        &test_setup.receiver_options_stringified,
+        &id,
+    )
+    .await?;
+
+    // Fetch all messages
+    let messages = get_messages_by_thid(&id).await?;
+
+    let messages: Vec<String> = serde_json::from_str(&messages)?;
+
+    // Total 4 messages should be fetched
+    assert!(
+        messages.len() == 4,
+        "Invalid message count for thid {} found in rocks db",
+        id
+    );
+
+    // Get message sent in exchange at index 0
+    let message_0 = messages.get(0).ok_or("Invalid message stored in didcomm")?;
+
+    let parsed_message_0: ExtendedMessage = serde_json::from_str(&message_0)?;
+
+    let message_id = parsed_message_0.id.ok_or("Invalid id")?;
+
+    // Fetch message by thid and msgid
+    let message = get_messages_by_msgid(&id, &message_id).await?;
+    let message: Vec<String> = serde_json::from_str(&message)?;
+    let message = message.get(0).ok_or("Invalid message stored in didcomm")?;
+
+    let parsed_message_1: ExtendedMessage = serde_json::from_str(&message)?;
+
+    // Message fetch by id and Message fetched by thid at index 0 should be equal
+    assert_eq!(parsed_message_1.r#type, parsed_message_0.r#type);
+
+    assert_eq!(parsed_message_1.created_time, parsed_message_0.created_time);
+
+    assert_eq!(parsed_message_1.body, parsed_message_0.body);
 
     Ok(())
 }

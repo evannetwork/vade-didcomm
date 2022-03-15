@@ -379,7 +379,10 @@ async fn should_store_messages_in_rocks_db() -> Result<(), Box<dyn std::error::E
 
             let stored_message = read_db(&format!(
                 "message_{}_{}",
-                parsed.message.thid.unwrap_or(parsed.message.id.clone().ok_or("id is missing")?),
+                parsed
+                    .message
+                    .thid
+                    .unwrap_or(parsed.message.id.clone().ok_or("id is missing")?),
                 parsed.message.id.ok_or("id is missing")?
             ))?;
 
@@ -395,7 +398,7 @@ async fn should_store_messages_in_rocks_db() -> Result<(), Box<dyn std::error::E
                     .ok_or("no body filled")?
                     .response_requested
             );
-            
+
             if parsed.message.created_time.is_none() {
                 return Err(Box::from("Default created_time was not generated!"));
             }

@@ -20,7 +20,7 @@ use crate::{
     keypair::{get_com_keypair, get_key_agreement_key},
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
-    utils::{vec_to_array, write_raw_message_to_db},
+    utils::{read_raw_message_from_db, vec_to_array, write_raw_message_to_db},
 };
 
 big_array! { BigArray; }
@@ -43,6 +43,7 @@ impl VadePlugin for VadeDidComm {
     /// Runs a custom function, currently supports
     ///
     /// - `create_new_keys` to create a new key pair to be used for DIDCOMM communication.
+    /// - `query_didcomm_messages` to fetch stored didcomm messaged by thid(e.g: "message_{thid}_*") and complete messageid(e.g: "message_{thid}_{msgid}")
     ///
     /// # Arguments
     ///
@@ -58,7 +59,7 @@ impl VadePlugin for VadeDidComm {
         _method: &str,
         function: &str,
         _options: &str,
-        _payload: &str,
+        payload: &str,
     ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
         match function {
             "create_keys" => {
@@ -72,6 +73,17 @@ impl VadePlugin for VadeDidComm {
                 Ok(VadePluginResultValue::Success(Some(serde_json::to_string(
                     &enc_key_pair,
                 )?)))
+            }
+            "query_didcomm_messages" => {
+                let mut message_values = payload.split('_');
+                let prefix = message_values.next().ok_or("Invalid message prefix")?;
+                let thid = message_values.next().ok_or("Invalid message thid")?;
+                let message_id = message_values.next().ok_or("Invalid message id")?;
+
+                let db_result = read_raw_message_from_db(prefix, thid, message_id)?;
+                let result = serde_json::to_string(&db_result)?;
+
+                Ok(VadePluginResultValue::Success(Some(result)))
             }
             _ => Ok(VadePluginResultValue::Ignored),
         }

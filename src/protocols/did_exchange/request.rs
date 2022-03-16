@@ -1,4 +1,4 @@
-use k256::elliptic_curve::rand_core::OsRng;
+use rand_core::OsRng;
 use x25519_dalek::{PublicKey, StaticSecret};
 
 use super::helper::{

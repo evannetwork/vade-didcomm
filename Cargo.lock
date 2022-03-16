@@ -641,8 +641,8 @@ dependencies = [
 
 [[package]]
 name = "didcomm-rs"
-version = "0.7.0"
-source = "git+https://github.com/evannetwork/didcomm-rs.git?branch=main#8a9ba37f90bf92836ab58f85ddbfd9a268ca3849"
+version = "0.7.1"
+source = "git+https://github.com/decentralized-identity/didcomm-rs.git?branch=main#b57234e981f0040f592fc92d8e162cb0e4a03bf7"
 dependencies = [
  "aes-gcm",
  "arrayref",
@@ -2382,7 +2382,7 @@ dependencies = [
 
 [[package]]
 name = "vade-didcomm"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "bs58",

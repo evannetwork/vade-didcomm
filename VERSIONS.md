@@ -4,6 +4,14 @@
 
 ### Features
 
+### Fixes
+
+### Deprecations
+
+## v0.2.0
+
+### Features
+
 - refactor Present Proof protocol handling - refactor data structure according to spec
 - refactor Issue Credential protocol handling - refactor data structure according to spec
 - add create_keys function to generate X25519 secret/public keys for encryption
@@ -17,8 +25,6 @@
   - move ack message out of DIDComm nesting in body and use a single DIDComm message for this
   - allow issuer to enter the flow upon receiving a request
   - fix mime type in test
-
-### Deprecations
 
 ## v0.1.0
 

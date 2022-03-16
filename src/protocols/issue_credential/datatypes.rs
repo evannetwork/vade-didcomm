@@ -2,6 +2,8 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
+use crate::datatypes::Data;
+
 pub const ISSUE_CREDENTIAL_PROTOCOL_URL: &str = "https://didcomm.org/issue-credential/1.0";
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -19,7 +21,7 @@ pub struct IssuerCredentialReq {
 pub struct CredentialAttach {
     pub id: String,
     pub mime_type: String,
-    pub data: String,
+    pub data: Data,
 }
 
 /// CredentialProposal struct contains fields required by propose-credential message.
@@ -54,7 +56,6 @@ pub struct CredentialPreview {
 /// required for all messages of Issue Credential protocol.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CredentialData {
-    pub state: State,
     #[serde(skip_serializing_if = "Option::is_none")]
     // credential_preview is sent only with offer-credential, propose-credential
     pub credential_preview: Option<CredentialPreview>,
@@ -66,14 +67,9 @@ pub struct CredentialData {
     pub credential_proposal: Option<CredentialProposal>,
 }
 
-/// Problem report structure contains fields which are required for reporting problem
+// properties for ProblemReport messages that are not part of the default DIDComm message set
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ProblemReport {
-    pub r#type: String,
-    pub from: Option<String>,
-    pub to: Option<Vec<String>>,
-    pub id: String,
-    pub thid: Option<String>,
+pub struct ProblemReportData {
     pub user_type: UserType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
@@ -92,7 +88,25 @@ pub struct ProblemReport {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tracking_uri: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub excalation_uri: Option<String>,
+    pub escalation_uri: Option<String>,
+}
+
+/// Problem report structure contains fields which are required for reporting problem
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ProblemReport {
+    pub r#type: String,
+    pub from: Option<String>,
+    pub to: Option<Vec<String>>,
+    pub id: String,
+    pub thid: Option<String>,
+    pub body: ProblemReportData,
+}
+
+// properties for Ack messages that are not part of the default DIDComm message set
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct AckData {
+    pub status: AckStatus,
+    pub user_type: UserType,
 }
 
 /// Ack structure contains fields which are sent as acknowledgment of received credential
@@ -102,9 +116,15 @@ pub struct Ack {
     pub to: Option<Vec<String>>,
     pub r#type: String,
     pub id: String,
-    pub status: String,
     pub thid: Option<String>,
-    pub user_type: UserType,
+    pub body: AckData,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum AckStatus {
+    OK,
+    FAIL,
+    PENDING,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

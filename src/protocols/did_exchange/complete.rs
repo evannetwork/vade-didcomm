@@ -1,6 +1,6 @@
 use super::helper::DID_EXCHANGE_PROTOCOL_URL;
 use crate::{
-    datatypes::BaseMessage,
+    datatypes::ExtendedMessage,
     protocols::protocol::{generate_step_output, StepResult},
 };
 
@@ -8,7 +8,7 @@ use crate::{
 /// just ensures to set the correct message type, before the message will be sent (first time for
 /// DID exchange, that a encrypted message will be sent)
 pub fn send_complete(_options: &str, message: &str) -> StepResult {
-    let mut parsed_message: BaseMessage = serde_json::from_str(message)?;
+    let mut parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     parsed_message.r#type = format!("{}/complete", DID_EXCHANGE_PROTOCOL_URL);
 
     generate_step_output(&serde_json::to_string(&parsed_message)?, "{}")

@@ -5,7 +5,10 @@ use std::{
 
 use uuid::Uuid;
 
-use crate::datatypes::{BaseMessage, ExtendedMessage, FromTo};
+use crate::{
+    datatypes::{BaseMessage, ExtendedMessage, FromTo},
+    db::{read_db, search_db_keys, write_db},
+};
 
 /// Formats an vector into an array dynamically.
 ///
@@ -43,6 +46,45 @@ pub fn get_from_to_from_message(
         from: from_did.to_owned(),
         to: String::from(to_did),
     })
+}
+
+/// Write a didcomm_send/didcomm_receive raw message to rocks_db
+///
+/// # Arguments
+/// * `message` - Raw message
+pub fn write_raw_message_to_db(message: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let parsed_raw_message: ExtendedMessage = serde_json::from_str(message)?;
+
+    write_db(
+        &format!(
+            "message_{}_{}",
+            parsed_raw_message
+                .thid
+                .unwrap_or(parsed_raw_message.id.clone().ok_or("id is missing")?),
+            parsed_raw_message.id.ok_or("id is missing")?
+        ),
+        message,
+    )
+}
+
+/// Read a didcomm_send/didcomm_receive raw message from rocks_db
+///
+/// # Arguments
+/// * `message` - Raw message
+pub fn read_raw_message_from_db(
+    prefix: &str,
+    thid: &str,
+    msg_id: &str,
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let mut key = format!("{}_{}_{}", prefix, thid, msg_id);
+
+    if msg_id == "*" {
+        key = format!("{}_{}", prefix, thid);
+        search_db_keys(&key)
+    } else {
+        let value = read_db(&key)?;
+        Ok(vec![value])
+    }
 }
 
 /// Adds an id and create_time to stringified DIDComm message.

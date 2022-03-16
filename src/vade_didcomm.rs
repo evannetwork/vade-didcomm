@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use didcomm_rs::Jwe;
 use ed25519_dalek::{Keypair, PublicKey, SecretKey};
+use rand_core::OsRng;
 use vade::{VadePlugin, VadePluginResultValue};
 use x25519_dalek::StaticSecret;
 
@@ -8,6 +9,7 @@ use crate::{
     datatypes::{
         BaseMessage,
         DidCommOptions,
+        EncryptionKeyPair,
         EncryptionKeys,
         ExtendedMessage,
         MessageDirection,
@@ -18,7 +20,7 @@ use crate::{
     keypair::{get_com_keypair, get_key_agreement_key},
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
-    utils::vec_to_array,
+    utils::{read_raw_message_from_db, vec_to_array, write_raw_message_to_db},
 };
 
 big_array! { BigArray; }
@@ -38,6 +40,55 @@ impl VadeDidComm {
 
 #[async_trait(?Send)]
 impl VadePlugin for VadeDidComm {
+    /// Runs a custom function, currently supports
+    ///
+    /// - `create_new_keys` to create a new key pair to be used for DIDCOMM communication.
+    /// - `query_didcomm_messages` to fetch stored didcomm messaged by thid(e.g: "message_{thid}_*") and complete messageid(e.g: "message_{thid}_{msgid}")
+    ///
+    /// # Arguments
+    ///
+    /// * `_method` - not required, can be left empty
+    /// * `function` - currently supports `create_new_keys`
+    /// * `_options` - not required, can be left empty
+    /// * `_payload` - not required, can be left empty
+    ///
+    /// # Returns
+    /// * `Option<String>>` - created key pair
+    async fn run_custom_function(
+        &mut self,
+        _method: &str,
+        function: &str,
+        _options: &str,
+        payload: &str,
+    ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
+        match function {
+            "create_keys" => {
+                let secret_key = StaticSecret::new(OsRng);
+                let pub_key = x25519_dalek::PublicKey::from(&secret_key);
+
+                let enc_key_pair = EncryptionKeyPair {
+                    secret: secret_key.to_bytes(),
+                    public: pub_key.to_bytes(),
+                };
+                Ok(VadePluginResultValue::Success(Some(serde_json::to_string(
+                    &enc_key_pair,
+                )?)))
+            }
+            "query_didcomm_messages" => {
+                let mut message_values = payload.split('_');
+                let prefix = message_values.next().ok_or("Invalid message prefix")?;
+                let thid = message_values.next().ok_or("Invalid message thid")?;
+                let message_id = message_values.next().ok_or("Invalid message id")?;
+
+                let db_result = read_raw_message_from_db(prefix, thid, message_id)?;
+                let result = serde_json::to_string(&db_result)?;
+
+                Ok(VadePluginResultValue::Success(Some(result)))
+            }
+            _ => Ok(VadePluginResultValue::Ignored),
+        }
+    }
+
     /// Prepare a plain DIDComm json message to be sent, including encryption and protocol specific
     /// message enhancement.
     /// The DIDComm options can include a shared secret to encrypt the message with a specific key.
@@ -78,6 +129,8 @@ impl VadePlugin for VadeDidComm {
 
         // keep a copy of unencrypted message
         let message_raw = &message_with_id;
+        // store unencrypted raw message in db
+        write_raw_message_to_db(message_raw)?;
 
         // message string, that will be returned
         let final_message: String;
@@ -245,6 +298,9 @@ impl VadePlugin for VadeDidComm {
 
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(&decrypted)?;
+        // store unencrypted raw message in db
+        write_raw_message_to_db(&message_with_id)?;
+
         let protocol_result = match options_parsed.skip_protocol_handling {
             None | Some(false) => {
                 // run protocol specific logic
@@ -263,10 +319,9 @@ impl VadePlugin for VadeDidComm {
         let receive_result = format!(
             r#"{{
                 "message": {},
-                "messageRaw": {},
                 "metadata": {}
             }}"#,
-            protocol_result.message, message_with_id, protocol_result.metadata,
+            protocol_result.message, protocol_result.metadata,
         );
 
         return Ok(VadePluginResultValue::Success(Some(receive_result)));

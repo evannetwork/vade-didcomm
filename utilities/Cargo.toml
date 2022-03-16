@@ -6,13 +6,14 @@ edition = "2018"
 license = "Apache-2.0"
 
 [dependencies]
-k256 = "0.7.2"
+k256 = "0.9.4"
 x25519-dalek = "1.1.1"
 ed25519-dalek = "1.0.1"
 vade = { git = "https://git.slock.it/equs/interop/vade/vade.git", branch = "develop", version = "0.1.0" }
 vade-didcomm = { path = "..", default-features = false, features = ["wasm"] }
 base58 = "0.1.0"
 arrayref = "0.3"
+rand_core = "0.5.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.124"
 serde_json = { version = "1.0.53", features = ["preserve_order", "raw_value"] }

@@ -3,9 +3,28 @@
 ## Next Version
 
 ### Features
+
 ### Fixes
+
 ### Deprecations
 
+## v0.2.0
+
+### Features
+
+- refactor Present Proof protocol handling - refactor data structure according to spec
+- refactor Issue Credential protocol handling - refactor data structure according to spec
+- add create_keys function to generate X25519 secret/public keys for encryption
+- remove messageRaw property from the output of didcomm_receive
+- store raw messages in rocks db for didcomm send/receive
+- retrieve stored didcomm messages by custom function
+
+### Fixes
+
+- fix smaller things in Issue Credential flow
+  - move ack message out of DIDComm nesting in body and use a single DIDComm message for this
+  - allow issuer to enter the flow upon receiving a request
+  - fix mime type in test
 
 ## v0.1.0
 
@@ -29,6 +48,13 @@
 ### Fixes
 
 - fix Linux and WASM build
+- `body` is now mandatory in for DIDComm messages according to spec
+- fixes DID exchange protocol handling:
+  - fix `thid` preservation between DID exchange messages
+  - fix `from` and `to` in DID exchange response
+  - keys may be saved twice if exchanging a DID document with a DID that differs from documents `id`
+  - DID exchange result metadata is now properly camel cased
+  - fix missing `thid` in DID exchange complete message
 
 ## v0.0.2
 

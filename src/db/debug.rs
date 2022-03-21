@@ -5,7 +5,7 @@
 //! Does NOT ensure thread safety, therefore parallel calls may overwrite the "database" file.
 
 use std::fs;
-
+use std::collections::HashMap;
 use serde_json::json;
 
 const DEBUG_DB_PATH: &str = "./.didcomm_debug_db.json";
@@ -36,4 +36,18 @@ pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
         .ok_or(format!("key {} not found in debug db", key))
         .map(|v| v.to_string())
         .map_err(|e| Box::from(e.to_string()))
+}
+
+pub fn search_db_keys(prefix: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let mut values: Vec<String> = Vec::new();
+    let storage = &serde_json::to_string(&get_storage()?)?;
+    let storage_map : HashMap<&str, &str> = serde_json::from_str(storage)?;
+
+    for (key, value) in storage_map {
+        if key.contains(prefix) {
+            values.push(value.to_string());
+        }
+    }
+
+    return Ok(values);
 }

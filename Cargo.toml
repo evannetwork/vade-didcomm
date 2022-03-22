@@ -1,6 +1,6 @@
 [package]
 name = "vade-didcomm"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["BlockchainsInc"]
 edition = "2018"
 description = "DIDComm communication helper for vade"

@@ -38,10 +38,17 @@ pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
         .map_err(|e| Box::from(e.to_string()))
 }
 
+/// Gets a list of values matching with key prefix from local file.
+///
+/// # Arguments
+/// * `prefix` - key prefix to match values for
+///
+/// # Returns
+/// * `Vec<String>` - stored values
 pub fn search_db_keys(prefix: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let mut values: Vec<String> = Vec::new();
     let storage = &serde_json::to_string(&get_storage()?)?;
-    let storage_map : HashMap<&str, &str> = serde_json::from_str(storage)?;
+    let storage_map: HashMap<&str, &str> = serde_json::from_str(storage)?;
 
     for (key, value) in storage_map {
         if key.contains(prefix) {

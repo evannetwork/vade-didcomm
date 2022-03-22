@@ -305,7 +305,7 @@ impl VadePlugin for VadeDidComm {
                 encrypt: true,
                 protocol: "".to_string(),
                 metadata: "{}".to_string(),
-                message: message_with_id.to_string(),
+                message: message_with_id,
                 step: "".to_string(),
             },
         };

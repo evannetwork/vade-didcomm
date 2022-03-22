@@ -58,7 +58,7 @@ pub fn search_db_keys(prefix: &str) -> Result<Vec<String>, Box<dyn std::error::E
         let value = String::from_utf8((*val).to_vec())?;
         values.push(value);
     }
-    return Ok(values);
+    Ok(values)
 }
 
 #[cfg(test)]

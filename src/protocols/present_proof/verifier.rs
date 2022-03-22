@@ -23,7 +23,7 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
         .as_ref()
         .ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
+    let current_state: State = get_current_state(thid, &UserType::Verifier)?.parse()?;
     match current_state {
         State::PresentationProposalReceived | State::Unknown => {
             save_state(thid, &State::PresentationRequested, &UserType::Verifier)?

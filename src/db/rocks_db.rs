@@ -1,10 +1,10 @@
-use rocksdb::{DBWithThreadMode, IteratorMode, SingleThreaded, DB};
+use rocksdb::{DBWithThreadMode, IteratorMode, MultiThreaded, DB};
 
 const ROCKS_DB_PATH: &str = "./.didcomm_rocks_db";
 
 /// Return a new instance of the rocks db.
-fn get_db() -> Result<DBWithThreadMode<SingleThreaded>, Box<dyn std::error::Error>> {
-    let db: DBWithThreadMode<SingleThreaded> = DB::open_default(ROCKS_DB_PATH)?;
+fn get_db() -> Result<DBWithThreadMode<MultiThreaded>, Box<dyn std::error::Error>> {
+    let db: DBWithThreadMode<MultiThreaded> = DB::open_default(ROCKS_DB_PATH)?;
 
     Ok(db)
 }

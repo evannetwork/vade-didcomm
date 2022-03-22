@@ -7,16 +7,10 @@ use x25519_dalek::StaticSecret;
 
 use crate::{
     datatypes::{
-        BaseMessage,
-        DidCommOptions,
-        EncryptionKeyPair,
-        EncryptionKeys,
-        ExtendedMessage,
-        MessageDirection,
-        ProtocolHandleOutput,
+        BaseMessage, DidCommOptions, EncryptionKeyPair, EncryptionKeys, ExtendedMessage,
+        MessageDirection, ProtocolHandleOutput,
     },
-    fill_message_id_and_timestamps,
-    get_from_to_from_message,
+    fill_message_id_and_timestamps, get_from_to_from_message,
     keypair::{get_com_keypair, get_key_agreement_key},
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
@@ -242,7 +236,7 @@ impl VadePlugin for VadeDidComm {
         let decrypted: String;
 
         // if the message is encrypted, try to decrypt it
-        if parsed_message.is_ok() {
+        if parsed_message.is_ok() && !matches!(options_parsed.skip_message_packaging, Some(true)) {
             // if shared secret was passed to the options, use this one
             let decryption_keys: EncryptionKeys;
             if options_parsed.encryption_keys.is_some() {

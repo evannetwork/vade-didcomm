@@ -4,8 +4,10 @@
 
 ### Features
 
+- added support for "skipMessagePackaging" in didcomm_receive
 ### Fixes
 
+- enabled multithread support for rocksdb
 ### Deprecations
 
 ## v0.2.0

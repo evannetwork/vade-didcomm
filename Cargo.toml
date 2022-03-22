@@ -1,6 +1,6 @@
 [package]
 name = "vade-didcomm"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["BlockchainsInc"]
 edition = "2018"
 description = "DIDComm communication helper for vade"
@@ -58,7 +58,7 @@ vade = { git = "https://git.slock.it/equs/interop/vade/vade.git", branch = "deve
 x25519-dalek = "1.1.1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-rocksdb = "0.17.0"
+rocksdb = { version = "0.17.0", features = [ 'multi-threaded-cf' ] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { version = "0.3.39", features = [ 'Storage', 'Window' ] }

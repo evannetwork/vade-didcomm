@@ -111,7 +111,7 @@ pub fn send_propose_presentation(_options: &str, message: &str) -> StepResult {
 
     match current_state {
         State::PresentationRequestReceived | State::Unknown => {
-            save_state(&thid, &State::PresentationProposed, &UserType::Prover)?
+            save_state(thid, &State::PresentationProposed, &UserType::Prover)?
         }
         _ => {
             return Err(Box::from(format!(

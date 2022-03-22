@@ -51,7 +51,7 @@ pub fn search_db_keys(prefix: &str) -> Result<Vec<String>, Box<dyn std::error::E
     let storage_map: HashMap<&str, &str> = serde_json::from_str(storage)?;
 
     for (key, value) in storage_map {
-        if key.contains(prefix) {
+        if key.starts_with(prefix) {
             values.push(value.to_string());
         }
     }

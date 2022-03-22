@@ -68,7 +68,7 @@ pub fn search_db_keys(prefix: &str) -> Result<Vec<String>, Box<dyn std::error::E
             })?
             .ok_or("Invalid index value.")?;
 
-        if key.contains(prefix) {
+        if key.starts_with(&format!("{}:{}", LOCAL_STORAGE_PREFIX, prefix)) {
             let value = local_storage
                 .get_item(&key)
                 .map_err(|err| {

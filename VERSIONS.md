@@ -35,6 +35,7 @@
   - move ack message out of DIDComm nesting in body and use a single DIDComm message for this
   - allow issuer to enter the flow upon receiving a request
   - fix mime type in test
+  - add search_db_keys function for local_storage and debug storage. 
 
 ## v0.1.0
 

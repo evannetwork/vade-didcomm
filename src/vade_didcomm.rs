@@ -191,7 +191,7 @@ impl VadePlugin for VadeDidComm {
                 encryption_keys
                     .encryption_others_public
                     .as_ref()
-                    .map(|v| &v[..]),
+                    .map(|v| v.to_vec()),
                 signing_keypair,
             )?;
         } else {
@@ -283,7 +283,7 @@ impl VadePlugin for VadeDidComm {
                 decryption_keys
                     .encryption_others_public
                     .as_ref()
-                    .map(|v| &v[..]),
+                    .map(|v| v.to_vec()),
                 signing_others_public.as_ref().map(|v| &v[..]),
             )?;
         } else {

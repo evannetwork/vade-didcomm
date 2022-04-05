@@ -32,12 +32,12 @@ macro_rules! apply_optional {
 pub fn encrypt_message(
     message_string: &str,
     encryption_secret: &[u8],
-    encryption_target_public: Option<&[u8]>,
+    encryption_target_public: Option<Vec<u8>>,
     sign_keypair: Option<ed25519_dalek::Keypair>,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut d_message = DIDCommMessage::new()
         .body(&message_string.to_string())
-        .as_jwe(&CryptoAlgorithm::XC20P, encryption_target_public);
+        .as_jwe(&CryptoAlgorithm::XC20P, encryption_target_public.clone());
     let message: ExtendedMessage = serde_json::from_str(message_string)?;
 
     // apply optional headers to known sections, use remaining as custom headers
@@ -101,7 +101,7 @@ pub fn encrypt_message(
 pub fn decrypt_message(
     message: &str,
     decryption_key: Option<&[u8]>,
-    decryption_public: Option<&[u8]>,
+    decryption_public: Option<Vec<u8>>,
     sign_public: Option<&[u8]>,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let received = DIDCommMessage::receive(message, decryption_key, decryption_public, sign_public)
@@ -149,7 +149,7 @@ mod tests {
         let encrypted = encrypt_message(
             &payload,
             &sign_keypair.user1_secret.to_bytes(),
-            Some(&sign_keypair.user2_pub.to_bytes()),
+            Some(sign_keypair.user2_pub.to_bytes().to_vec()),
             Some(sign_keypair.sign_keypair),
         )?;
         let _: Jwe = serde_json::from_str(&encrypted)?;
@@ -173,14 +173,14 @@ mod tests {
         let encrypted = encrypt_message(
             &payload,
             &sign_keypair.user1_secret.to_bytes(),
-            Some(&sign_keypair.user2_pub.to_bytes()),
+            Some(sign_keypair.user2_pub.to_bytes().to_vec()),
             Some(sign_keypair.sign_keypair),
         )?;
 
         let decrypted = decrypt_message(
             &encrypted,
             Some(&sign_keypair.user2_secret.to_bytes()),
-            Some(&sign_keypair.user1_pub.to_bytes()),
+            Some(sign_keypair.user1_pub.to_bytes().to_vec()),
             None,
         )?;
 

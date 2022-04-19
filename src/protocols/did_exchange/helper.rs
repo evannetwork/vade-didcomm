@@ -16,10 +16,9 @@ use crate::{
         ExchangeInfo,
         MessageWithBody,
     },
+    protocols::did_exchange::DID_EXCHANGE_PROTOCOL_URL,
     utils::hex_option,
 };
-
-pub const DID_EXCHANGE_PROTOCOL_URL: &str = "https://didcomm.org/didexchange/1.0";
 
 /// Specifies all possible message directions.
 #[derive(PartialEq)]

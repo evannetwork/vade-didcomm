@@ -18,6 +18,7 @@
 ### Fixes
 
 - enabled multithread support for rocksdb
+- added problem report and state management support for did_exchange protocol
 
 ## v0.2.0
 

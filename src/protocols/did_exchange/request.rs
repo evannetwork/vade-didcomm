@@ -9,11 +9,15 @@ use super::helper::{
     DidExchangeType,
 };
 use crate::{
-    datatypes::BaseMessage,
+    datatypes::{BaseMessage, MessageWithBody, DidDocumentBodyAttachment, Base64Container},
     get_from_to_from_message,
     keypair::save_com_keypair,
     protocols::{
-        did_exchange::helper::DidExchangeBaseMessage,
+        did_exchange::{
+            datatypes::{State, UserType},
+            did_exchange::{get_current_state, save_didexchange, save_state},
+            helper::DidExchangeBaseMessage
+        },
         protocol::{generate_step_output, StepResult},
     },
 };
@@ -81,6 +85,30 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
         )?;
     }
 
+    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
+
+    let current_state: State = get_current_state(&thid, &UserType::Inviter)?.parse()?;
+    match current_state {
+        State::Unknown => {
+            save_state(&thid, &State::SendRequest, &UserType::Inviter)?
+        }
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::SendRequest
+            )))
+        }
+    };
+
+    save_didexchange(
+        &exchange_info.from,
+        &exchange_info.to,
+        &thid,
+        &serde_json::to_string(&did_document)?,
+        &State::SendRequest,
+    )?;
+
     generate_step_output(&serde_json::to_string(&request_message)?, &metadata)
 }
 
@@ -88,6 +116,9 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
 /// Receives the partners DID and communication pub key and generates new communication keypairs,
 /// stores it within the db.
 pub fn receive_request(options: &str, message: &str) -> StepResult {
+
+    let parsed_message: MessageWithBody<DidDocumentBodyAttachment<Base64Container>> = serde_json::from_str(message)?;
+    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
     let did_document = get_did_document_from_body(message)?;
     let parsed_message: BaseMessage = serde_json::from_str(message)?;
     let exchange_info = get_exchange_info_from_message(&parsed_message, did_document)?;
@@ -127,6 +158,28 @@ pub fn receive_request(options: &str, message: &str) -> StepResult {
         )?;
     }
     let metadata = serde_json::to_string(&encoded_keypair)?;
+
+    let current_state: State = get_current_state(&thid, &UserType::Invitee)?.parse()?;
+    match current_state {
+        State::Unknown => {
+            save_state(&thid, &State::ReceiveRequest, &UserType::Invitee)?
+        }
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::ReceiveRequest
+            )))
+        }
+    };
+
+    save_didexchange(
+        &exchange_info.from,
+        &exchange_info.to,
+        &thid,
+        &serde_json::to_string(&encoded_keypair)?,
+        &State::ReceiveRequest,
+    )?;
 
     generate_step_output(message, &metadata)
 }

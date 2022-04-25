@@ -161,7 +161,7 @@ pub fn receive_request(options: &str, message: &str) -> StepResult {
 
     let current_state: State = get_current_state(&thid, &UserType::Invitee)?.parse()?;
     match current_state {
-        State::Unknown => {
+        State::Unknown | State::SendResponse => {
             save_state(&thid, &State::ReceiveRequest, &UserType::Invitee)?
         }
         _ => {

@@ -148,18 +148,7 @@ pub fn receive_request(options: &str, message: &str) -> StepResult {
     let metadata = serde_json::to_string(&encoded_keypair)?;
 
     let current_state: State = get_current_state(&thid, &UserType::Invitee)?.parse()?;
-    match current_state {
-        State::Unknown | State::SendResponse => {
-            save_state(&thid, &State::ReceiveRequest, &UserType::Invitee)?
-        }
-        _ => {
-            return Err(Box::from(format!(
-                "Error while processing step: State from {} to {} not allowed",
-                current_state,
-                State::ReceiveRequest
-            )))
-        }
-    };
+    save_state(&thid, &State::ReceiveRequest, &UserType::Invitee)?;
 
     save_didexchange(
         &exchange_info.from,

@@ -89,7 +89,7 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
 
     let current_state: State = get_current_state(&thid, &UserType::Inviter)?.parse()?;
     match current_state {
-        State::Unknown => {
+        State::Unknown | State::SendRequest => {
             save_state(&thid, &State::SendRequest, &UserType::Inviter)?
         }
         _ => {

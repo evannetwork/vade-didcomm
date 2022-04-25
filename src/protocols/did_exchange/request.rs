@@ -87,19 +87,7 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
 
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Inviter)?.parse()?;
-    match current_state {
-        State::Unknown | State::SendRequest => {
-            save_state(&thid, &State::SendRequest, &UserType::Inviter)?
-        }
-        _ => {
-            return Err(Box::from(format!(
-                "Error while processing step: State from {} to {} not allowed",
-                current_state,
-                State::SendRequest
-            )))
-        }
-    };
+    save_state(&thid, &State::SendRequest, &UserType::Inviter)?;
 
     save_didexchange(
         &exchange_info.from,

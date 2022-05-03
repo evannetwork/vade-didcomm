@@ -104,7 +104,6 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
 /// Receives the partners DID and communication pub key and generates new communication keypairs,
 /// stores it within the db.
 pub fn receive_request(options: &str, message: &str) -> StepResult {
-
     let parsed_message: MessageWithBody<DidDocumentBodyAttachment<Base64Container>> = serde_json::from_str(message)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
     let did_document = get_did_document_from_body(message)?;

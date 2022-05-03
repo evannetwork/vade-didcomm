@@ -7,6 +7,7 @@ use didcomm_rs::Jwe;
 use serde::{Deserialize, Serialize};
 use serial_test::serial;
 use utilities::keypair::get_keypair_set;
+use uuid::Uuid;
 use vade_didcomm::datatypes::{
     BaseMessage,
     DidCommOptions,
@@ -272,7 +273,7 @@ async fn can_be_used_to_skip_protocol_handling_and_just_decrypt_data(
 #[serial]
 async fn can_prepare_encrypted_didcomm_messages() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-
+    let id = Uuid::new_v4().to_simple().to_string();
     let sign_keypair = get_keypair_set();
     let payload = format!(
         r#"{{
@@ -280,9 +281,10 @@ async fn can_prepare_encrypted_didcomm_messages() -> Result<(), Box<dyn std::err
             "serviceEndpoint": "https://evan.network",
             "from": "{}",
             "to": ["{}"],
+            "thid": "{}",
             "body": {{}}
         }}"#,
-        DID_EXCHANGE_PROTOCOL_URL, &sign_keypair.user1_did, &sign_keypair.user2_did,
+        DID_EXCHANGE_PROTOCOL_URL, &sign_keypair.user1_did, &sign_keypair.user2_did, id,
     );
     let results = vade
         .didcomm_send(&sign_keypair.sender_options_stringified, &payload)
@@ -308,7 +310,7 @@ async fn can_prepare_encrypted_didcomm_messages() -> Result<(), Box<dyn std::err
 #[serial]
 async fn can_prepare_unencrypted_didcomm_messages() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
-
+    let id = Uuid::new_v4().to_simple().to_string();
     let sign_keypair = get_keypair_set();
     let payload = format!(
         r#"{{
@@ -316,9 +318,10 @@ async fn can_prepare_unencrypted_didcomm_messages() -> Result<(), Box<dyn std::e
             "serviceEndpoint": "https://evan.network",
             "from": "{}",
             "to": ["{}"],
+            "thid": "{}",
             "body": {{}}
         }}"#,
-        DID_EXCHANGE_PROTOCOL_URL, &sign_keypair.user1_did, &sign_keypair.user2_did,
+        DID_EXCHANGE_PROTOCOL_URL, &sign_keypair.user1_did, &sign_keypair.user2_did, id,
     );
     let mut options_object: DidCommOptions =
         serde_json::from_str(&sign_keypair.sender_options_stringified)?;

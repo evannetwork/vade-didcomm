@@ -9,7 +9,7 @@ license = "Apache-2.0"
 k256 = "0.9.4"
 x25519-dalek = "1.1.1"
 ed25519-dalek = "1.0.1"
-vade = { git = "https://git.slock.it/equs/interop/vade/vade.git", branch = "develop", version = "0.1.0" }
+vade = "0.1.0"
 vade-didcomm = { path = "..", default-features = false, features = ["wasm"] }
 base58 = "0.1.0"
 arrayref = "0.3"

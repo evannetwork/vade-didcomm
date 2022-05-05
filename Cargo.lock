@@ -2372,7 +2372,8 @@ dependencies = [
 [[package]]
 name = "vade"
 version = "0.1.0"
-source = "git+https://git.slock.it/equs/interop/vade/vade.git?branch=develop#9e76511acb74834bf4558c8e27748e5866d5d591"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28c510deb9534df9da15a2dce4602d1601a5ec9cf231293adffc0b39bfe877dc"
 dependencies = [
  "async-trait",
  "env_logger 0.7.1",

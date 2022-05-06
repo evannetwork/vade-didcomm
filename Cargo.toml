@@ -5,8 +5,9 @@ authors = ["BlockchainsInc"]
 edition = "2018"
 license-file = "LICENSE.txt"
 description = "DIDComm communication helper for vade"
-documentation = "tbd"
-repository = "tbd"
+homepage = "https://github.com/evannetwork/vade-didcomm"
+documentation = "https://docs.rs/crate/vade-didcomm"
+repository = "https://github.com/evannetwork/vade-didcomm"
 readme = "README.md"
 keywords = ["didcomm"]
 

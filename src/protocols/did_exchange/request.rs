@@ -15,7 +15,7 @@ use crate::{
     protocols::{
         did_exchange::{
             datatypes::{State, UserType},
-            did_exchange::{get_current_state, save_didexchange, save_state},
+            did_exchange::{save_didexchange, save_state},
             helper::DidExchangeBaseMessage
         },
         protocol::{generate_step_output, StepResult},
@@ -146,7 +146,6 @@ pub fn receive_request(options: &str, message: &str) -> StepResult {
     }
     let metadata = serde_json::to_string(&encoded_keypair)?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Invitee)?.parse()?;
     save_state(&thid, &State::ReceiveRequest, &UserType::Invitee)?;
 
     save_didexchange(

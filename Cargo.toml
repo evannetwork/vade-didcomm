@@ -3,6 +3,7 @@ name = "vade-didcomm"
 version = "0.3.0"
 authors = ["BlockchainsInc"]
 edition = "2018"
+license-file = "LICENSE.txt"
 description = "DIDComm communication helper for vade"
 homepage = "tbd"
 documentation = "tbd"

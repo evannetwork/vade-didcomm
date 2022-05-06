@@ -5,7 +5,6 @@ authors = ["BlockchainsInc"]
 edition = "2018"
 license-file = "LICENSE.txt"
 description = "DIDComm communication helper for vade"
-homepage = "tbd"
 documentation = "tbd"
 repository = "tbd"
 readme = "README.md"

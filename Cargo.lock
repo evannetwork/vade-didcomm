@@ -641,8 +641,8 @@ dependencies = [
 
 [[package]]
 name = "didcomm-rs"
-version = "0.7.1"
-source = "git+https://github.com/decentralized-identity/didcomm-rs.git?branch=main#b57234e981f0040f592fc92d8e162cb0e4a03bf7"
+version = "0.7.2"
+source = "git+https://github.com/decentralized-identity/didcomm-rs.git?branch=main#7d09a4bab753b95d4b2d5043f25199b8dd8287a3"
 dependencies = [
  "aes-gcm",
  "arrayref",
@@ -2372,7 +2372,8 @@ dependencies = [
 [[package]]
 name = "vade"
 version = "0.1.0"
-source = "git+https://git.slock.it/equs/interop/vade/vade.git?branch=develop#9e76511acb74834bf4558c8e27748e5866d5d591"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28c510deb9534df9da15a2dce4602d1601a5ec9cf231293adffc0b39bfe877dc"
 dependencies = [
  "async-trait",
  "env_logger 0.7.1",

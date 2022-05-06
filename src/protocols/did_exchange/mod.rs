@@ -1,13 +1,16 @@
 pub(crate) mod complete;
+pub mod datatypes;
+mod did_exchange;
 pub(crate) mod helper;
+mod problem_report;
 pub(crate) mod request;
 pub(crate) mod response;
-
-use helper::DID_EXCHANGE_PROTOCOL_URL;
 
 use crate::protocols::{
     did_exchange::{
         complete::{receive_complete, send_complete},
+        datatypes::DID_EXCHANGE_PROTOCOL_URL,
+        problem_report::{receive_problem_report, send_problem_report},
         request::{receive_request, send_request},
         response::{receive_response, send_response},
     },
@@ -28,6 +31,8 @@ pub(crate) fn generate_did_exchange_protocol() -> Protocol {
             generate_receive_step("response", receive_response),
             generate_send_step("complete", send_complete),
             generate_receive_step("complete", receive_complete),
+            generate_send_step("problem-report", send_problem_report),
+            generate_receive_step("problem-report", receive_problem_report),
         ],
     }
 }

@@ -43,3 +43,43 @@ pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
         })?
         .ok_or_else(|| Box::from("".to_string()))
 }
+
+/// Gets a list of values matching with key prefix from local storage.
+///
+/// # Arguments
+/// * `prefix` - key prefix to match values for
+///
+/// # Returns
+/// * `Vec<String>` - stored values
+pub fn search_db_keys(prefix: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let mut values: Vec<String> = Vec::new();
+    let local_storage = get_storage()?;
+    let length = local_storage.length().map_err(|err| {
+        err.as_string()
+            .unwrap_or_else(|| "couldn't read from local storage".to_string())
+    })?;
+
+    for index in 0..length {
+        let key = local_storage
+            .key(index)
+            .map_err(|err| {
+                err.as_string()
+                    .unwrap_or_else(|| "couldn't read from local storage".to_string())
+            })?
+            .ok_or("Invalid index value.")?;
+
+        if key.starts_with(&format!("{}:{}", LOCAL_STORAGE_PREFIX, prefix)) {
+            let value = local_storage
+                .get_item(&key)
+                .map_err(|err| {
+                    err.as_string()
+                        .unwrap_or_else(|| "couldn't read from local storage".to_string())
+                })?
+                .ok_or(format!("Invalid value for key {}", key))?;
+
+            values.push(value);
+        }
+    }
+
+    return Ok(values);
+}

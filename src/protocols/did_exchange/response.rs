@@ -9,7 +9,11 @@ use super::helper::{
 use crate::{
     get_from_to_from_message,
     keypair::{get_com_keypair, get_key_agreement_key, save_com_keypair},
-    protocols::protocol::{generate_step_output, StepResult},
+    protocols::{
+        did_exchange::datatypes::{State, UserType},
+        did_exchange::did_exchange::{get_current_state, save_didexchange, save_state},
+        protocol::{generate_step_output, StepResult}
+    },
 };
 
 /// protocol handler for direction: `send`, type: `DID_EXCHANGE_PROTOCOL_URL/response`
@@ -33,6 +37,30 @@ pub fn send_response(options: &str, message: &str) -> StepResult {
         &options.service_endpoint.unwrap_or_else(|| "".to_string()),
         pub_key_base58_string,
         &parsed_message,
+    )?;
+
+    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
+
+    let current_state: State = get_current_state(&thid, &UserType::Invitee)?.parse()?;
+    match current_state {
+        State::ReceiveRequest => {
+            save_state(&thid, &State::SendResponse, &UserType::Invitee)?
+        }
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::SendResponse
+            )))
+        }
+    };
+
+    save_didexchange(
+        &exchange_info.from,
+        &exchange_info.to,
+        &thid,
+        &serde_json::to_string(&request_message)?,
+        &State::SendResponse,
     )?;
 
     generate_step_output(&serde_json::to_string(&request_message)?, &metadata)
@@ -73,6 +101,30 @@ pub fn receive_response(_options: &str, message: &str) -> StepResult {
     }
 
     let metadata = serde_json::to_string(&enhanced_encoded_keypair)?;
+
+    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
+
+    let current_state: State = get_current_state(&thid, &UserType::Inviter)?.parse()?;
+    match current_state {
+        State::SendRequest => {
+            save_state(&thid, &State::ReceiveResponse, &UserType::Inviter)?
+        }
+        _ => {
+            return Err(Box::from(format!(
+                "Error while processing step: State from {} to {} not allowed",
+                current_state,
+                State::ReceiveResponse
+            )))
+        }
+    };
+
+    save_didexchange(
+        &exchange_info.from,
+        &exchange_info.to,
+        &thid,
+        &serde_json::to_string(&enhanced_encoded_keypair)?,
+        &State::ReceiveResponse,
+    )?;
 
     generate_step_output(message, &metadata)
 }

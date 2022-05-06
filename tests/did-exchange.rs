@@ -4,6 +4,7 @@ use common::{get_vade, read_db};
 use didcomm_rs::Jwe;
 use serial_test::serial;
 use utilities::keypair::get_keypair_set;
+use uuid::Uuid;
 use vade::Vade;
 use vade_didcomm::{
     datatypes::{
@@ -18,7 +19,7 @@ use vade_didcomm::{
         VadeDidCommPluginReceiveOutput,
         VadeDidCommPluginSendOutput,
     },
-    protocols::did_exchange::DidExchangeOptions,
+    protocols::did_exchange::{DidExchangeOptions, datatypes::{ProblemReportData, ProblemReport, UserType}},
 };
 
 const DID_SERVICE_ENDPOINT: &str = "https://evan.network";
@@ -36,6 +37,7 @@ async fn send_request(
     sender: &str,
     receiver: &str,
     options: &str,
+    id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_request = format!(
         r#"{{
@@ -43,9 +45,10 @@ async fn send_request(
             "serviceEndpoint": "https://evan.network",
             "from": "{}",
             "to": ["{}"],
+            "thid": "{}",
             "body": {{}}
         }}"#,
-        DID_EXCHANGE_PROTOCOL_URL, sender, receiver
+        DID_EXCHANGE_PROTOCOL_URL, sender, receiver, id,
     );
     let results = vade.didcomm_send(options, &exchange_request).await?;
     let result = results
@@ -128,6 +131,7 @@ async fn send_response(
     sender: &str,
     receiver: &str,
     options: &str,
+    id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_response = format!(
         r#"{{
@@ -135,9 +139,10 @@ async fn send_response(
             "serviceEndpoint": "{}",
             "from": "{}",
             "to": ["{}"],
+            "thid": "{}",
             "body": {{}}
         }}"#,
-        DID_EXCHANGE_PROTOCOL_URL, DID_SERVICE_ENDPOINT, sender, receiver
+        DID_EXCHANGE_PROTOCOL_URL, DID_SERVICE_ENDPOINT, sender, receiver, id
     );
     let results = vade.didcomm_send(options, &exchange_response).await?;
     let result = results
@@ -189,15 +194,17 @@ async fn send_complete(
     sender: &str,
     receiver: &str,
     options: &str,
+    id: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let exchange_complete = format!(
         r#"{{
             "type": "{}/complete",
             "from": "{}",
             "to": ["{}"],
+            "thid": "{}",
             "body": {{}}
         }}"#,
-        DID_EXCHANGE_PROTOCOL_URL, sender, receiver
+        DID_EXCHANGE_PROTOCOL_URL, sender, receiver, id
     );
 
     let results = vade.didcomm_send(options, &exchange_complete).await?;
@@ -248,16 +255,82 @@ async fn create_keys(vade: &mut Vade) -> Result<EncryptionKeyPair, Box<dyn std::
     Ok(keys)
 }
 
+async fn send_problem_report(
+    vade: &mut Vade,
+    sender: &str,
+    receiver: &str,
+    options: &str,
+    id: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let problem = ProblemReport {
+        r#type: format!("{}/problem-report", DID_EXCHANGE_PROTOCOL_URL),
+        from: Some(sender.to_string()),
+        to: Some([receiver.to_string()].to_vec()),
+        id: id.to_string(),
+        thid: Some(id.to_string()),
+        body: ProblemReportData {
+            description: Some(String::from("Request Rejected.")),
+            problem_items: None,
+            who_retries: None,
+            fix_hint: None,
+            impact: None,
+            r#where: None,
+            noticed_time: None,
+            tracking_uri: None,
+            escalation_uri: None,
+            user_type: UserType::Inviter,
+        },
+    };
+    let message_string = serde_json::to_string(&problem).map_err(|e| e.to_string())?;
+
+    let results = vade.didcomm_send(options, &message_string).await?;
+    let result = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+    let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
+
+    Ok(serde_json::to_string(&prepared.message)?)
+}
+
+async fn receive_problem_report(
+    vade: &mut Vade,
+    _sender: &str,
+    _receiver: &str,
+    options: &str,
+    message: String,
+    id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let results = vade.didcomm_receive(options, &message).await?;
+    let result = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+
+    let received: VadeDidCommPluginReceiveOutput<ProblemReport> = serde_json::from_str(result)?;
+
+    let received_problem = received.message;
+
+    assert_eq!(received_problem.thid.ok_or("Thread id not sent")?, id);
+
+    Ok(())
+}
+
 #[tokio::test]
 #[serial]
 async fn can_do_key_exchange_with_auto_generated_keys() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let test_setup = get_keypair_set();
+    let id = Uuid::new_v4().to_simple().to_string();
+
     let request_message = send_request(
         &mut vade,
         &test_setup.user1_did,
         &test_setup.user2_did,
         &test_setup.sender_options_stringified,
+        &id,
     )
     .await?;
     receive_request(
@@ -272,6 +345,7 @@ async fn can_do_key_exchange_with_auto_generated_keys() -> Result<(), Box<dyn st
         &test_setup.user2_did,
         &test_setup.user1_did,
         &test_setup.receiver_signing_options_stringified,
+        &id,
     )
     .await?;
     receive_response(
@@ -286,6 +360,7 @@ async fn can_do_key_exchange_with_auto_generated_keys() -> Result<(), Box<dyn st
         &test_setup.user1_did,
         &test_setup.user2_did,
         &test_setup.sender_signing_options_stringified,
+        &id,
     )
     .await?;
     receive_complete(
@@ -304,17 +379,20 @@ async fn can_do_key_exchange_pregenerated_keys() -> Result<(), Box<dyn std::erro
     let sender_secret_key: [u8; 32] = x25519_dalek::StaticSecret::from([1; 32]).to_bytes();
     let receiver_secret_key: [u8; 32] = x25519_dalek::StaticSecret::from([2; 32]).to_bytes();
 
+    let id = Uuid::new_v4().to_simple().to_string();
     let mut vade = get_vade().await?;
     let test_setup = get_keypair_set();
     let mut options_object: DidExchangeOptions =
         serde_json::from_str(&test_setup.sender_options_stringified)?;
     options_object.did_exchange_my_secret = Some(sender_secret_key);
     let options_string = serde_json::to_string(&options_object)?;
+
     let request_message = send_request(
         &mut vade,
         &test_setup.user1_did,
         &test_setup.user2_did,
         &options_string,
+        &id,
     )
     .await?;
 
@@ -329,6 +407,7 @@ async fn can_do_key_exchange_pregenerated_keys() -> Result<(), Box<dyn std::erro
         &test_setup.user2_did,
         &test_setup.user1_did,
         &test_setup.receiver_signing_options_stringified,
+        &id,
     )
     .await?;
     receive_response(
@@ -343,6 +422,7 @@ async fn can_do_key_exchange_pregenerated_keys() -> Result<(), Box<dyn std::erro
         &test_setup.user1_did,
         &test_setup.user2_did,
         &test_setup.sender_signing_options_stringified,
+        &id,
     )
     .await?;
     receive_complete(
@@ -377,6 +457,7 @@ async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error
     let mut vade = get_vade().await?;
     let alice_keys = create_keys(&mut vade).await?;
     let bob_keys = create_keys(&mut vade).await?;
+    let id = Uuid::new_v4().to_simple().to_string();
 
     let didcomm_options_alice = DidCommOptions {
         encryption_keys: Some(EncryptionKeys {
@@ -411,6 +492,7 @@ async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error
         &test_setup.user1_did,
         &test_setup.user2_did,
         &sender_options_stringified,
+        &id,
     )
     .await?;
     receive_request(&mut vade, request_message, &receiver_options_stringified).await?;
@@ -420,6 +502,7 @@ async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error
         &test_setup.user2_did,
         &test_setup.user1_did,
         &receiver_options_stringified,
+        &id,
     )
     .await?;
     receive_response(&mut vade, response_message, &sender_options_stringified).await?;
@@ -429,9 +512,88 @@ async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error
         &test_setup.user1_did,
         &test_setup.user2_did,
         &sender_options_stringified,
+        &id,
     )
     .await?;
     receive_complete(&mut vade, complete_message, &receiver_options_stringified).await?;
+
+    Ok(())
+}
+
+#[tokio::test]
+#[serial]
+async fn can_report_problem() -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+    let alice_keys = create_keys(&mut vade).await?;
+    let bob_keys = create_keys(&mut vade).await?;
+    let id = Uuid::new_v4().to_simple().to_string();
+
+    let didcomm_options_alice = DidCommOptions {
+        encryption_keys: Some(EncryptionKeys {
+            encryption_my_secret: alice_keys.secret,
+            encryption_others_public: Some(bob_keys.public),
+        }),
+        signing_keys: None,
+        skip_message_packaging: Some(false),
+        skip_protocol_handling: Some(false),
+    };
+
+    let didcomm_options_bob = DidCommOptions {
+        encryption_keys: Some(EncryptionKeys {
+            encryption_my_secret: bob_keys.secret,
+            encryption_others_public: Some(alice_keys.public),
+        }),
+        signing_keys: None,
+        skip_message_packaging: Some(false),
+        skip_protocol_handling: Some(false),
+    };
+
+    let sender_options_stringified =
+        serde_json::to_string(&didcomm_options_bob).unwrap_or_else(|_| "{}".to_string());
+
+    let receiver_options_stringified =
+        serde_json::to_string(&didcomm_options_alice).unwrap_or_else(|_| "{}".to_string());
+
+    let test_setup = get_keypair_set();
+
+    let request_message = send_request(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &sender_options_stringified,
+        &id,
+    )
+    .await?;
+    receive_request(&mut vade, request_message, &receiver_options_stringified).await?;
+
+    let response_message = send_response(
+        &mut vade,
+        &test_setup.user2_did,
+        &test_setup.user1_did,
+        &receiver_options_stringified,
+        &id,
+    )
+    .await?;
+    receive_response(&mut vade, response_message, &sender_options_stringified).await?;
+
+    let problem_message = send_problem_report(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.sender_options_stringified,
+        &id,
+    )
+    .await?;
+    
+    receive_problem_report(
+        &mut vade,
+        &test_setup.user1_did,
+        &test_setup.user2_did,
+        &test_setup.receiver_options_stringified,
+        problem_message,
+        &id,
+    )
+    .await?;
 
     Ok(())
 }

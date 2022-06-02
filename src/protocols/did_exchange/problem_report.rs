@@ -24,9 +24,11 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
     let current_state: State = get_current_state(&thid, &problem_report_data.user_type)?.parse()?;
 
     match current_state {
-        State::ReceiveRequest | State::ReceiveResponse => {
-            save_state(thid, &State::SendProblemReport, &problem_report_data.user_type)?
-        }
+        State::Unknown | State::ReceiveRequest | State::ReceiveResponse => save_state(
+            thid,
+            &State::SendProblemReport,
+            &problem_report_data.user_type,
+        )?,
         _ => {
             return Err(Box::from(format!(
                 "Error while processing step: State from {} to {} not allowed",
@@ -64,7 +66,7 @@ pub fn receive_problem_report(_options: &str, message: &str) -> StepResult {
     let current_state: State = get_current_state(&thid, &current_user_type)?.parse()?;
 
     match current_state {
-        State::SendRequest | State::SendResponse => {
+        State::Unknown | State::SendRequest | State::SendResponse => {
             save_state(&thid, &State::ReceiveProblemReport, &current_user_type)?
         }
         _ => {

@@ -133,6 +133,10 @@ pub fn get_did_exchange_message(
                 did_doc_attach: Base64Container {
                     base64: base64_encoded_did_document,
                 },
+                label: match message.base_message.body.get("label") {
+                    Some(label) => serde_json::from_value(label.clone())?,
+                    None => None,
+                },
             }),
             created_time: None,
             expires_time: None,

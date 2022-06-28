@@ -347,6 +347,7 @@ async fn can_prepare_unencrypted_didcomm_messages() -> Result<(), Box<dyn std::e
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "state_storage")]
 async fn should_store_messages_in_rocks_db() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
 

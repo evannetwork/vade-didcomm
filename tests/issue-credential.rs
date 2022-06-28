@@ -129,12 +129,16 @@ async fn receive_propose_credential(
         .credential_proposal
         .ok_or("Proposal not attached")?;
 
-    let req_data_saved = get_credential(sender, receiver, id, State::SendProposeCredential)?;
-    let attached_req_saved = req_data_saved
-        .credential_proposal
-        .ok_or("Proposal data not attached")?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let req_data_saved = get_credential(sender, receiver, id, State::SendProposeCredential)?;
+            let attached_req_saved = req_data_saved
+                .credential_proposal
+                .ok_or("Proposal data not attached")?;
 
-    assert_eq!(attached_req.id, attached_req_saved.id);
+            assert_eq!(attached_req.id, attached_req_saved.id);
+        } else {}
+    }
 
     Ok(())
 }
@@ -224,15 +228,19 @@ async fn receive_offer_credential(
         .ok_or("Offer credential request not attached")?;
     let credential_data = attached_data.get(0).ok_or("Request body is invalid")?;
 
-    let req_data_saved = get_credential(sender, receiver, id, State::SendOfferCredential)?;
-    let attached_credential_saved = req_data_saved
-        .data_attach
-        .ok_or("Offer Credential request not saved in DB")?;
-    let attached_data_saved = attached_credential_saved
-        .get(0)
-        .ok_or("Request body is invalid")?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let req_data_saved = get_credential(sender, receiver, id, State::SendOfferCredential)?;
+            let attached_credential_saved = req_data_saved
+                .data_attach
+                .ok_or("Offer Credential request not saved in DB")?;
+            let attached_data_saved = attached_credential_saved
+                .get(0)
+                .ok_or("Request body is invalid")?;
 
-    assert_eq!(credential_data.data.base64, attached_data_saved.data.base64);
+            assert_eq!(credential_data.data.base64, attached_data_saved.data.base64);
+        } else {}
+    }
 
     Ok(())
 }
@@ -315,15 +323,20 @@ async fn receive_request_credential(
 
     let attribute = proposal_data.get(0).ok_or("Attachment is invalid")?;
 
-    let proposal_data_saved =
-        get_credential(sender, receiver, id, State::SendRequestCredential)?.data_attach;
-    let proposal_data_saved_attributes =
-        proposal_data_saved.ok_or("Request credential data not saved in db")?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let proposal_data_saved =
+                get_credential(sender, receiver, id, State::SendRequestCredential)?.data_attach;
+            let proposal_data_saved_attributes =
+                proposal_data_saved.ok_or("Request credential data not saved in db")?;
 
-    let attribute_saved = proposal_data_saved_attributes
-        .get(0)
-        .ok_or("Saved Attachment is invalid")?;
-    assert_eq!(attribute.data.base64, attribute_saved.data.base64);
+            let attribute_saved = proposal_data_saved_attributes
+                .get(0)
+                .ok_or("Saved Attachment is invalid")?;
+            assert_eq!(attribute.data.base64, attribute_saved.data.base64);
+        } else {}
+    }
+
     Ok(())
 }
 
@@ -408,16 +421,21 @@ async fn receive_issue_credential(
 
     let attachment = proposal_data.get(0).ok_or("Attachment is invalid")?;
 
-    let proposal_data_saved =
-        get_credential(sender, receiver, id, State::SendIssueCredential)?.data_attach;
-    let proposal_data_saved_attributes =
-        proposal_data_saved.ok_or("Issue Credential not saved in db")?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let proposal_data_saved =
+                get_credential(sender, receiver, id, State::SendIssueCredential)?.data_attach;
+            let proposal_data_saved_attributes =
+                proposal_data_saved.ok_or("Issue Credential not saved in db")?;
 
-    let attachment_saved = proposal_data_saved_attributes
-        .get(0)
-        .ok_or("Saved Attachment is invalid")?;
+            let attachment_saved = proposal_data_saved_attributes
+                .get(0)
+                .ok_or("Saved Attachment is invalid")?;
 
-    assert_eq!(attachment.data.base64, attachment_saved.data.base64);
+            assert_eq!(attachment.data.base64, attachment_saved.data.base64);
+        } else {}
+    }
+
     assert_eq!(
         attachment
             .data
@@ -721,6 +739,7 @@ async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
 #[tokio::test]
 #[should_panic]
 #[serial]
+#[cfg(feature = "state_storage")]
 async fn will_panic_and_fail_to_process_wrong_state() {
     let result = send_wrong_ack_state().await;
     if let Err(e) = result {

@@ -17,7 +17,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = ["portable"]
+default = ["portable", "state_storage"]
 
 debug_db = []
 
@@ -25,6 +25,8 @@ portable = [
     "didcomm-rs/raw-crypto",
     "didcomm-rs/resolve",
 ]
+
+state_storage = []
 
 wasm = [
     "didcomm-rs/raw-crypto",

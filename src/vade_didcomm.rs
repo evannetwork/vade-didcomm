@@ -7,10 +7,16 @@ use x25519_dalek::StaticSecret;
 
 use crate::{
     datatypes::{
-        BaseMessage, DidCommOptions, EncryptionKeyPair, EncryptionKeys, ExtendedMessage,
-        MessageDirection, ProtocolHandleOutput,
+        BaseMessage,
+        DidCommOptions,
+        EncryptionKeyPair,
+        EncryptionKeys,
+        ExtendedMessage,
+        MessageDirection,
+        ProtocolHandleOutput,
     },
-    fill_message_id_and_timestamps, get_from_to_from_message,
+    fill_message_id_and_timestamps,
+    get_from_to_from_message,
     keypair::{get_com_keypair, get_key_agreement_key},
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
@@ -123,8 +129,13 @@ impl VadePlugin for VadeDidComm {
 
         // keep a copy of unencrypted message
         let message_raw = &message_with_id;
-        // store unencrypted raw message in db
-        write_raw_message_to_db(message_raw)?;
+
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "state_storage")] {
+                // store unencrypted raw message in db
+                write_raw_message_to_db(message_raw)?;
+            } else {}
+        }
 
         // message string, that will be returned
         let final_message: String;
@@ -136,40 +147,46 @@ impl VadePlugin for VadeDidComm {
                     .encryption_keys
                     .ok_or("encryption_keys is missing in options parameter")?;
             } else {
-                // otherwise use keys from DID exchange
-                let parsed_message: BaseMessage = serde_json::from_str(message)?;
-                let from_to = get_from_to_from_message(&parsed_message)?;
-                let mut encoded_keypair = get_key_agreement_key(&from_to.from);
-                if encoded_keypair.is_err() {
-                    // when we dont find a  key agreement key, try to get the stored keypair
-                    encoded_keypair = get_com_keypair(&from_to.from, &from_to.to);
-                    if encoded_keypair.is_err() {
-                        return Err(Box::from("No keypair found"));
+                cfg_if::cfg_if! {
+                    if #[cfg(not(feature = "state_storage"))] {
+                        return Err(Box::from("encryption_keys must be provided if 'state_storage' is disabled".to_string()));
+                    } else {
+                        // otherwise use keys from DID exchange
+                        let parsed_message: BaseMessage = serde_json::from_str(message)?;
+                        let from_to = get_from_to_from_message(&parsed_message)?;
+                        let mut encoded_keypair = get_key_agreement_key(&from_to.from);
+                        if encoded_keypair.is_err() {
+                            // when we dont find a  key agreement key, try to get the stored keypair
+                            encoded_keypair = get_com_keypair(&from_to.from, &from_to.to);
+                            if encoded_keypair.is_err() {
+                                return Err(Box::from("No keypair found"));
+                            }
+                            encoded_keypair = get_key_agreement_key(&encoded_keypair?.key_agreement_key);
+                        }
+                        let keypair = encoded_keypair?;
+                        let secret_decoded = vec_to_array(hex::decode(keypair.secret_key)?)?;
+                        let public_decoded = vec_to_array(hex::decode(keypair.target_pub_key)?)?;
+
+                        // when we have a key agreement key, adjust the "to" field to the key agreement
+                        let mut parsed_message: ExtendedMessage =
+                            serde_json::from_str(&protocol_result.message)?;
+
+                        log::debug!(
+                            "adjusting from: {} to:{}",
+                            keypair.key_agreement_key,
+                            keypair.target_key_agreement_key
+                        );
+                        parsed_message.to = Some(vec![keypair.target_key_agreement_key]);
+                        parsed_message.from = Some(keypair.key_agreement_key);
+                        protocol_result.message = serde_json::to_string(&parsed_message)?;
+
+                        encryption_keys = EncryptionKeys {
+                            encryption_my_secret: StaticSecret::from(secret_decoded).to_bytes(),
+                            encryption_others_public: Some(public_decoded),
+                        };
                     }
-                    encoded_keypair = get_key_agreement_key(&encoded_keypair?.key_agreement_key);
                 }
-                let keypair = encoded_keypair?;
-                let secret_decoded = vec_to_array(hex::decode(keypair.secret_key)?)?;
-                let public_decoded = vec_to_array(hex::decode(keypair.target_pub_key)?)?;
-
-                // when we have a key agreement key, adjust the "to" field to the key agreement
-                let mut parsed_message: ExtendedMessage =
-                    serde_json::from_str(&protocol_result.message)?;
-
-                log::debug!(
-                    "adjusting from: {} to:{}",
-                    keypair.key_agreement_key,
-                    keypair.target_key_agreement_key
-                );
-                parsed_message.to = Some(vec![keypair.target_key_agreement_key]);
-                parsed_message.from = Some(keypair.key_agreement_key);
-                protocol_result.message = serde_json::to_string(&parsed_message)?;
-
-                encryption_keys = EncryptionKeys {
-                    encryption_my_secret: StaticSecret::from(secret_decoded).to_bytes(),
-                    encryption_others_public: Some(public_decoded),
-                };
-            }
+            };
 
             let signing_keypair;
             if let Some(signing_keys_input) = options_parsed.signing_keys {
@@ -292,8 +309,13 @@ impl VadePlugin for VadeDidComm {
 
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(&decrypted)?;
-        // store unencrypted raw message in db
-        write_raw_message_to_db(&message_with_id)?;
+
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "state_storage")] {
+                // store unencrypted raw message in db
+                write_raw_message_to_db(&message_with_id)?;
+            } else {}
+        }
 
         let protocol_result = match options_parsed.skip_protocol_handling {
             None | Some(false) => {

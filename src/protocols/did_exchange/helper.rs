@@ -134,7 +134,7 @@ pub fn get_did_exchange_message(
                     base64: base64_encoded_did_document,
                 },
                 label: match message.base_message.body.get("label") {
-                    Some(label) => serde_json::from_value(label.clone())?,
+                    Some(label) => label.as_str().map(|v| v.to_string()),
                     None => None,
                 },
             }),

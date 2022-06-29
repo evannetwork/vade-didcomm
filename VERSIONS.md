@@ -4,6 +4,8 @@
 
 ### Features
 
+- allow setting a `label` in the invitation and response message
+
 ### Fixes
 
 ### Deprecations

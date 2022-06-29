@@ -49,7 +49,9 @@ async fn send_request(
             "from": "{}",
             "to": ["{}"],
             "thid": "{}",
-            "body": {{}}
+            "body": {{
+                "label": "test"
+            }}
         }}"#,
         DID_EXCHANGE_PROTOCOL_URL, sender, receiver, id,
     );
@@ -126,7 +128,6 @@ async fn receive_request(
         .get("targetPubKey")
         .ok_or("send DIDComm request does not return targetPubKey")?
         .to_owned();
-
     cfg_if::cfg_if! {
         if #[cfg(feature = "state_storage")] {
             let comm_keypair = get_com_keypair(target_did)?;
@@ -136,6 +137,10 @@ async fn receive_request(
             assert_eq!(secret_key, comm_keypair.secret_key);
         } else {}
     }
+    assert_eq!(
+        received.message.body.unwrap().label,
+        Some("test".to_string())
+    );
 
     Ok(())
 }

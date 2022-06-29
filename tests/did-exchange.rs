@@ -19,7 +19,10 @@ use vade_didcomm::{
         VadeDidCommPluginReceiveOutput,
         VadeDidCommPluginSendOutput,
     },
-    protocols::did_exchange::{DidExchangeOptions, datatypes::{ProblemReportData, ProblemReport, UserType}},
+    protocols::did_exchange::{
+        datatypes::{ProblemReport, ProblemReportData, UserType},
+        DidExchangeOptions,
+    },
 };
 
 const DID_SERVICE_ENDPOINT: &str = "https://evan.network";
@@ -46,7 +49,9 @@ async fn send_request(
             "from": "{}",
             "to": ["{}"],
             "thid": "{}",
-            "body": {{}}
+            "body": {{
+                "label": "test"
+            }}
         }}"#,
         DID_EXCHANGE_PROTOCOL_URL, sender, receiver, id,
     );
@@ -122,6 +127,10 @@ async fn receive_request(
     assert_eq!(target_pub_key, comm_keypair.target_pub_key);
     assert_eq!(pub_key, comm_keypair.pub_key);
     assert_eq!(secret_key, comm_keypair.secret_key);
+    assert_eq!(
+        received.message.body.unwrap().label,
+        Some("test".to_string())
+    );
 
     Ok(())
 }
@@ -584,7 +593,7 @@ async fn can_report_problem() -> Result<(), Box<dyn std::error::Error>> {
         &id,
     )
     .await?;
-    
+
     receive_problem_report(
         &mut vade,
         &test_setup.user1_did,

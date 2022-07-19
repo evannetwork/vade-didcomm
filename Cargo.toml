@@ -17,7 +17,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = ["portable", "state_storage"]
+default = ["portable"]
 
 debug_db = []
 

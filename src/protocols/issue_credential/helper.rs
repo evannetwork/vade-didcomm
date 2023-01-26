@@ -2,13 +2,11 @@ use std::collections::HashMap;
 
 use uuid::Uuid;
 
+#[cfg(feature = "state_storage")]
+use crate::protocols::issue_credential::datatypes::IssuerCredentialReq;
 use crate::{
     datatypes::MessageWithBody,
-    protocols::issue_credential::datatypes::{
-        CredentialData,
-        IssuerCredentialReq,
-        ISSUE_CREDENTIAL_PROTOCOL_URL,
-    },
+    protocols::issue_credential::datatypes::{CredentialData, ISSUE_CREDENTIAL_PROTOCOL_URL},
 };
 
 /// Specifies all possible message directions.
@@ -71,6 +69,7 @@ pub fn get_issue_credential_message(
 ///
 /// # Returns
 /// * `IssuerCredentialReq` - necessary information
+#[cfg(feature = "state_storage")]
 pub fn get_issue_credential_info_from_message(
     message: MessageWithBody<CredentialData>,
 ) -> Result<IssuerCredentialReq, Box<dyn std::error::Error>> {

@@ -1,4 +1,4 @@
-use rand_core::OsRng;
+#[cfg(not(feature = "state_storage"))]
 use x25519_dalek::{PublicKey, StaticSecret};
 
 use super::helper::{
@@ -9,16 +9,18 @@ use super::helper::{
     DidExchangeOptions,
     DidExchangeType,
 };
+#[cfg(not(feature = "state_storage"))]
+use crate::datatypes::CommKeyPair;
 use crate::{
-    datatypes::CommKeyPair,
     get_from_to_from_message,
+    protocols::protocol::{generate_step_output, StepResult},
+};
+#[cfg(feature = "state_storage")]
+use crate::{
     keypair::{get_com_keypair, get_key_agreement_key, save_com_keypair},
-    protocols::{
-        did_exchange::{
-            datatypes::{State, UserType},
-            did_exchange::{get_current_state, save_didexchange, save_state},
-        },
-        protocol::{generate_step_output, StepResult},
+    protocols::did_exchange::{
+        datatypes::{State, UserType},
+        did_exchange::{get_current_state, save_didexchange, save_state},
     },
 };
 
@@ -97,7 +99,11 @@ pub fn send_response(options: &str, message: &str) -> StepResult {
 /// protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/response`
 /// Receives the partners pub key and updates the existing communication key pair for this DID in
 /// the db.
-pub fn receive_response(options: &str, message: &str) -> StepResult {
+pub fn receive_response(
+    #[allow(unused_variables)] // may not be used, depending on feature setup
+    options: &str,
+    message: &str,
+) -> StepResult {
     let parsed_message: DidExchangeBaseMessage = serde_json::from_str(message)?;
     let did_document = get_did_document_from_body(message)?;
     let exchange_info = get_exchange_info_from_message(&parsed_message.base_message, did_document)?;

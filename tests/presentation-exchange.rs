@@ -2,6 +2,7 @@ mod common;
 
 extern crate jsonpath_lib as jsonpath;
 
+#[cfg(feature = "state_storage")]
 use std::cmp::Ordering;
 
 use common::{get_vade, read_db};
@@ -10,13 +11,10 @@ use serial_test::serial;
 use utilities::keypair::get_keypair_set;
 use uuid::Uuid;
 use vade::Vade;
+#[cfg(feature = "state_storage")]
+use vade_didcomm::datatypes::ExtendedMessage;
 use vade_didcomm::{
-    datatypes::{
-        ExtendedMessage,
-        MessageWithBody,
-        VadeDidCommPluginReceiveOutput,
-        VadeDidCommPluginSendOutput,
-    },
+    datatypes::{MessageWithBody, VadeDidCommPluginReceiveOutput, VadeDidCommPluginSendOutput},
     protocols::presentation_exchange::datatypes::{
         Attachment,
         Constraints,
@@ -188,10 +186,13 @@ async fn send_request_presentation(
 
 async fn receive_request_presentation(
     vade: &mut Vade,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     sender: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     receiver: &str,
     message: String,
     options: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive(options, &message).await?;
@@ -212,6 +213,7 @@ async fn receive_request_presentation(
         .request_presentation_attach
         .ok_or("Presentation request not attached")?;
 
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let presentation_data = &attached_req
         .data
         .get(0)
@@ -389,10 +391,13 @@ async fn send_presentation(
 
 async fn receive_presentation(
     vade: &mut Vade,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     sender: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     receiver: &str,
     message: String,
     options: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive(options, &message).await?;
@@ -410,11 +415,13 @@ async fn receive_presentation(
         .body
         .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     let state = received_presentation.state;
     let attached_presentation = received_presentation
         .presentations_attach
         .ok_or("Presentation not attached")?;
 
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let data = &attached_presentation
         .data
         .get(0)
@@ -593,10 +600,13 @@ async fn send_presentation_proposal(
 
 async fn receive_presentation_proposal(
     vade: &mut Vade,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     sender: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     receiver: &str,
     message: String,
     options: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive(options, &message).await?;
@@ -614,12 +624,14 @@ async fn receive_presentation_proposal(
         .body
         .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     let state = received_proposal.state;
 
     let proposal_data = received_proposal
         .proposal_attach
         .ok_or("Proposal data not attached")?;
 
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let attribute_data = &proposal_data
         .data
         .get(0)
@@ -658,6 +670,7 @@ async fn receive_presentation_proposal(
     Ok(())
 }
 
+#[cfg(feature = "state_storage")]
 async fn get_messages_by_thid(thid: &str) -> Result<String, Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let message_id = format!("message_{}_*", thid);
@@ -674,6 +687,7 @@ async fn get_messages_by_thid(thid: &str) -> Result<String, Box<dyn std::error::
     Ok(received.to_string())
 }
 
+#[cfg(feature = "state_storage")]
 async fn get_messages_by_msgid(
     thid: &str,
     msg_id: &str,

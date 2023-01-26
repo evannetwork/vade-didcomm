@@ -7,20 +7,26 @@ use x25519_dalek::StaticSecret;
 
 use crate::{
     datatypes::{
-        BaseMessage,
         DidCommOptions,
         EncryptionKeyPair,
         EncryptionKeys,
-        ExtendedMessage,
         MessageDirection,
         ProtocolHandleOutput,
     },
     fill_message_id_and_timestamps,
-    get_from_to_from_message,
     keypair::{get_com_keypair, get_key_agreement_key},
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
-    utils::{read_raw_message_from_db, vec_to_array, write_raw_message_to_db},
+    utils::read_raw_message_from_db, vec_to_array,
+};
+#[cfg(feature = "state_storage")]
+use crate::{
+    datatypes::{
+        BaseMessage,
+        ExtendedMessage,
+    },
+    get_from_to_from_message,
+    utils::write_raw_message_to_db,
 };
 
 big_array! { BigArray; }
@@ -112,6 +118,7 @@ impl VadePlugin for VadeDidComm {
         let options_parsed = serde_json::from_str::<DidCommOptions>(options)?;
         let message_with_id = fill_message_id_and_timestamps(message)?;
 
+        #[allow(unused_mut)] // may need to be mutable, depending on feature setup
         let mut protocol_result = match options_parsed.skip_protocol_handling {
             None | Some(false) => {
                 // run protocol specific logic

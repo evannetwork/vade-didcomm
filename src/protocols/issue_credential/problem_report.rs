@@ -1,9 +1,11 @@
 use crate::protocols::{
-    issue_credential::{
-        credential::{get_current_state, save_state},
-        datatypes::{ProblemReport, State, UserType},
-    },
+    issue_credential::datatypes::ProblemReport,
     protocol::{generate_step_output, StepResult},
+};
+#[cfg(feature = "state_storage")]
+use crate::protocols::issue_credential::{
+    credential::{get_current_state, save_state},
+    datatypes::{State, UserType},
 };
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/problem-report`
@@ -41,6 +43,7 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
 
 /// Protocol handler for direction: `receive`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/problem-report`
 pub fn receive_problem_report(_options: &str, message: &str) -> StepResult {
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let problem_report: ProblemReport = serde_json::from_str(message)?;
 
     cfg_if::cfg_if! {

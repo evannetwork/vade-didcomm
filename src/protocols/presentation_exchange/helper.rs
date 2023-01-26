@@ -3,11 +3,12 @@ use std::collections::HashMap;
 
 use uuid::Uuid;
 
+#[cfg(feature = "state_storage")]
+use crate::protocols::presentation_exchange::datatypes::PresentationExchangeInfo;
 use crate::{
     datatypes::MessageWithBody,
     protocols::presentation_exchange::datatypes::{
         PresentationExchangeData,
-        PresentationExchangeInfo,
         PRESENTATION_EXCHANGE_PROTOCOL_URL,
     },
 };
@@ -68,6 +69,7 @@ pub fn get_presentation_exchange_message(
 ///
 /// # Returns
 /// * `PresentationExchangeInfo` - necessary information
+#[cfg(feature = "state_storage")]
 pub fn get_presentation_exchange_info_from_message(
     message: MessageWithBody<PresentationExchangeData>,
 ) -> Result<PresentationExchangeInfo, Box<dyn std::error::Error>> {
@@ -98,6 +100,7 @@ pub fn get_presentation_exchange_info_from_message(
 ///
 /// # Returns
 /// * `bool` - returns true if presentation is valid and satisfies constraints otherwise returns false
+#[cfg(feature = "state_storage")]
 pub fn validate_presentation_against_credentials(
     request_presentation: PresentationExchangeData,
     received_presentation: PresentationExchangeData,

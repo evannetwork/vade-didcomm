@@ -1,11 +1,14 @@
 use crate::{
     datatypes::ExtendedMessage,
     protocols::{
-        did_exchange::datatypes::{State, UserType},
-        did_exchange::did_exchange::{get_current_state, save_state},
         did_exchange::DID_EXCHANGE_PROTOCOL_URL,
         protocol::{generate_step_output, StepResult},
     },
+};
+#[cfg(feature = "state_storage")]
+use crate::protocols::{
+    did_exchange::datatypes::{State, UserType},
+    did_exchange::did_exchange::{get_current_state, save_state},
 };
 
 /// protocol handler for direction: `send`, type: `DID_EXCHANGE_PROTOCOL_URL/complete`
@@ -40,6 +43,7 @@ pub fn send_complete(_options: &str, message: &str) -> StepResult {
 
 /// protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/complete`
 pub fn receive_complete(_options: &str, message: &str) -> StepResult {
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
 
     cfg_if::cfg_if! {

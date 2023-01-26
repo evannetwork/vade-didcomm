@@ -61,6 +61,7 @@ pub fn search_db_keys(prefix: &str) -> Result<Vec<String>, Box<dyn std::error::E
     Ok(values)
 }
 
+#[cfg(feature = "state_storage")]
 #[cfg(test)]
 mod tests {
     use super::*;

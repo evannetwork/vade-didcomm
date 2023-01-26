@@ -1,7 +1,6 @@
-use crate::{
-    datatypes::CommKeyPair,
-    db::{read_db, write_db},
-};
+#[cfg(feature = "state_storage")]
+use crate::db::write_db;
+use crate::{datatypes::CommKeyPair, db::read_db};
 
 /// Saves a communication keypair within db for two DIDs (from -> to). Entry key will be
 /// comm_keypair_{from}_{to}.
@@ -18,7 +17,9 @@ use crate::{
 /// * `CommKeyPair` - new instance of the comm key pair
 #[allow(clippy::too_many_arguments)]
 pub fn save_com_keypair(
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     from_did: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     to_did: &str,
     key_agreement_key: &str,
     target_key_agreement_key: &str,

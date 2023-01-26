@@ -110,10 +110,13 @@ async fn send_request_presentation(
 
 async fn receive_request_presentation(
     vade: &mut Vade,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     sender: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     receiver: &str,
     message: String,
     options: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     thid: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive(options, &message).await?;
@@ -131,6 +134,7 @@ async fn receive_request_presentation(
         .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
     let attached_req = request_presentation.request_presentations_attach;
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let presentation_data = attached_req.get(0).ok_or("Request body is invalid")?;
 
     cfg_if::cfg_if! {
@@ -192,10 +196,13 @@ async fn send_presentation(
 
 async fn receive_presentation(
     vade: &mut Vade,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     sender: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     receiver: &str,
     message: String,
     options: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     thid: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive(options, &message).await?;
@@ -214,6 +221,7 @@ async fn receive_presentation(
         .ok_or("send DIDComm request does not return presentation".to_string())?;
 
     let attached_presentation = received_presentation.presentations_attach;
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let presentation_data = attached_presentation
         .get(0)
         .ok_or("Presentation body is invalid")?;
@@ -293,10 +301,13 @@ async fn send_presentation_proposal(
 
 async fn receive_presentation_proposal(
     vade: &mut Vade,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     sender: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     receiver: &str,
     message: String,
     options: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     thid: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive(options, &message).await?;
@@ -318,6 +329,7 @@ async fn receive_presentation_proposal(
         .presentation_proposal
         .attribute
         .ok_or("Attributes not provided with proposal")?;
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let attribute = attribute_data.get(0).ok_or("Attribute is invalid")?;
 
     cfg_if::cfg_if! {
@@ -614,6 +626,7 @@ async fn can_do_problem_report() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "state_storage")]
 async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let test_setup = get_keypair_set();

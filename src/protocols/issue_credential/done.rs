@@ -1,9 +1,11 @@
 use crate::protocols::{
-    issue_credential::{
-        credential::{get_current_state, save_state},
-        datatypes::{Ack, State, UserType},
-    },
+    issue_credential::datatypes::Ack,
     protocol::{generate_step_output, StepResult},
+};
+#[cfg(feature = "state_storage")]
+use crate::protocols::issue_credential::{
+    credential::{get_current_state, save_state},
+    datatypes::{State, UserType}
 };
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/ack`
@@ -39,6 +41,7 @@ pub fn send_credential_ack(_options: &str, message: &str) -> StepResult {
 
 /// Protocol handler for direction: `receive`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/ack`
 pub fn receive_credential_ack(_options: &str, message: &str) -> StepResult {
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let parsed_message: Ack = serde_json::from_str(message)?;
 
     cfg_if::cfg_if! {

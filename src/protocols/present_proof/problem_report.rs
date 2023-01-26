@@ -1,12 +1,14 @@
 use crate::{
     datatypes::MessageWithBody,
     protocols::{
-        present_proof::{
-            datatypes::{ProblemReportData, State, UserType},
-            presentation::{get_current_state, save_state},
-        },
+        present_proof::datatypes::ProblemReportData,
         protocol::{generate_step_output, StepResult},
     },
+};
+#[cfg(feature = "state_storage")]
+use crate::protocols::present_proof::{
+    datatypes::{State, UserType},
+    presentation::{get_current_state, save_state},
 };
 
 /// Protocol handler for direction: `send`, type: `PRESENT_PROOF_PROTOCOL_URL/problem-report`
@@ -52,6 +54,7 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/problem-report`
 pub fn receive_problem_report(_options: &str, message: &str) -> StepResult {
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let problem_report_message: MessageWithBody<ProblemReportData> = serde_json::from_str(message)?;
 
     cfg_if::cfg_if! {

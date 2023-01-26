@@ -11,18 +11,17 @@ use vade_didcomm::{
         Base64Container,
         BaseMessage,
         CommKeyPair,
-        DidCommOptions,
         DidDocumentBodyAttachment,
-        EncryptionKeyPair,
-        EncryptionKeys,
         MessageWithBody,
         VadeDidCommPluginReceiveOutput,
         VadeDidCommPluginSendOutput,
     },
-    protocols::did_exchange::{
-        datatypes::{ProblemReport, ProblemReportData, UserType},
-        DidExchangeOptions,
-    },
+    protocols::did_exchange::DidExchangeOptions,
+};
+#[cfg(feature = "state_storage")]
+use vade_didcomm::{
+    datatypes::{DidCommOptions, EncryptionKeyPair, EncryptionKeys},
+    protocols::did_exchange::datatypes::{ProblemReport, ProblemReportData, UserType},
 };
 
 const DID_SERVICE_ENDPOINT: &str = "https://evan.network";
@@ -63,16 +62,19 @@ async fn send_request(
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
 
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let pub_key = prepared
         .metadata
         .get("pubKey")
         .ok_or("send DIDComm request does not return pubKey")?
         .to_owned();
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let secret_key = prepared
         .metadata
         .get("secretKey")
         .ok_or("send DIDComm request does not return secretKey")?
         .to_owned();
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let target_pub_key = prepared
         .metadata
         .get("targetPubKey")
@@ -108,21 +110,25 @@ async fn receive_request(
         MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
     > = serde_json::from_str(result)?;
 
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let target_did = received
         .metadata
         .get("keyAgreementKey")
         .ok_or("no keyAgreementKey")?;
 
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let pub_key = received
         .metadata
         .get("pubKey")
         .ok_or("send DIDComm request does not return pubKey")?
         .to_owned();
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let secret_key = received
         .metadata
         .get("secretKey")
         .ok_or("send DIDComm request does not return secretKey")?
         .to_owned();
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let target_pub_key = received
         .metadata
         .get("targetPubKey")
@@ -189,10 +195,12 @@ async fn receive_response(
     let received: VadeDidCommPluginReceiveOutput<
         MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
     > = serde_json::from_str(result)?;
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let receiver_did = received
         .metadata
         .get("keyAgreementKey")
         .ok_or("no keyAgreementKey")?;
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let sender_did = received
         .metadata
         .get("targetKeyAgreementKey")
@@ -264,6 +272,7 @@ async fn receive_complete(
     Ok(())
 }
 
+#[cfg(feature = "state_storage")]
 async fn create_keys(vade: &mut Vade) -> Result<EncryptionKeyPair, Box<dyn std::error::Error>> {
     let results = vade
         .run_custom_function("{}", "create_keys", "{}", "{}")
@@ -279,6 +288,7 @@ async fn create_keys(vade: &mut Vade) -> Result<EncryptionKeyPair, Box<dyn std::
     Ok(keys)
 }
 
+#[cfg(feature = "state_storage")]
 async fn send_problem_report(
     vade: &mut Vade,
     sender: &str,
@@ -318,6 +328,7 @@ async fn send_problem_report(
     Ok(serde_json::to_string(&prepared.message)?)
 }
 
+#[cfg(feature = "state_storage")]
 async fn receive_problem_report(
     vade: &mut Vade,
     _sender: &str,
@@ -428,6 +439,7 @@ async fn can_do_key_exchange_pregenerated_keys() -> Result<(), Box<dyn std::erro
 
     receive_request(&mut vade, request_message, &options_string).await?;
 
+    #[allow(unused_mut)] // may need to be mutable, depending on feature setup
     let mut receiver_options_string = test_setup.receiver_signing_options_stringified.to_owned();
     cfg_if::cfg_if! {
         if #[cfg(not(feature = "state_storage"))] {
@@ -447,6 +459,7 @@ async fn can_do_key_exchange_pregenerated_keys() -> Result<(), Box<dyn std::erro
     )
     .await?;
 
+    #[allow(unused_mut)] // may need to be mutable, depending on feature setup
     let mut sender_options_string = test_setup.sender_signing_options_stringified.to_owned();
     cfg_if::cfg_if! {
         if #[cfg(not(feature = "state_storage"))] {

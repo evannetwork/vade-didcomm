@@ -1,11 +1,17 @@
+#[cfg(feature = "state_storage")]
 use super::datatypes::PROPOSAL_PROTOCOL_URL;
+#[cfg(feature = "state_storage")]
 use crate::{
-    datatypes::{HasFromAndTo, MessageWithBody},
+    datatypes::HasFromAndTo,
+    protocols::present_proof::{
+        datatypes::{State, UserType},
+        presentation::{get_current_state, save_presentation, save_state},
+    },
+};
+use crate::{
+    datatypes::MessageWithBody,
     protocols::{
-        present_proof::{
-            datatypes::{PresentationData, ProposalData, RequestData, State, UserType},
-            presentation::{get_current_state, save_presentation, save_state},
-        },
+        present_proof::datatypes::{PresentationData, ProposalData, RequestData},
         protocol::{generate_step_output, StepResult},
     },
 };
@@ -55,6 +61,7 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/presentation`
 pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let presentation_message: MessageWithBody<PresentationData> = serde_json::from_str(message)?;
 
     cfg_if::cfg_if! {
@@ -98,6 +105,7 @@ pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
 
 /// Protocol handler for direction: `receive`, type: `PRESENT_PROOF_PROTOCOL_URL/propose-presentation`
 pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult {
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let proposal_message: MessageWithBody<ProposalData> = serde_json::from_str(message)?;
 
     cfg_if::cfg_if! {

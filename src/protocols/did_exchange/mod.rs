@@ -1,5 +1,6 @@
 pub(crate) mod complete;
 pub mod datatypes;
+#[cfg(feature = "state_storage")]
 mod did_exchange;
 pub(crate) mod helper;
 mod problem_report;

@@ -1,11 +1,11 @@
-use crate::protocols::{
-    issue_credential::datatypes::ProblemReport,
-    protocol::{generate_step_output, StepResult},
-};
 #[cfg(feature = "state_storage")]
 use crate::protocols::issue_credential::{
     credential::{get_current_state, save_state},
     datatypes::{State, UserType},
+};
+use crate::protocols::{
+    issue_credential::datatypes::ProblemReport,
+    protocol::{generate_step_output, StepResult},
 };
 
 /// Protocol handler for direction: `send`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/problem-report`
@@ -19,7 +19,10 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
                 .thid
                 .as_ref()
                 .ok_or("Thread id can't be empty")?;
-            let current_state: State = get_current_state(thid, &problem_report_data.user_type)?.parse()?;
+            let current_state: State = get_current_state(
+                thid,
+                &problem_report_data.user_type,
+            )?.parse()?;
 
             match current_state {
                 State::ReceiveProposeCredential | State::ReceiveOfferCredential => save_state(

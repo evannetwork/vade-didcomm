@@ -52,8 +52,8 @@ pub fn get_presentation_exchange_message(
         from: Some(String::from(from_did)),
         id: Some(String::from(&thread_id)),
         other: HashMap::new(),
-        pthid: Some(format!("{}#presentation-exchange", thread_id)),
-        r#type: format!("{}/{}", PRESENTATION_EXCHANGE_PROTOCOL_URL, step_name),
+        pthid: Some(format!("{thread_id}#presentation-exchange")),
+        r#type: format!("{PRESENTATION_EXCHANGE_PROTOCOL_URL}/{step_name}"),
         thid: Some(thid.to_string()),
         to: Some([String::from(to_did)].to_vec()),
     };

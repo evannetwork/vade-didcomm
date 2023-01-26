@@ -67,7 +67,7 @@ pub fn get_com_keypair(
     from_did: &str,
     to_did: &str,
 ) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
-    let db_result = read_db(&format!("comm_keypair_{}_{}", from_did, to_did))?;
+    let db_result = read_db(&format!("comm_keypair_{from_did}_{to_did}"))?;
     log::debug!(
         "receiving key: comm_keypair_{}_{} with data: {}",
         from_did,
@@ -91,7 +91,7 @@ pub fn get_com_keypair(
 pub fn get_key_agreement_key(
     key_agreement_key: &str,
 ) -> Result<CommKeyPair, Box<dyn std::error::Error>> {
-    let db_result = read_db(&format!("key_agreement_key_{}", key_agreement_key))?;
+    let db_result = read_db(&format!("key_agreement_key_{key_agreement_key}"))?;
     log::debug!(
         "receving key: key_agreement_key_{} with data: {}",
         key_agreement_key,

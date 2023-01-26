@@ -37,7 +37,7 @@ pub fn send_offer_credential(_options: &str, message: &str) -> StepResult {
         IssueCredentialType::OfferCredential,
         &exchange_info.from,
         &exchange_info.to,
-        credential_data.clone(),
+        credential_data,
         &thid,
     )?;
 
@@ -208,7 +208,7 @@ pub fn send_issue_credential(_options: &str, message: &str) -> StepResult {
         IssueCredentialType::IssueCredential,
         &exchange_info.from,
         &exchange_info.to,
-        credential_data.clone(),
+        credential_data,
         &thid,
     )?;
 

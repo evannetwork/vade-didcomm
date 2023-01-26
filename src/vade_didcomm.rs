@@ -5,6 +5,12 @@ use rand_core::OsRng;
 use vade::{VadePlugin, VadePluginResultValue};
 use x25519_dalek::StaticSecret;
 
+#[cfg(feature = "state_storage")]
+use crate::{
+    datatypes::{BaseMessage, ExtendedMessage},
+    get_from_to_from_message,
+    utils::write_raw_message_to_db,
+};
 use crate::{
     datatypes::{
         DidCommOptions,
@@ -17,16 +23,8 @@ use crate::{
     keypair::{get_com_keypair, get_key_agreement_key},
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
-    utils::read_raw_message_from_db, vec_to_array,
-};
-#[cfg(feature = "state_storage")]
-use crate::{
-    datatypes::{
-        BaseMessage,
-        ExtendedMessage,
-    },
-    get_from_to_from_message,
-    utils::write_raw_message_to_db,
+    utils::read_raw_message_from_db,
+    vec_to_array,
 };
 
 big_array! { BigArray; }
@@ -148,11 +146,10 @@ impl VadePlugin for VadeDidComm {
         let final_message: String;
 
         if protocol_result.encrypt && !matches!(options_parsed.skip_message_packaging, Some(true)) {
-            let encryption_keys: EncryptionKeys;
-            if options_parsed.encryption_keys.is_some() {
-                encryption_keys = options_parsed
+            let encryption_keys: EncryptionKeys = if options_parsed.encryption_keys.is_some() {
+                options_parsed
                     .encryption_keys
-                    .ok_or("encryption_keys is missing in options parameter")?;
+                    .ok_or("encryption_keys is missing in options parameter")?
             } else {
                 cfg_if::cfg_if! {
                     if #[cfg(not(feature = "state_storage"))] {
@@ -168,7 +165,9 @@ impl VadePlugin for VadeDidComm {
                             if encoded_keypair.is_err() {
                                 return Err(Box::from("No keypair found"));
                             }
-                            encoded_keypair = get_key_agreement_key(&encoded_keypair?.key_agreement_key);
+                            encoded_keypair = get_key_agreement_key(
+                                &encoded_keypair?.key_agreement_key,
+                            );
                         }
                         let keypair = encoded_keypair?;
                         let secret_decoded = vec_to_array(hex::decode(keypair.secret_key)?)?;
@@ -187,10 +186,10 @@ impl VadePlugin for VadeDidComm {
                         parsed_message.from = Some(keypair.key_agreement_key);
                         protocol_result.message = serde_json::to_string(&parsed_message)?;
 
-                        encryption_keys = EncryptionKeys {
+                        EncryptionKeys {
                             encryption_my_secret: StaticSecret::from(secret_decoded).to_bytes(),
                             encryption_others_public: Some(public_decoded),
-                        };
+                        }
                     }
                 }
             };
@@ -299,8 +298,7 @@ impl VadePlugin for VadeDidComm {
             }
             let signing_others_public = options_parsed
                 .signing_keys
-                .map(|keys| keys.signing_others_public)
-                .flatten();
+                .and_then(|keys| keys.signing_others_public);
             decrypted = decrypt_message(
                 message,
                 Some(&decryption_keys.encryption_my_secret),

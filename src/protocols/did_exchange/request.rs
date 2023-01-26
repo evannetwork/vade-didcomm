@@ -66,7 +66,7 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
         &exchange_info.from,
         &key_did,
         &exchange_info.to,
-        &options.service_endpoint.unwrap_or_else(|| "".to_string()),
+        &options.service_endpoint.unwrap_or_default(),
         pub_key_base58_string,
         &parsed_message,
     )?;

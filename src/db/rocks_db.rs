@@ -34,8 +34,8 @@ pub fn read_db(key: &str) -> Result<String, Box<dyn std::error::Error>> {
 
     match db.get(key) {
         Ok(Some(result)) => Ok(String::from_utf8(result)?),
-        Ok(None) => Err(format!("{0} not found", key).into()),
-        Err(e) => Err(format!("Error while loading key: {0}, {1}", key, e).into()),
+        Ok(None) => Err(format!("{key} not found").into()),
+        Err(e) => Err(format!("Error while loading key: {key}, {e}").into()),
     }
 }
 

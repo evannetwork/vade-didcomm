@@ -57,7 +57,7 @@ pub fn send_propose_credential(_options: &str, message: &str) -> StepResult {
         IssueCredentialType::ProposeCredential,
         &exchange_info.from,
         &exchange_info.to,
-        credential_data.clone(),
+        credential_data,
         &thid,
     )?;
 
@@ -173,7 +173,7 @@ pub fn send_request_credential(_options: &str, message: &str) -> StepResult {
         IssueCredentialType::RequestCredential,
         &exchange_info.from,
         &exchange_info.to,
-        credential_data.clone(),
+        credential_data,
         &thid,
     )?;
 
@@ -202,13 +202,7 @@ pub fn receive_issue_credential(_options: &str, message: &str) -> StepResult {
         body: HashMap::new(),
         from: parsed_message.from.clone(),
         r#type: parsed_message.r#type.clone(),
-        to: Some(
-            parsed_message
-                .to
-                .clone()
-                .ok_or("To DID not provided")?
-                .to_vec(),
-        ),
+        to: Some(parsed_message.to.ok_or("To DID not provided")?.to_vec()),
     };
     cfg_if::cfg_if! {
         if #[cfg(feature = "state_storage")] {

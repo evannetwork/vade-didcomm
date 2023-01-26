@@ -36,7 +36,7 @@ pub fn encrypt_message(
     sign_keypair: Option<ed25519_dalek::Keypair>,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut d_message = DIDCommMessage::new()
-        .body(&message_string.to_string())
+        .body(message_string)
         .as_jwe(&CryptoAlgorithm::XC20P, encryption_target_public.clone());
     let message: ExtendedMessage = serde_json::from_str(message_string)?;
 

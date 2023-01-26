@@ -60,7 +60,7 @@ pub fn send_propose_presentation(_options: &str, message: &str) -> StepResult {
         PresentationExchangeType::ProposePresentation,
         &exchange_info.from,
         &exchange_info.to,
-        presentation_exchange_data.clone(),
+        presentation_exchange_data,
         &thid,
     )?;
 
@@ -180,7 +180,7 @@ pub fn send_presentation(_options: &str, message: &str) -> StepResult {
         PresentationExchangeType::Presentation,
         &exchange_info.from,
         &exchange_info.to,
-        presentation_exchange_data.clone(),
+        presentation_exchange_data,
         &thid,
     )?;
 

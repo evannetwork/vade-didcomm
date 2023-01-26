@@ -1,3 +1,8 @@
+#[cfg(feature = "state_storage")]
+use crate::protocols::{
+    did_exchange::datatypes::{State, UserType},
+    did_exchange::did_exchange::{get_current_state, save_state},
+};
 use crate::{
     datatypes::ExtendedMessage,
     protocols::{
@@ -5,18 +10,13 @@ use crate::{
         protocol::{generate_step_output, StepResult},
     },
 };
-#[cfg(feature = "state_storage")]
-use crate::protocols::{
-    did_exchange::datatypes::{State, UserType},
-    did_exchange::did_exchange::{get_current_state, save_state},
-};
 
 /// protocol handler for direction: `send`, type: `DID_EXCHANGE_PROTOCOL_URL/complete`
 /// just ensures to set the correct message type, before the message will be sent (first time for
 /// DID exchange, that a encrypted message will be sent)
 pub fn send_complete(_options: &str, message: &str) -> StepResult {
     let mut parsed_message: ExtendedMessage = serde_json::from_str(message)?;
-    parsed_message.r#type = format!("{}/complete", DID_EXCHANGE_PROTOCOL_URL);
+    parsed_message.r#type = format!("{DID_EXCHANGE_PROTOCOL_URL}/complete");
 
     cfg_if::cfg_if! {
         if #[cfg(feature = "state_storage")] {
@@ -53,7 +53,11 @@ pub fn receive_complete(_options: &str, message: &str) -> StepResult {
             let current_state: State = get_current_state(&thid, &UserType::Invitee)?.parse()?;
 
             match current_state {
-                State::SendResponse => save_state(&thid, &State::ReceiveComplete, &UserType::Invitee)?,
+                State::SendResponse => save_state(
+                    &thid,
+                    &State::ReceiveComplete,
+                    &UserType::Invitee,
+                )?,
                 _ => {
                     return Err(Box::from(format!(
                         "State from {} to {} not allowed",

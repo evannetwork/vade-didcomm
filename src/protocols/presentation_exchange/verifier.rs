@@ -68,7 +68,7 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
         PresentationExchangeType::RequestPresentation,
         &exchange_info.from,
         &exchange_info.to,
-        presentation_exchange_data.clone(),
+        presentation_exchange_data,
         &thid,
     )?;
 

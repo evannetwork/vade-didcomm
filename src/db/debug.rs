@@ -4,8 +4,8 @@
 //!
 //! Does NOT ensure thread safety, therefore parallel calls may overwrite the "database" file.
 
-use std::fs;
-use std::collections::HashMap;
+use std::{collections::HashMap, fs};
+
 use serde_json::json;
 
 const DEBUG_DB_PATH: &str = "./.didcomm_debug_db.json";

@@ -135,7 +135,12 @@ async fn receive_propose_credential(
 
     cfg_if::cfg_if! {
         if #[cfg(feature = "state_storage")] {
-            let req_data_saved = get_credential(sender, receiver, id, State::SendProposeCredential)?;
+            let req_data_saved = get_credential(
+                sender,
+                receiver,
+                id,
+                State::SendProposeCredential,
+            )?;
             let attached_req_saved = req_data_saved
                 .credential_proposal
                 .ok_or("Proposal data not attached")?;

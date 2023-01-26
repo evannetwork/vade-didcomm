@@ -52,8 +52,7 @@ pub fn get_credential(
     state: &State,
 ) -> Result<CredentialData, Box<dyn std::error::Error>> {
     let credential = read_db(&format!(
-        "issue_credential_{}_{}_{}_{}",
-        from_did, to_did, state, thid
+        "issue_credential_{from_did}_{to_did}_{state}_{thid}"
     ))?;
     let credential_data: CredentialData = serde_json::from_str(&credential)?;
     Ok(credential_data)

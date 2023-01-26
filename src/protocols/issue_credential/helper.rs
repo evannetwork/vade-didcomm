@@ -52,8 +52,8 @@ pub fn get_issue_credential_message(
         from: Some(String::from(from_did)),
         id: Some(String::from(&thread_id)),
         other: HashMap::new(),
-        pthid: Some(format!("{}#issue-credential", thread_id)),
-        r#type: format!("{}/{}", ISSUE_CREDENTIAL_PROTOCOL_URL, step_name),
+        pthid: Some(format!("{thread_id}#issue-credential")),
+        r#type: format!("{ISSUE_CREDENTIAL_PROTOCOL_URL}/{step_name}"),
         thid: Some(thid.to_string()),
         to: Some([String::from(to_did)].to_vec()),
     };

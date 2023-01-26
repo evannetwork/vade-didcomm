@@ -36,15 +36,19 @@ pub fn save_com_keypair(
         target_service_endpoint: service_endpoint.unwrap_or_else(|| String::from("")),
     };
 
-    write_db(
-        &format!("comm_keypair_{}_{}", from_did, to_did),
-        &serde_json::to_string(&comm_keypair)?,
-    )?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            write_db(
+                &format!("comm_keypair_{}_{}", from_did, to_did),
+                &serde_json::to_string(&comm_keypair)?,
+            )?;
 
-    write_db(
-        &format!("key_agreement_key_{}", key_agreement_key),
-        &serde_json::to_string(&comm_keypair)?,
-    )?;
+            write_db(
+                &format!("key_agreement_key_{}", key_agreement_key),
+                &serde_json::to_string(&comm_keypair)?,
+            )?;
+        } else { }
+    }
 
     Ok(comm_keypair)
 }

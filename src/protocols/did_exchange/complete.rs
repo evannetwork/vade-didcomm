@@ -15,21 +15,25 @@ pub fn send_complete(_options: &str, message: &str) -> StepResult {
     let mut parsed_message: ExtendedMessage = serde_json::from_str(message)?;
     parsed_message.r#type = format!("{}/complete", DID_EXCHANGE_PROTOCOL_URL);
 
-    let thid = parsed_message.thid.as_ref().ok_or("Thread id can't be empty")?;
-    let current_state: State = get_current_state(&thid, &UserType::Inviter)?.parse()?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let thid = parsed_message.thid.as_ref().ok_or("Thread id can't be empty")?;
+            let current_state: State = get_current_state(&thid, &UserType::Inviter)?.parse()?;
 
-    match current_state {
-        State::ReceiveResponse => {
-            save_state(&thid, &State::SendComplete, &UserType::Inviter)?
-        }
-        _ => {
-            return Err(Box::from(format!(
-                "State from {} to {} not allowed",
-                current_state,
-                State::SendComplete
-            )))
-        }
-    };
+            match current_state {
+                State::ReceiveResponse => {
+                    save_state(&thid, &State::SendComplete, &UserType::Inviter)?
+                }
+                _ => {
+                    return Err(Box::from(format!(
+                        "State from {} to {} not allowed",
+                        current_state,
+                        State::SendComplete
+                    )))
+                }
+            };
+        } else { }
+    }
 
     generate_step_output(&serde_json::to_string(&parsed_message)?, "{}")
 }
@@ -38,20 +42,24 @@ pub fn send_complete(_options: &str, message: &str) -> StepResult {
 pub fn receive_complete(_options: &str, message: &str) -> StepResult {
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
 
-    let thid = parsed_message.thid.as_ref().ok_or("Thread id can't be empty")?;
-    let current_state: State = get_current_state(&thid, &UserType::Invitee)?.parse()?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
 
-    match current_state {
-        State::SendResponse => {
-            save_state(&thid, &State::ReceiveComplete, &UserType::Invitee)?
-        }
-        _ => {
-            return Err(Box::from(format!(
-                "State from {} to {} not allowed",
-                current_state,
-                State::ReceiveComplete
-            )))
-        }
-    };
+            let thid = parsed_message.thid.as_ref().ok_or("Thread id can't be empty")?;
+            let current_state: State = get_current_state(&thid, &UserType::Invitee)?.parse()?;
+
+            match current_state {
+                State::SendResponse => save_state(&thid, &State::ReceiveComplete, &UserType::Invitee)?,
+                _ => {
+                    return Err(Box::from(format!(
+                        "State from {} to {} not allowed",
+                        current_state,
+                        State::ReceiveComplete
+                    )))
+                }
+            };
+        } else { }
+    }
+
     generate_step_output(message, "{}")
 }

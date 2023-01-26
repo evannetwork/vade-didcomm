@@ -132,15 +132,20 @@ async fn receive_request_presentation(
 
     let attached_req = request_presentation.request_presentations_attach;
     let presentation_data = attached_req.get(0).ok_or("Request body is invalid")?;
-    let req_data_saved: RequestData =
-        get_presentation_data(sender, receiver, thid, State::PresentationRequested)?;
-    let attached_req_saved = req_data_saved.request_presentations_attach;
-    let presentation_data_saved = attached_req_saved.get(0).ok_or("Request body is invalid")?;
 
-    assert_eq!(
-        presentation_data.data.base64,
-        presentation_data_saved.data.base64
-    );
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let req_data_saved: RequestData =
+                get_presentation_data(sender, receiver, thid, State::PresentationRequested)?;
+            let attached_req_saved = req_data_saved.request_presentations_attach;
+            let presentation_data_saved = attached_req_saved.get(0).ok_or("Request body is invalid")?;
+
+            assert_eq!(
+                presentation_data.data.base64,
+                presentation_data_saved.data.base64
+            );
+        } else {}
+    }
 
     Ok(())
 }
@@ -213,17 +218,21 @@ async fn receive_presentation(
         .get(0)
         .ok_or("Presentation body is invalid")?;
 
-    let req_data_saved: PresentationData =
-        get_presentation_data(sender, receiver, thid, State::PresentationSent)?;
-    let attached_presentation_saved = req_data_saved.presentations_attach;
-    let presentation_data_saved = attached_presentation_saved
-        .get(0)
-        .ok_or("Presentation body is invalid")?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let req_data_saved: PresentationData =
+                get_presentation_data(sender, receiver, thid, State::PresentationSent)?;
+            let attached_presentation_saved = req_data_saved.presentations_attach;
+            let presentation_data_saved = attached_presentation_saved
+                .get(0)
+                .ok_or("Presentation body is invalid")?;
 
-    assert_eq!(
-        presentation_data.data.base64,
-        presentation_data_saved.data.base64
-    );
+            assert_eq!(
+                presentation_data.data.base64,
+                presentation_data_saved.data.base64
+            );
+        } else {}
+    }
 
     Ok(())
 }
@@ -311,16 +320,21 @@ async fn receive_presentation_proposal(
         .ok_or("Attributes not provided with proposal")?;
     let attribute = attribute_data.get(0).ok_or("Attribute is invalid")?;
 
-    let proposal_data_saved: ProposalData =
-        get_presentation_data(sender, receiver, thid, State::PresentationProposed)?;
-    let attribute_data_saved = proposal_data_saved
-        .presentation_proposal
-        .attribute
-        .ok_or("Attributes not saved in db")?;
-    let attribute_saved = attribute_data_saved
-        .get(0)
-        .ok_or("Saved Attribute is invalid")?;
-    assert_eq!(attribute.value, attribute_saved.value);
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let proposal_data_saved: ProposalData =
+                get_presentation_data(sender, receiver, thid, State::PresentationProposed)?;
+            let attribute_data_saved = proposal_data_saved
+                .presentation_proposal
+                .attribute
+                .ok_or("Attributes not saved in db")?;
+            let attribute_saved = attribute_data_saved
+                .get(0)
+                .ok_or("Saved Attribute is invalid")?;
+            assert_eq!(attribute.value, attribute_saved.value);
+        } else {}
+    }
+
     Ok(())
 }
 
@@ -628,6 +642,7 @@ async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
 #[tokio::test]
 #[should_panic]
 #[serial]
+#[cfg(feature = "state_storage")]
 async fn will_panic_and_fail_to_process_wrong_state() {
     let result = send_wrong_ack_state().await;
     if let Err(e) = result {

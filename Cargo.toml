@@ -26,6 +26,8 @@ portable = [
     "didcomm-rs/resolve",
 ]
 
+state_storage = []
+
 wasm = [
     "didcomm-rs/raw-crypto",
     "getrandom/js",

@@ -43,20 +43,24 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
 
     let thid = parsed_message.thid.ok_or("Thread id can't be empty.")?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
 
-    match current_state {
-        State::ReceiveProposePresentation | State::Unknown => {
-            save_state(&thid, &State::SendPresentationRequest, &UserType::Verifier)?
-        }
-        _ => {
-            return Err(Box::from(format!(
-                "Error while processing step: State from {} to {} not allowed",
-                current_state,
-                State::SendPresentationRequest
-            )))
-        }
-    };
+            match current_state {
+                State::ReceiveProposePresentation | State::Unknown => {
+                    save_state(&thid, &State::SendPresentationRequest, &UserType::Verifier)?
+                }
+                _ => {
+                    return Err(Box::from(format!(
+                        "Error while processing step: State from {} to {} not allowed",
+                        current_state,
+                        State::SendPresentationRequest
+                    )))
+                }
+            };
+        } else { }
+    }
 
     let request_message = get_presentation_exchange_message(
         PresentationExchangeType::RequestPresentation,
@@ -66,13 +70,17 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
         &thid,
     )?;
 
-    save_presentation_exchange(
-        &exchange_info.from,
-        &exchange_info.to,
-        &thid,
-        &serde_json::to_string(&presentation_exchange_data)?,
-        &State::SendPresentationRequest,
-    )?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            save_presentation_exchange(
+                &exchange_info.from,
+                &exchange_info.to,
+                &thid,
+                &serde_json::to_string(&presentation_exchange_data)?,
+                &State::SendPresentationRequest,
+            )?;
+        } else { }
+    }
 
     generate_step_output(&serde_json::to_string(&request_message)?, "{}")
 }
@@ -81,53 +89,57 @@ pub fn send_request_presentation(_options: &str, message: &str) -> StepResult {
 pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<PresentationExchangeData> = serde_json::from_str(message)?;
 
-    let base_message: BaseMessage = BaseMessage {
-        body: HashMap::new(),
-        from: parsed_message.from.clone(),
-        r#type: parsed_message.r#type.clone(),
-        to: Some(
-            parsed_message
-                .to
-                .clone()
-                .ok_or("To DID not provided")?
-                .to_vec(),
-        ),
-    };
-    let thid = parsed_message
-        .thid
-        .to_owned()
-        .ok_or("Thread id can't be empty")?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let base_message: BaseMessage = BaseMessage {
+                body: HashMap::new(),
+                from: parsed_message.from.clone(),
+                r#type: parsed_message.r#type.clone(),
+                to: Some(
+                    parsed_message
+                        .to
+                        .clone()
+                        .ok_or("To DID not provided")?
+                        .to_vec(),
+                ),
+            };
+            let thid = parsed_message
+                .thid
+                .to_owned()
+                .ok_or("Thread id can't be empty")?;
 
-    let exchange_info = get_presentation_exchange_info_from_message(parsed_message)?;
-    let base_info = get_from_to_from_message(&base_message)?;
-    let presentation_exchange_data = exchange_info
-        .presentation_exchange_data
-        .ok_or("Presentation exchange data not provided.")?;
+            let exchange_info = get_presentation_exchange_info_from_message(parsed_message)?;
+            let base_info = get_from_to_from_message(&base_message)?;
+            let presentation_exchange_data = exchange_info
+                .presentation_exchange_data
+                .ok_or("Presentation exchange data not provided.")?;
 
-    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
+            let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
 
-    match current_state {
-        State::Unknown | State::SendPresentationRequest => save_state(
-            &thid,
-            &State::ReceiveProposePresentation,
-            &UserType::Verifier,
-        )?,
-        _ => {
-            return Err(Box::from(format!(
-                "Error while processing step: State from {} to {} not allowed",
-                current_state,
-                State::ReceiveProposePresentation
-            )))
-        }
-    };
+            match current_state {
+                State::Unknown | State::SendPresentationRequest => save_state(
+                    &thid,
+                    &State::ReceiveProposePresentation,
+                    &UserType::Verifier,
+                )?,
+                _ => {
+                    return Err(Box::from(format!(
+                        "Error while processing step: State from {} to {} not allowed",
+                        current_state,
+                        State::ReceiveProposePresentation
+                    )))
+                }
+            };
 
-    save_presentation_exchange(
-        &base_info.to,
-        &base_info.from,
-        &thid,
-        &serde_json::to_string(&presentation_exchange_data)?,
-        &State::ReceiveProposePresentation,
-    )?;
+            save_presentation_exchange(
+                &base_info.to,
+                &base_info.from,
+                &thid,
+                &serde_json::to_string(&presentation_exchange_data)?,
+                &State::ReceiveProposePresentation,
+            )?;
+        } else { }
+    }
 
     generate_step_output(message, "{}")
 }
@@ -136,68 +148,72 @@ pub fn receive_propose_presentation(_options: &str, message: &str) -> StepResult
 pub fn receive_presentation(_options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<PresentationExchangeData> = serde_json::from_str(message)?;
 
-    let base_message: BaseMessage = BaseMessage {
-        body: HashMap::new(),
-        from: parsed_message.from.clone(),
-        r#type: parsed_message.r#type.clone(),
-        to: Some(
-            parsed_message
-                .to
-                .clone()
-                .ok_or("To DID not provided")?
-                .to_vec(),
-        ),
-    };
-    let thid = parsed_message
-        .thid
-        .to_owned()
-        .ok_or("Thread id can't be empty")?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let base_message: BaseMessage = BaseMessage {
+                body: HashMap::new(),
+                from: parsed_message.from.clone(),
+                r#type: parsed_message.r#type.clone(),
+                to: Some(
+                    parsed_message
+                        .to
+                        .clone()
+                        .ok_or("To DID not provided")?
+                        .to_vec(),
+                ),
+            };
+            let thid = parsed_message
+                .thid
+                .to_owned()
+                .ok_or("Thread id can't be empty")?;
 
-    let exchange_info = get_presentation_exchange_info_from_message(parsed_message)?;
-    let base_info = get_from_to_from_message(&base_message)?;
-    let presentation_exchange_data = exchange_info
-        .presentation_exchange_data
-        .ok_or("Presentation exchange data not provided.")?;
+            let exchange_info = get_presentation_exchange_info_from_message(parsed_message)?;
+            let base_info = get_from_to_from_message(&base_message)?;
+            let presentation_exchange_data = exchange_info
+                .presentation_exchange_data
+                .ok_or("Presentation exchange data not provided.")?;
 
-    let req_data_saved = get_presentation_exchange(
-        &base_info.to,
-        &base_info.from,
-        &thid,
-        &State::SendPresentationRequest,
-    )?;
+            let req_data_saved = get_presentation_exchange(
+                &base_info.to,
+                &base_info.from,
+                &thid,
+                &State::SendPresentationRequest,
+            )?;
 
-    let result = validate_presentation_against_credentials(
-        req_data_saved,
-        presentation_exchange_data.clone(),
-    );
+            let result = validate_presentation_against_credentials(
+                req_data_saved,
+                presentation_exchange_data.clone(),
+            );
 
-    match result {
-        Ok(_) => {}
-        Err(err) => return Err(err),
+            match result {
+                Ok(_) => {}
+                Err(err) => return Err(err),
+            }
+
+            let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
+
+            match current_state {
+                State::SendPresentationRequest => {
+                    save_state(&thid, &State::ReceivePresentation, &UserType::Verifier)?
+                }
+                _ => {
+                    return Err(Box::from(format!(
+                        "Error while processing step: State from {} to {} not allowed",
+                        current_state,
+                        State::ReceivePresentation
+                    )))
+                }
+            };
+
+            save_presentation_exchange(
+                &base_info.to,
+                &base_info.from,
+                &thid,
+                &serde_json::to_string(&presentation_exchange_data)?,
+                &State::ReceivePresentation,
+            )?;
+        } else { }
     }
-
-    let current_state: State = get_current_state(&thid, &UserType::Verifier)?.parse()?;
-
-    match current_state {
-        State::SendPresentationRequest => {
-            save_state(&thid, &State::ReceivePresentation, &UserType::Verifier)?
-        }
-        _ => {
-            return Err(Box::from(format!(
-                "Error while processing step: State from {} to {} not allowed",
-                current_state,
-                State::ReceivePresentation
-            )))
-        }
-    };
-
-    save_presentation_exchange(
-        &base_info.to,
-        &base_info.from,
-        &thid,
-        &serde_json::to_string(&presentation_exchange_data)?,
-        &State::ReceivePresentation,
-    )?;
 
     generate_step_output(message, "{}")
 }

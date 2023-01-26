@@ -61,7 +61,10 @@ pub fn get_keypair_set() -> KeyPairSet {
         serde_json::to_string(&sender_options).unwrap_or_else(|_| "{}".to_string());
 
     let sender_signing_options: DidCommOptions = DidCommOptions {
-        encryption_keys: None,
+        encryption_keys: Some(EncryptionKeys {
+            encryption_my_secret: alice_secret_key.to_bytes(),
+            encryption_others_public: Some(bob_public.to_bytes()),
+        }),
         signing_keys: Some(SigningKeys {
             signing_my_secret: Some(sign_keypair.secret.to_bytes()),
             signing_others_public: Some(sign_keypair2.public.to_bytes()),
@@ -88,7 +91,10 @@ pub fn get_keypair_set() -> KeyPairSet {
         serde_json::to_string(&receiver_options).unwrap_or_else(|_| "{}".to_string());
 
     let receiver_signing_options: DidCommOptions = DidCommOptions {
-        encryption_keys: None,
+        encryption_keys: Some(EncryptionKeys {
+            encryption_my_secret: bob_secret_key.to_bytes(),
+            encryption_others_public: Some(alice_public.to_bytes()),
+        }),
         signing_keys: Some(SigningKeys {
             signing_my_secret: Some(sign_keypair2.secret.to_bytes()),
             signing_others_public: Some(sign_keypair.public.to_bytes()),

@@ -62,8 +62,6 @@ async fn send_request(
         .as_ref()
         .ok_or("no value in result")?;
     let prepared: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(result)?;
-    let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver))?;
-    let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
 
     let pub_key = prepared
         .metadata
@@ -81,9 +79,16 @@ async fn send_request(
         .ok_or("send DIDComm request does not return targetPubKey")?
         .to_owned();
 
-    assert_eq!(target_pub_key, comm_keypair.target_pub_key);
-    assert_eq!(pub_key, comm_keypair.pub_key);
-    assert_eq!(secret_key, comm_keypair.secret_key);
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver))?;
+            let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
+
+            assert_eq!(target_pub_key, comm_keypair.target_pub_key);
+            assert_eq!(pub_key, comm_keypair.pub_key);
+            assert_eq!(secret_key, comm_keypair.secret_key);
+        } else {}
+    }
 
     Ok(serde_json::to_string(&prepared.message)?)
 }
@@ -102,11 +107,11 @@ async fn receive_request(
     let received: VadeDidCommPluginReceiveOutput<
         MessageWithBody<DidDocumentBodyAttachment<Base64Container>>,
     > = serde_json::from_str(result)?;
+
     let target_did = received
         .metadata
         .get("keyAgreementKey")
         .ok_or("no keyAgreementKey")?;
-    let comm_keypair = get_com_keypair(target_did)?;
 
     let pub_key = received
         .metadata
@@ -123,10 +128,15 @@ async fn receive_request(
         .get("targetPubKey")
         .ok_or("send DIDComm request does not return targetPubKey")?
         .to_owned();
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let comm_keypair = get_com_keypair(target_did)?;
 
-    assert_eq!(target_pub_key, comm_keypair.target_pub_key);
-    assert_eq!(pub_key, comm_keypair.pub_key);
-    assert_eq!(secret_key, comm_keypair.secret_key);
+            assert_eq!(target_pub_key, comm_keypair.target_pub_key);
+            assert_eq!(pub_key, comm_keypair.pub_key);
+            assert_eq!(secret_key, comm_keypair.secret_key);
+        } else {}
+    }
     assert_eq!(
         received.message.body.unwrap().label,
         Some("test".to_string())
@@ -187,13 +197,18 @@ async fn receive_response(
         .metadata
         .get("targetKeyAgreementKey")
         .ok_or("no targetKeyAgreementKey")?;
-    let comm_keypair_receiver = get_com_keypair(receiver_did)?;
-    let comm_keypair_sender = get_com_keypair(sender_did)?;
 
-    assert_eq!(
-        comm_keypair_sender.target_pub_key,
-        comm_keypair_receiver.pub_key
-    );
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let comm_keypair_receiver = get_com_keypair(receiver_did)?;
+            let comm_keypair_sender = get_com_keypair(sender_did)?;
+
+            assert_eq!(
+                comm_keypair_sender.target_pub_key,
+                comm_keypair_receiver.pub_key
+            );
+        } else {}
+    }
 
     Ok(())
 }
@@ -329,6 +344,7 @@ async fn receive_problem_report(
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "state_storage")]
 async fn can_do_key_exchange_with_auto_generated_keys() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let test_setup = get_keypair_set();
@@ -409,59 +425,77 @@ async fn can_do_key_exchange_pregenerated_keys() -> Result<(), Box<dyn std::erro
         serde_json::from_str(&test_setup.receiver_options_stringified)?;
     options_object.did_exchange_my_secret = Some(receiver_secret_key);
     let options_string = serde_json::to_string(&options_object)?;
+
     receive_request(&mut vade, request_message, &options_string).await?;
+
+    let mut receiver_options_string = test_setup.receiver_signing_options_stringified.to_owned();
+    cfg_if::cfg_if! {
+        if #[cfg(not(feature = "state_storage"))] {
+            let mut receiver_options_object: DidExchangeOptions =
+                serde_json::from_str(&receiver_options_string)?;
+            receiver_options_object.did_exchange_my_secret = Some(receiver_secret_key);
+            receiver_options_string = serde_json::to_string(&receiver_options_object)?;
+        } else {}
+    };
 
     let response_message = send_response(
         &mut vade,
         &test_setup.user2_did,
         &test_setup.user1_did,
-        &test_setup.receiver_signing_options_stringified,
+        &receiver_options_string,
         &id,
     )
     .await?;
-    receive_response(
-        &mut vade,
-        response_message,
-        &test_setup.sender_signing_options_stringified,
-    )
-    .await?;
+
+    let mut sender_options_string = test_setup.sender_signing_options_stringified.to_owned();
+    cfg_if::cfg_if! {
+        if #[cfg(not(feature = "state_storage"))] {
+            let mut sender_options_object: DidExchangeOptions =
+                serde_json::from_str(&sender_options_string)?;
+            sender_options_object.did_exchange_my_secret = Some(sender_secret_key);
+            sender_options_string = serde_json::to_string(&sender_options_object)?;
+        } else {}
+    };
+
+    receive_response(&mut vade, response_message, &sender_options_string).await?;
 
     let complete_message = send_complete(
         &mut vade,
         &test_setup.user1_did,
         &test_setup.user2_did,
-        &test_setup.sender_signing_options_stringified,
+        &sender_options_string,
         &id,
     )
     .await?;
-    receive_complete(
-        &mut vade,
-        complete_message,
-        &test_setup.receiver_signing_options_stringified,
-    )
-    .await?;
 
-    // check sender key
-    let db_result = read_db(&format!(
-        "comm_keypair_{}_{}",
-        &test_setup.user1_did, &test_setup.user2_did
-    ))?;
-    let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
-    assert_eq!(comm_keypair.secret_key, hex::encode(sender_secret_key));
+    receive_complete(&mut vade, complete_message, &receiver_options_string).await?;
 
-    // check receiver key
-    let db_result = read_db(&format!(
-        "comm_keypair_{}_{}",
-        &test_setup.user2_did, &test_setup.user1_did
-    ))?;
-    let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
-    assert_eq!(comm_keypair.secret_key, hex::encode(receiver_secret_key));
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            // check sender key
+            let db_result = read_db(&format!(
+                "comm_keypair_{}_{}",
+                &test_setup.user1_did, &test_setup.user2_did
+            ))?;
+            let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
+            assert_eq!(comm_keypair.secret_key, hex::encode(sender_secret_key));
+
+            // check receiver key
+            let db_result = read_db(&format!(
+                "comm_keypair_{}_{}",
+                &test_setup.user2_did, &test_setup.user1_did
+            ))?;
+            let comm_keypair: CommKeyPair = serde_json::from_str(&db_result)?;
+            assert_eq!(comm_keypair.secret_key, hex::encode(receiver_secret_key));
+        } else {}
+    }
 
     Ok(())
 }
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "state_storage")]
 async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let alice_keys = create_keys(&mut vade).await?;
@@ -531,6 +565,7 @@ async fn can_do_key_exchange_with_create_keys() -> Result<(), Box<dyn std::error
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "state_storage")]
 async fn can_report_problem() -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let alice_keys = create_keys(&mut vade).await?;

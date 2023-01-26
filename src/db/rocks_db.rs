@@ -66,6 +66,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg(feature = "state_storage")]
     fn can_use_rocks_db() -> Result<(), Box<dyn std::error::Error>> {
         write_db("test1", "helloooo")?;
         let result = read_db("test1")?;

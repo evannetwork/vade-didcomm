@@ -9,14 +9,14 @@ use super::helper::{
     DidExchangeType,
 };
 use crate::{
-    datatypes::{BaseMessage, MessageWithBody, DidDocumentBodyAttachment, Base64Container},
+    datatypes::{Base64Container, BaseMessage, DidDocumentBodyAttachment, MessageWithBody},
     get_from_to_from_message,
     keypair::save_com_keypair,
     protocols::{
         did_exchange::{
             datatypes::{State, UserType},
             did_exchange::{save_didexchange, save_state},
-            helper::DidExchangeBaseMessage
+            helper::DidExchangeBaseMessage,
         },
         protocol::{generate_step_output, StepResult},
     },
@@ -85,17 +85,22 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
         )?;
     }
 
-    let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
 
-    save_state(&thid, &State::SendRequest, &UserType::Inviter)?;
+            save_state(&thid, &State::SendRequest, &UserType::Inviter)?;
 
-    save_didexchange(
-        &exchange_info.from,
-        &exchange_info.to,
-        &thid,
-        &serde_json::to_string(&did_document)?,
-        &State::SendRequest,
-    )?;
+            save_didexchange(
+                &exchange_info.from,
+                &exchange_info.to,
+                &thid,
+                &serde_json::to_string(&did_document)?,
+                &State::SendRequest,
+            )?;
+
+    } else { }
+    }
 
     generate_step_output(&serde_json::to_string(&request_message)?, &metadata)
 }
@@ -104,7 +109,8 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
 /// Receives the partners DID and communication pub key and generates new communication keypairs,
 /// stores it within the db.
 pub fn receive_request(options: &str, message: &str) -> StepResult {
-    let parsed_message: MessageWithBody<DidDocumentBodyAttachment<Base64Container>> = serde_json::from_str(message)?;
+    let parsed_message: MessageWithBody<DidDocumentBodyAttachment<Base64Container>> =
+        serde_json::from_str(message)?;
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
     let did_document = get_did_document_from_body(message)?;
     let parsed_message: BaseMessage = serde_json::from_str(message)?;
@@ -146,15 +152,19 @@ pub fn receive_request(options: &str, message: &str) -> StepResult {
     }
     let metadata = serde_json::to_string(&encoded_keypair)?;
 
-    save_state(&thid, &State::ReceiveRequest, &UserType::Invitee)?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            save_state(&thid, &State::ReceiveRequest, &UserType::Invitee)?;
 
-    save_didexchange(
-        &exchange_info.from,
-        &exchange_info.to,
-        &thid,
-        &serde_json::to_string(&encoded_keypair)?,
-        &State::ReceiveRequest,
-    )?;
+            save_didexchange(
+                &exchange_info.from,
+                &exchange_info.to,
+                &thid,
+                &serde_json::to_string(&encoded_keypair)?,
+                &State::ReceiveRequest,
+            )?;
+        } else { }
+    }
 
     generate_step_output(message, &metadata)
 }

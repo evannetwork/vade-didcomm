@@ -225,27 +225,31 @@ async fn receive_request_presentation(
         .ok_or("input descriptor not found")?
         .name;
 
-    let req_data_saved =
-        get_presentation_exchange(sender, receiver, id, request_presentation.state)?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let req_data_saved =
+                get_presentation_exchange(sender, receiver, id, request_presentation.state)?;
 
-    let attached_req_saved = req_data_saved
-        .request_presentation_attach
-        .ok_or("Presentation request not attached")?;
+            let attached_req_saved = req_data_saved
+                .request_presentation_attach
+                .ok_or("Presentation request not attached")?;
 
-    let presentation_data_saved = &attached_req_saved
-        .data
-        .get(0)
-        .ok_or("Data not found")?
-        .json
-        .presentation_definition
-        .as_ref()
-        .ok_or("presentation definition not found")?
-        .input_descriptors
-        .get(0)
-        .ok_or("input descriptor not found")?
-        .name;
+            let presentation_data_saved = &attached_req_saved
+                .data
+                .get(0)
+                .ok_or("Data not found")?
+                .json
+                .presentation_definition
+                .as_ref()
+                .ok_or("presentation definition not found")?
+                .input_descriptors
+                .get(0)
+                .ok_or("input descriptor not found")?
+                .name;
 
-    assert_eq!(presentation_data, presentation_data_saved);
+            assert_eq!(presentation_data, presentation_data_saved);
+        } else {}
+    }
 
     Ok(())
 }
@@ -423,51 +427,55 @@ async fn receive_presentation(
         .ok_or("Credentials are empty")?
         .r#type;
 
-    let req_data_saved = get_presentation_exchange(sender, receiver, id, state)?;
-    let req_data_saved_cloned = req_data_saved.clone();
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let req_data_saved = get_presentation_exchange(sender, receiver, id, state)?;
+            let req_data_saved_cloned = req_data_saved.clone();
 
-    let attached_presentation_saved = req_data_saved
-        .presentations_attach
-        .ok_or("Presentation not attached")?;
+            let attached_presentation_saved = req_data_saved
+                .presentations_attach
+                .ok_or("Presentation not attached")?;
 
-    let data_saved = &attached_presentation_saved
-        .data
-        .get(0)
-        .ok_or("Presentation data is empty")?
-        .json
-        .verifiable_credential
-        .as_ref()
-        .ok_or("Credentials not attached")?
-        .get(0)
-        .ok_or("Credentials are empty")?
-        .r#type;
+            let data_saved = &attached_presentation_saved
+                .data
+                .get(0)
+                .ok_or("Presentation data is empty")?
+                .json
+                .verifiable_credential
+                .as_ref()
+                .ok_or("Credentials not attached")?
+                .get(0)
+                .ok_or("Credentials are empty")?
+                .r#type;
 
-    assert_eq!(data, data_saved);
+            assert_eq!(data, data_saved);
 
-    let sent_request =
-        get_presentation_exchange(receiver, sender, id, State::SendPresentationRequest)?;
+            let sent_request =
+                get_presentation_exchange(receiver, sender, id, State::SendPresentationRequest)?;
 
-    let requested_json = serde_json::to_value(sent_request)?;
-    let mut requested_selector = jsonpath::selector(&requested_json);
+            let requested_json = serde_json::to_value(sent_request)?;
+            let mut requested_selector = jsonpath::selector(&requested_json);
 
-    let received_json = serde_json::to_value(req_data_saved_cloned)?;
-    let mut received_selector = jsonpath::selector(&received_json);
+            let received_json = serde_json::to_value(req_data_saved_cloned)?;
+            let mut received_selector = jsonpath::selector(&received_json);
 
-    let passport_dob = received_selector(
-        "$.presentations_attach.data[0].json.verifiable_credential[*].credentialSubject.data.dob",
-    )?
-    .get(0)
-    .ok_or("Dob not provided")?
-    .to_string();
+            let passport_dob = received_selector(
+                "$.presentations_attach.data[0].json.verifiable_credential[*].credentialSubject.data.dob",
+            )?
+            .get(0)
+            .ok_or("Dob not provided")?
+            .to_string();
 
-    let minimum_date = requested_selector(
-        "$.request_presentation_attach.data[0].json.presentation_definition.input_descriptors[*].constraints.fields[*].filter.minimum",
-    )?
-    .get(0)
-    .ok_or("Date filter not provided")?
-    .to_string();
+            let minimum_date = requested_selector(
+                "$.request_presentation_attach.data[0].json.presentation_definition.input_descriptors[*].constraints.fields[*].filter.minimum",
+            )?
+            .get(0)
+            .ok_or("Date filter not provided")?
+            .to_string();
 
-    assert_eq!(passport_dob.cmp(&minimum_date), Ordering::Greater);
+            assert_eq!(passport_dob.cmp(&minimum_date), Ordering::Greater);
+        } else {}
+    }
 
     Ok(())
 }
@@ -624,24 +632,29 @@ async fn receive_presentation_proposal(
         .ok_or("input descriptor not found")?
         .name;
 
-    let proposal_data_saved =
-        get_presentation_exchange(sender, receiver, id, state)?.proposal_attach;
-    let proposal_data_saved_attributes =
-        proposal_data_saved.ok_or("Proposal data not saved in db")?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "state_storage")] {
+            let proposal_data_saved =
+                get_presentation_exchange(sender, receiver, id, state)?.proposal_attach;
+            let proposal_data_saved_attributes =
+                proposal_data_saved.ok_or("Proposal data not saved in db")?;
 
-    let attribute_data_saved = &proposal_data_saved_attributes
-        .data
-        .get(0)
-        .ok_or("Data not found")?
-        .json
-        .input_descriptors
-        .as_ref()
-        .ok_or("Proposal data not found")?
-        .get(0)
-        .ok_or("input descriptor not found")?
-        .name;
+            let attribute_data_saved = &proposal_data_saved_attributes
+                .data
+                .get(0)
+                .ok_or("Data not found")?
+                .json
+                .input_descriptors
+                .as_ref()
+                .ok_or("Proposal data not found")?
+                .get(0)
+                .ok_or("input descriptor not found")?
+                .name;
 
-    assert_eq!(attribute_data, attribute_data_saved);
+            assert_eq!(attribute_data, attribute_data_saved);
+        } else {}
+    }
+
     Ok(())
 }
 
@@ -775,6 +788,7 @@ async fn can_do_proposal_exchange_for_presentation_exchange(
 
 #[tokio::test]
 #[serial]
+#[cfg(feature = "state_storage")]
 async fn can_do_presentation_exchange_and_fetch_all_messages_from_didcomm_by_thid(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;

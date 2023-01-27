@@ -413,7 +413,7 @@ dependencies = [
 [[package]]
 name = "didcomm-rs"
 version = "0.7.2"
-source = "git+https://github.com/evannetwork/didcomm-rs.git?rev=d8ee19aeb2b96bba114be746d2492f09d3537e3a#d8ee19aeb2b96bba114be746d2492f09d3537e3a"
+source = "git+https://github.com/evannetwork/didcomm-rs.git#d8ee19aeb2b96bba114be746d2492f09d3537e3a"
 dependencies = [
  "aes-gcm",
  "arrayref",

@@ -6,7 +6,7 @@ edition = "2018"
 license = "Apache-2.0"
 
 [dependencies]
-k256 = "0.9.4"
+k256 = "^0.11.0"
 x25519-dalek = "1.1.1"
 ed25519-dalek = "1.0.1"
 vade = "0.1.0"

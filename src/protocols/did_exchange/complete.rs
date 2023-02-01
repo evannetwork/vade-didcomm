@@ -1,8 +1,11 @@
+#[cfg(feature = "state_storage")]
+use crate::protocols::{
+    did_exchange::datatypes::{State, UserType},
+    did_exchange::did_exchange::{get_current_state, save_state},
+};
 use crate::{
     datatypes::ExtendedMessage,
     protocols::{
-        did_exchange::datatypes::{State, UserType},
-        did_exchange::did_exchange::{get_current_state, save_state},
         did_exchange::DID_EXCHANGE_PROTOCOL_URL,
         protocol::{generate_step_output, StepResult},
     },
@@ -13,7 +16,7 @@ use crate::{
 /// DID exchange, that a encrypted message will be sent)
 pub fn send_complete(_options: &str, message: &str) -> StepResult {
     let mut parsed_message: ExtendedMessage = serde_json::from_str(message)?;
-    parsed_message.r#type = format!("{}/complete", DID_EXCHANGE_PROTOCOL_URL);
+    parsed_message.r#type = format!("{DID_EXCHANGE_PROTOCOL_URL}/complete");
 
     cfg_if::cfg_if! {
         if #[cfg(feature = "state_storage")] {
@@ -40,6 +43,7 @@ pub fn send_complete(_options: &str, message: &str) -> StepResult {
 
 /// protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/complete`
 pub fn receive_complete(_options: &str, message: &str) -> StepResult {
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let parsed_message: ExtendedMessage = serde_json::from_str(message)?;
 
     cfg_if::cfg_if! {
@@ -49,7 +53,11 @@ pub fn receive_complete(_options: &str, message: &str) -> StepResult {
             let current_state: State = get_current_state(&thid, &UserType::Invitee)?.parse()?;
 
             match current_state {
-                State::SendResponse => save_state(&thid, &State::ReceiveComplete, &UserType::Invitee)?,
+                State::SendResponse => save_state(
+                    &thid,
+                    &State::ReceiveComplete,
+                    &UserType::Invitee,
+                )?,
                 _ => {
                     return Err(Box::from(format!(
                         "State from {} to {} not allowed",

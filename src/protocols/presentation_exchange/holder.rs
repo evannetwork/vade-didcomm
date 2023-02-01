@@ -1,22 +1,18 @@
 use std::collections::HashMap;
 
-use super::helper::{
-    get_presentation_exchange_info_from_message,
-    get_presentation_exchange_message,
-    PresentationExchangeType,
+#[cfg(feature = "state_storage")]
+use super::helper::get_presentation_exchange_info_from_message;
+use super::helper::{get_presentation_exchange_message, PresentationExchangeType};
+#[cfg(feature = "state_storage")]
+use crate::protocols::presentation_exchange::{
+    datatypes::{State, UserType},
+    presentation_exchange_data::{get_current_state, save_presentation_exchange, save_state},
 };
 use crate::{
     datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
     get_from_to_from_message,
     protocols::{
-        presentation_exchange::{
-            datatypes::{PresentationExchangeData, State, UserType},
-            presentation_exchange_data::{
-                get_current_state,
-                save_presentation_exchange,
-                save_state,
-            },
-        },
+        presentation_exchange::datatypes::PresentationExchangeData,
         protocol::{generate_step_output, StepResult},
     },
 };
@@ -64,7 +60,7 @@ pub fn send_propose_presentation(_options: &str, message: &str) -> StepResult {
         PresentationExchangeType::ProposePresentation,
         &exchange_info.from,
         &exchange_info.to,
-        presentation_exchange_data.clone(),
+        presentation_exchange_data,
         &thid,
     )?;
 
@@ -85,6 +81,7 @@ pub fn send_propose_presentation(_options: &str, message: &str) -> StepResult {
 
 /// Protocol handler for direction: `receive`, type: `PRESENTATION_EXCHANGE_PROTOCOL_URI/request-presentation`
 pub fn receive_request_presentation(_options: &str, message: &str) -> StepResult {
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let parsed_message: MessageWithBody<PresentationExchangeData> = serde_json::from_str(message)?;
 
     cfg_if::cfg_if! {
@@ -183,7 +180,7 @@ pub fn send_presentation(_options: &str, message: &str) -> StepResult {
         PresentationExchangeType::Presentation,
         &exchange_info.from,
         &exchange_info.to,
-        presentation_exchange_data.clone(),
+        presentation_exchange_data,
         &thid,
     )?;
 

@@ -65,7 +65,7 @@ pub fn get_communication_did_doc(
     public_key_encoded: &str,
     service_endpoint: &str,
 ) -> CommunicationDidDocument {
-    let key_id = format!("{}#key-1", from_did);
+    let key_id = format!("{from_did}#key-1");
     let pub_key_vec = vec![DidCommPubKey {
         id: key_id.to_owned(),
         r#type: [String::from("Ed25519VerificationKey2018")].to_vec(),
@@ -73,7 +73,7 @@ pub fn get_communication_did_doc(
     }];
 
     let service_vec = vec![DidCommService {
-        id: format!("{}#didcomm", from_did),
+        id: format!("{from_did}#didcomm"),
         r#type: String::from("did-communication"),
         priority: 0,
         service_endpoint: service_endpoint.to_string(),
@@ -122,7 +122,7 @@ pub fn get_did_exchange_message(
     let base64_encoded_did_document =
         BASE64.encode(serde_json::to_string(&did_document)?.as_bytes());
     let fallback_id = Uuid::new_v4().to_simple().to_string();
-    let service_id = format!("{0}#key-1", key_agreement_did);
+    let service_id = format!("{key_agreement_did}#key-1");
     let step_name = match step_type {
         DidExchangeType::Request => "request",
         DidExchangeType::Response => "response",
@@ -149,8 +149,8 @@ pub fn get_did_exchange_message(
             other: HashMap::new(),
             pthid: message
                 .pthid
-                .or_else(|| Some(format!("{}#key-1", fallback_id))),
-            r#type: format!("{}/{}", DID_EXCHANGE_PROTOCOL_URL, step_name),
+                .or_else(|| Some(format!("{fallback_id}#key-1"))),
+            r#type: format!("{DID_EXCHANGE_PROTOCOL_URL}/{step_name}"),
             thid: message.thid.or(Some(service_id)),
             to: Some([String::from(to_did)].to_vec()),
         };

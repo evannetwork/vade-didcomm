@@ -1,5 +1,6 @@
 pub mod datatypes;
 mod done;
+#[cfg(feature = "state_storage")]
 mod presentation;
 mod problem_report;
 mod prover;

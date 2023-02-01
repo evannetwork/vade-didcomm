@@ -3,11 +3,12 @@ use std::collections::HashMap;
 
 use uuid::Uuid;
 
+#[cfg(feature = "state_storage")]
+use crate::protocols::presentation_exchange::datatypes::PresentationExchangeInfo;
 use crate::{
     datatypes::MessageWithBody,
     protocols::presentation_exchange::datatypes::{
         PresentationExchangeData,
-        PresentationExchangeInfo,
         PRESENTATION_EXCHANGE_PROTOCOL_URL,
     },
 };
@@ -51,8 +52,8 @@ pub fn get_presentation_exchange_message(
         from: Some(String::from(from_did)),
         id: Some(String::from(&thread_id)),
         other: HashMap::new(),
-        pthid: Some(format!("{}#presentation-exchange", thread_id)),
-        r#type: format!("{}/{}", PRESENTATION_EXCHANGE_PROTOCOL_URL, step_name),
+        pthid: Some(format!("{thread_id}#presentation-exchange")),
+        r#type: format!("{PRESENTATION_EXCHANGE_PROTOCOL_URL}/{step_name}"),
         thid: Some(thid.to_string()),
         to: Some([String::from(to_did)].to_vec()),
     };
@@ -68,6 +69,7 @@ pub fn get_presentation_exchange_message(
 ///
 /// # Returns
 /// * `PresentationExchangeInfo` - necessary information
+#[cfg(feature = "state_storage")]
 pub fn get_presentation_exchange_info_from_message(
     message: MessageWithBody<PresentationExchangeData>,
 ) -> Result<PresentationExchangeInfo, Box<dyn std::error::Error>> {
@@ -98,6 +100,7 @@ pub fn get_presentation_exchange_info_from_message(
 ///
 /// # Returns
 /// * `bool` - returns true if presentation is valid and satisfies constraints otherwise returns false
+#[cfg(feature = "state_storage")]
 pub fn validate_presentation_against_credentials(
     request_presentation: PresentationExchangeData,
     received_presentation: PresentationExchangeData,

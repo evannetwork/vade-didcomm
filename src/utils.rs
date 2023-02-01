@@ -76,10 +76,10 @@ pub fn read_raw_message_from_db(
     thid: &str,
     msg_id: &str,
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let mut key = format!("{}_{}_{}", prefix, thid, msg_id);
+    let mut key = format!("{prefix}_{thid}_{msg_id}");
 
     if msg_id == "*" {
-        key = format!("{}_{}", prefix, thid);
+        key = format!("{prefix}_{thid}");
         search_db_keys(&key)
     } else {
         let value = read_db(&key)?;

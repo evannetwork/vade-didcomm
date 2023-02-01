@@ -5,8 +5,11 @@
 ### Features
 
 - allow setting a `label` in the invitation and response message
+- add `state_storage` feature to be able to disable rocksdb storage
 
 ### Fixes
+
+- remove warnings when building/testing with and/or without `state_storage` feature
 
 ### Deprecations
 

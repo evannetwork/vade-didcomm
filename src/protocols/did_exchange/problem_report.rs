@@ -1,10 +1,12 @@
+#[cfg(feature = "state_storage")]
+use crate::protocols::did_exchange::{
+    datatypes::{State, UserType},
+    did_exchange::{get_current_state, save_state},
+};
 use crate::{
     datatypes::MessageWithBody,
     protocols::{
-        did_exchange::{
-            datatypes::{ProblemReportData, State, UserType},
-            did_exchange::{get_current_state, save_state},
-        },
+        did_exchange::datatypes::ProblemReportData,
         protocol::{generate_step_output, StepResult},
     },
 };
@@ -24,7 +26,8 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
                 .as_ref()
                 .ok_or("Thread id can't be empty")?;
 
-            let current_state: State = get_current_state(&thid, &problem_report_data.user_type)?.parse()?;
+            let current_state: State = get_current_state(&thid, &problem_report_data.user_type)?
+                .parse()?;
 
             match current_state {
                 State::Unknown | State::ReceiveRequest | State::ReceiveResponse => save_state(
@@ -48,6 +51,7 @@ pub fn send_problem_report(_options: &str, message: &str) -> StepResult {
 
 /// Protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/problem-report`
 pub fn receive_problem_report(_options: &str, message: &str) -> StepResult {
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let problem_report_message: MessageWithBody<ProblemReportData> = serde_json::from_str(message)?;
 
     cfg_if::cfg_if! {

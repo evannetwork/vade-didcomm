@@ -1,4 +1,4 @@
-use rand_core::OsRng;
+#[cfg(not(feature = "state_storage"))]
 use x25519_dalek::{PublicKey, StaticSecret};
 
 use super::helper::{
@@ -9,16 +9,18 @@ use super::helper::{
     DidExchangeOptions,
     DidExchangeType,
 };
+#[cfg(not(feature = "state_storage"))]
+use crate::datatypes::CommKeyPair;
 use crate::{
-    datatypes::CommKeyPair,
     get_from_to_from_message,
+    protocols::protocol::{generate_step_output, StepResult},
+};
+#[cfg(feature = "state_storage")]
+use crate::{
     keypair::{get_com_keypair, get_key_agreement_key, save_com_keypair},
-    protocols::{
-        did_exchange::{
-            datatypes::{State, UserType},
-            did_exchange::{get_current_state, save_didexchange, save_state},
-        },
-        protocol::{generate_step_output, StepResult},
+    protocols::did_exchange::{
+        datatypes::{State, UserType},
+        did_exchange::{get_current_state, save_didexchange, save_state},
     },
 };
 
@@ -32,7 +34,6 @@ pub fn send_response(options: &str, message: &str) -> StepResult {
     let options: DidExchangeOptions = serde_json::from_str(options)?;
     let exchange_info = get_from_to_from_message(&parsed_message.base_message)?;
 
-    let pub_key_bytes;
     cfg_if::cfg_if! {
         if #[cfg(feature = "state_storage")] {
             let encoded_keypair = get_com_keypair(&exchange_info.from, &exchange_info.to)?;
@@ -44,7 +45,7 @@ pub fn send_response(options: &str, message: &str) -> StepResult {
                 .ok_or("did_exchange_my_secret is required when sending response without storage")?;
             let pub_key = PublicKey::from(&secret_key);
 
-            pub_key_bytes = pub_key.to_bytes();
+            let pub_key_bytes = pub_key.to_bytes();
         }
     }
 
@@ -58,7 +59,7 @@ pub fn send_response(options: &str, message: &str) -> StepResult {
         &exchange_info.from,
         &key_agreement_key,
         &exchange_info.to,
-        &options.service_endpoint.unwrap_or_else(|| "".to_string()),
+        &options.service_endpoint.unwrap_or_default(),
         pub_key_base58_string,
         &parsed_message,
     )?;
@@ -91,18 +92,21 @@ pub fn send_response(options: &str, message: &str) -> StepResult {
     } else { }
     }
 
-    generate_step_output(&serde_json::to_string(&request_message)?, &"{}".to_string())
+    generate_step_output(&serde_json::to_string(&request_message)?, "{}")
 }
 
 /// protocol handler for direction: `receive`, type: `DID_EXCHANGE_PROTOCOL_URL/response`
 /// Receives the partners pub key and updates the existing communication key pair for this DID in
 /// the db.
-pub fn receive_response(options: &str, message: &str) -> StepResult {
+pub fn receive_response(
+    #[allow(unused_variables)] // may not be used, depending on feature setup
+    options: &str,
+    message: &str,
+) -> StepResult {
     let parsed_message: DidExchangeBaseMessage = serde_json::from_str(message)?;
     let did_document = get_did_document_from_body(message)?;
     let exchange_info = get_exchange_info_from_message(&parsed_message.base_message, did_document)?;
 
-    let comm_key_pair;
     cfg_if::cfg_if! {
         if #[cfg(feature = "state_storage")] {
             let encoded_keypair = get_key_agreement_key(&exchange_info.to)?;
@@ -139,7 +143,7 @@ pub fn receive_response(options: &str, message: &str) -> StepResult {
                 .map(StaticSecret::from)
                 .ok_or("did_exchange_my_secret is required when receiving response without storage")?;
             let pub_key = PublicKey::from(&secret_key);
-            comm_key_pair = CommKeyPair {
+            let comm_key_pair = CommKeyPair {
                 pub_key:  hex::encode(pub_key.to_bytes()),
                 secret_key:  hex::encode(secret_key.to_bytes()),
                 key_agreement_key: exchange_info.to,

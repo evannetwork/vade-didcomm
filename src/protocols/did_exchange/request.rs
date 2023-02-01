@@ -8,16 +8,17 @@ use super::helper::{
     DidExchangeOptions,
     DidExchangeType,
 };
+#[cfg(feature = "state_storage")]
+use crate::protocols::did_exchange::{
+    datatypes::{State, UserType},
+    did_exchange::{save_didexchange, save_state},
+};
 use crate::{
     datatypes::{Base64Container, BaseMessage, DidDocumentBodyAttachment, MessageWithBody},
     get_from_to_from_message,
     keypair::save_com_keypair,
     protocols::{
-        did_exchange::{
-            datatypes::{State, UserType},
-            did_exchange::{save_didexchange, save_state},
-            helper::DidExchangeBaseMessage,
-        },
+        did_exchange::helper::DidExchangeBaseMessage,
         protocol::{generate_step_output, StepResult},
     },
 };
@@ -65,7 +66,7 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
         &exchange_info.from,
         &key_did,
         &exchange_info.to,
-        &options.service_endpoint.unwrap_or_else(|| "".to_string()),
+        &options.service_endpoint.unwrap_or_default(),
         pub_key_base58_string,
         &parsed_message,
     )?;
@@ -111,6 +112,7 @@ pub fn send_request(options: &str, message: &str) -> StepResult {
 pub fn receive_request(options: &str, message: &str) -> StepResult {
     let parsed_message: MessageWithBody<DidDocumentBodyAttachment<Base64Container>> =
         serde_json::from_str(message)?;
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let thid = parsed_message.thid.ok_or("Thread id can't be empty")?;
     let did_document = get_did_document_from_body(message)?;
     let parsed_message: BaseMessage = serde_json::from_str(message)?;

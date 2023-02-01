@@ -1,6 +1,7 @@
 pub mod datatypes;
 mod helper;
 mod holder;
+#[cfg(feature = "state_storage")]
 mod presentation_exchange_data;
 mod verifier;
 

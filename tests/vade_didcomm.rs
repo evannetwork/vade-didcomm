@@ -2,7 +2,9 @@ mod common;
 
 use std::collections::HashMap;
 
-use common::{get_vade, read_db};
+use common::get_vade;
+#[cfg(feature = "state_storage")]
+use common::read_db;
 use didcomm_rs::Jwe;
 use serde::{Deserialize, Serialize};
 use serial_test::serial;

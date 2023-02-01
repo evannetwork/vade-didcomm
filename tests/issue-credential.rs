@@ -105,10 +105,13 @@ async fn send_propose_credential(
 
 async fn receive_propose_credential(
     vade: &mut Vade,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     sender: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     receiver: &str,
     message: String,
     options: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive(options, &message).await?;
@@ -125,13 +128,19 @@ async fn receive_propose_credential(
         .body
         .ok_or_else(|| "send DIDComm request does not return propose credential".to_string())?;
 
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let attached_req = propose_credential
         .credential_proposal
         .ok_or("Proposal not attached")?;
 
     cfg_if::cfg_if! {
         if #[cfg(feature = "state_storage")] {
-            let req_data_saved = get_credential(sender, receiver, id, State::SendProposeCredential)?;
+            let req_data_saved = get_credential(
+                sender,
+                receiver,
+                id,
+                State::SendProposeCredential,
+            )?;
             let attached_req_saved = req_data_saved
                 .credential_proposal
                 .ok_or("Proposal data not attached")?;
@@ -203,10 +212,13 @@ async fn send_offer_credential(
 
 async fn receive_offer_credential(
     vade: &mut Vade,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     sender: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     receiver: &str,
     message: String,
     options: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive(options, &message).await?;
@@ -226,6 +238,7 @@ async fn receive_offer_credential(
     let attached_data = received_offer
         .data_attach
         .ok_or("Offer credential request not attached")?;
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let credential_data = attached_data.get(0).ok_or("Request body is invalid")?;
 
     cfg_if::cfg_if! {
@@ -297,10 +310,13 @@ async fn send_request_credential(
 
 async fn receive_request_credential(
     vade: &mut Vade,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     sender: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     receiver: &str,
     message: String,
     options: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let results = vade.didcomm_receive(options, &message).await?;
@@ -321,6 +337,7 @@ async fn receive_request_credential(
         .data_attach
         .ok_or("Request crendential data not attached")?;
 
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
     let attribute = proposal_data.get(0).ok_or("Attachment is invalid")?;
 
     cfg_if::cfg_if! {
@@ -392,10 +409,13 @@ async fn send_issue_credential(
 
 async fn receive_issue_credential(
     vade: &mut Vade,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     sender: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     receiver: &str,
     message: String,
     options: &str,
+    #[allow(unused_variables)] // may not be used, depending on feature setup
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let json_data = r#"{"name": "name", "mime_type": "text/text", "value": "vineet"}"#;
@@ -711,6 +731,7 @@ async fn can_do_problem_report() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "state_storage")]
 async fn send_wrong_ack_state() -> Result<String, Box<dyn std::error::Error>> {
     let mut vade = get_vade().await?;
     let test_setup = get_keypair_set();

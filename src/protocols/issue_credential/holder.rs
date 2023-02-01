@@ -1,18 +1,18 @@
 use std::collections::HashMap;
 
-use super::helper::{
-    get_issue_credential_info_from_message,
-    get_issue_credential_message,
-    IssueCredentialType,
+#[cfg(feature = "state_storage")]
+use super::helper::get_issue_credential_info_from_message;
+use super::helper::{get_issue_credential_message, IssueCredentialType};
+#[cfg(feature = "state_storage")]
+use crate::protocols::issue_credential::{
+    credential::{get_current_state, save_credential, save_state},
+    datatypes::{State, UserType},
 };
 use crate::{
     datatypes::{BaseMessage, ExtendedMessage, MessageWithBody},
     get_from_to_from_message,
     protocols::{
-        issue_credential::{
-            credential::{get_current_state, save_credential, save_state},
-            datatypes::{CredentialData, State, UserType},
-        },
+        issue_credential::datatypes::CredentialData,
         protocol::{generate_step_output, StepResult},
     },
 };
@@ -57,7 +57,7 @@ pub fn send_propose_credential(_options: &str, message: &str) -> StepResult {
         IssueCredentialType::ProposeCredential,
         &exchange_info.from,
         &exchange_info.to,
-        credential_data.clone(),
+        credential_data,
         &thid,
     )?;
 
@@ -78,6 +78,7 @@ pub fn send_propose_credential(_options: &str, message: &str) -> StepResult {
 
 /// Protocol handler for direction: `receive`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/offer_credential`
 pub fn receive_offer_credential(_options: &str, message: &str) -> StepResult {
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let parsed_message: MessageWithBody<CredentialData> = serde_json::from_str(message)?;
 
     cfg_if::cfg_if! {
@@ -172,7 +173,7 @@ pub fn send_request_credential(_options: &str, message: &str) -> StepResult {
         IssueCredentialType::RequestCredential,
         &exchange_info.from,
         &exchange_info.to,
-        credential_data.clone(),
+        credential_data,
         &thid,
     )?;
 
@@ -193,19 +194,15 @@ pub fn send_request_credential(_options: &str, message: &str) -> StepResult {
 
 /// Protocol handler for direction: `receive`, type: `ISSUE_CREDENTIAL_PROTOCOL_URL/issue_credential`
 pub fn receive_issue_credential(_options: &str, message: &str) -> StepResult {
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let parsed_message: MessageWithBody<CredentialData> = serde_json::from_str(message)?;
 
+    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate input
     let base_message: BaseMessage = BaseMessage {
         body: HashMap::new(),
         from: parsed_message.from.clone(),
         r#type: parsed_message.r#type.clone(),
-        to: Some(
-            parsed_message
-                .to
-                .clone()
-                .ok_or("To DID not provided")?
-                .to_vec(),
-        ),
+        to: Some(parsed_message.to.ok_or("To DID not provided")?.to_vec()),
     };
     cfg_if::cfg_if! {
         if #[cfg(feature = "state_storage")] {

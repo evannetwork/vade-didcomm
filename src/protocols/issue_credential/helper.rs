@@ -2,13 +2,11 @@ use std::collections::HashMap;
 
 use uuid::Uuid;
 
+#[cfg(feature = "state_storage")]
+use crate::protocols::issue_credential::datatypes::IssuerCredentialReq;
 use crate::{
     datatypes::MessageWithBody,
-    protocols::issue_credential::datatypes::{
-        CredentialData,
-        IssuerCredentialReq,
-        ISSUE_CREDENTIAL_PROTOCOL_URL,
-    },
+    protocols::issue_credential::datatypes::{CredentialData, ISSUE_CREDENTIAL_PROTOCOL_URL},
 };
 
 /// Specifies all possible message directions.
@@ -54,8 +52,8 @@ pub fn get_issue_credential_message(
         from: Some(String::from(from_did)),
         id: Some(String::from(&thread_id)),
         other: HashMap::new(),
-        pthid: Some(format!("{}#issue-credential", thread_id)),
-        r#type: format!("{}/{}", ISSUE_CREDENTIAL_PROTOCOL_URL, step_name),
+        pthid: Some(format!("{thread_id}#issue-credential")),
+        r#type: format!("{ISSUE_CREDENTIAL_PROTOCOL_URL}/{step_name}"),
         thid: Some(thid.to_string()),
         to: Some([String::from(to_did)].to_vec()),
     };
@@ -71,6 +69,7 @@ pub fn get_issue_credential_message(
 ///
 /// # Returns
 /// * `IssuerCredentialReq` - necessary information
+#[cfg(feature = "state_storage")]
 pub fn get_issue_credential_info_from_message(
     message: MessageWithBody<CredentialData>,
 ) -> Result<IssuerCredentialReq, Box<dyn std::error::Error>> {

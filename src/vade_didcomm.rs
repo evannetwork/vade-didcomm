@@ -9,7 +9,9 @@ use x25519_dalek::StaticSecret;
 use crate::{
     datatypes::{BaseMessage, ExtendedMessage},
     get_from_to_from_message,
-    utils::write_raw_message_to_db,
+    keypair::{get_com_keypair, get_key_agreement_key},
+    utils::{write_raw_message_to_db, read_raw_message_from_db},
+    vec_to_array,
 };
 use crate::{
     datatypes::{
@@ -20,11 +22,8 @@ use crate::{
         ProtocolHandleOutput,
     },
     fill_message_id_and_timestamps,
-    keypair::{get_com_keypair, get_key_agreement_key},
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
-    utils::read_raw_message_from_db,
-    vec_to_array,
 };
 
 big_array! { BigArray; }
@@ -54,7 +53,7 @@ impl VadePlugin for VadeDidComm {
     /// * `_method` - not required, can be left empty
     /// * `function` - currently supports `create_new_keys`
     /// * `_options` - not required, can be left empty
-    /// * `_payload` - not required, can be left empty
+    /// * `_payload` - required only for query_didcomm_messages
     ///
     /// # Returns
     /// * `Option<String>>` - created key pair
@@ -63,7 +62,7 @@ impl VadePlugin for VadeDidComm {
         _method: &str,
         function: &str,
         _options: &str,
-        payload: &str,
+        _payload: &str,
     ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
         match function {
             "create_keys" => {
@@ -79,15 +78,21 @@ impl VadePlugin for VadeDidComm {
                 )?)))
             }
             "query_didcomm_messages" => {
-                let mut message_values = payload.split('_');
-                let prefix = message_values.next().ok_or("Invalid message prefix")?;
-                let thid = message_values.next().ok_or("Invalid message thid")?;
-                let message_id = message_values.next().ok_or("Invalid message id")?;
+                cfg_if::cfg_if! {
+                    if #[cfg(not(feature = "state_storage"))] {
+                        return Err(Box::from("query_didcomm_messages cannot be used if 'state_storage' is disabled".to_string()));
+                    } else {
+                        let mut message_values = _payload.split('_');
+                        let prefix = message_values.next().ok_or("Invalid message prefix")?;
+                        let thid = message_values.next().ok_or("Invalid message thid")?;
+                        let message_id = message_values.next().ok_or("Invalid message id")?;
 
-                let db_result = read_raw_message_from_db(prefix, thid, message_id)?;
-                let result = serde_json::to_string(&db_result)?;
+                        let db_result = read_raw_message_from_db(prefix, thid, message_id)?;
+                        let result = serde_json::to_string(&db_result)?;
 
-                Ok(VadePluginResultValue::Success(Some(result)))
+                        Ok(VadePluginResultValue::Success(Some(result)))
+                    }
+                }
             }
             _ => Ok(VadePluginResultValue::Ignored),
         }
@@ -267,34 +272,39 @@ impl VadePlugin for VadeDidComm {
                     .encryption_keys
                     .ok_or("encryption_keys is missing")?;
             } else {
-                // otherwise use keys from DID exchange
-                let parsed_message = parsed_message?;
-                let from = parsed_message
-                    .protected
-                    .unwrap_or_default()
-                    .skid
-                    .unwrap_or_default();
-                let recipient = &parsed_message.recipients.unwrap_or_default()[0];
-                let to = recipient.header.kid.as_ref().unwrap();
-                log::debug!("fetching kak for from: {} to: {}", to, from);
-                let mut encoded_keypair = get_key_agreement_key(to);
-                if encoded_keypair.is_err() {
-                    // when we don't find a stored keypair, try to get the key agreement key
-                    log::debug!("fetching kak for {}", to);
-                    encoded_keypair = get_com_keypair(to, &from);
-                    if encoded_keypair.is_err() {
-                        return Err(Box::from("No keypair found"));
+                cfg_if::cfg_if! {
+                    if #[cfg(not(feature = "state_storage"))] {
+                        return Err(Box::from("encryption_keys must be provided if 'state_storage' is disabled".to_string()));
+                    } else {
+                        let parsed_message = parsed_message?;
+                        let from = parsed_message
+                        .protected
+                        .unwrap_or_default()
+                        .skid
+                        .unwrap_or_default();
+                        let recipient = &parsed_message.recipients.unwrap_or_default()[0];
+                        let to = recipient.header.kid.as_ref().unwrap();
+                        log::debug!("fetching kak for from: {} to: {}", to, from);
+                        let mut encoded_keypair = get_key_agreement_key(to);
+                        if encoded_keypair.is_err() {
+                            // when we don't find a stored keypair, try to get the key agreement key
+                            log::debug!("fetching kak for {}", to);
+                            encoded_keypair = get_com_keypair(to, &from);
+                            if encoded_keypair.is_err() {
+                                return Err(Box::from("No keypair found"));
+                            }
+                        }
+                        let keypair = encoded_keypair?;
+                        let mut target_pub_key = None;
+                        if !keypair.target_pub_key.is_empty() {
+                            target_pub_key = Some(vec_to_array(hex::decode(keypair.target_pub_key)?)?);
+                        }
+                        decryption_keys = EncryptionKeys {
+                            encryption_my_secret: vec_to_array(hex::decode(keypair.secret_key)?)?,
+                            encryption_others_public: target_pub_key,
+                        };
                     }
                 }
-                let keypair = encoded_keypair?;
-                let mut target_pub_key = None;
-                if !keypair.target_pub_key.is_empty() {
-                    target_pub_key = Some(vec_to_array(hex::decode(keypair.target_pub_key)?)?);
-                }
-                decryption_keys = EncryptionKeys {
-                    encryption_my_secret: vec_to_array(hex::decode(keypair.secret_key)?)?,
-                    encryption_others_public: target_pub_key,
-                };
             }
             let signing_others_public = options_parsed
                 .signing_keys

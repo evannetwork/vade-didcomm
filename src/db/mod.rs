@@ -6,7 +6,9 @@ cfg_if::cfg_if! {
         mod debug;
         pub use debug::*;
     } else {
+        #[cfg(feature = "state_storage")]
         mod rocks_db;
+        #[cfg(feature = "state_storage")]
         pub(crate) use rocks_db::*;
     }
 }

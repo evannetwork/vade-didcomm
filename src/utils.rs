@@ -5,10 +5,9 @@ use std::{
 
 use uuid::Uuid;
 
-use crate::{
-    datatypes::{BaseMessage, ExtendedMessage, FromTo},
-    db::{read_db, search_db_keys, write_db},
-};
+use crate::datatypes::{BaseMessage, ExtendedMessage, FromTo};
+#[cfg(feature = "state_storage")]
+use crate::db::{read_db, search_db_keys, write_db};
 
 /// Formats an vector into an array dynamically.
 ///
@@ -52,6 +51,7 @@ pub fn get_from_to_from_message(
 ///
 /// # Arguments
 /// * `message` - Raw message
+#[cfg(feature = "state_storage")]
 pub fn write_raw_message_to_db(message: &str) -> Result<(), Box<dyn std::error::Error>> {
     let parsed_raw_message: ExtendedMessage = serde_json::from_str(message)?;
 
@@ -71,6 +71,7 @@ pub fn write_raw_message_to_db(message: &str) -> Result<(), Box<dyn std::error::
 ///
 /// # Arguments
 /// * `message` - Raw message
+#[cfg(feature = "state_storage")]
 pub fn read_raw_message_from_db(
     prefix: &str,
     thid: &str,

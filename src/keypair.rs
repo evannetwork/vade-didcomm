@@ -1,6 +1,6 @@
+use crate::datatypes::CommKeyPair;
 #[cfg(feature = "state_storage")]
-use crate::db::write_db;
-use crate::{datatypes::CommKeyPair, db::read_db};
+use crate::{db::read_db, db::write_db};
 
 /// Saves a communication keypair within db for two DIDs (from -> to). Entry key will be
 /// comm_keypair_{from}_{to}.
@@ -63,6 +63,7 @@ pub fn save_com_keypair(
 ///
 /// # Returns
 /// * `CommKeyPair` - new instance of the comm key pair
+#[cfg(feature = "state_storage")]
 pub fn get_com_keypair(
     from_did: &str,
     to_did: &str,
@@ -88,6 +89,7 @@ pub fn get_com_keypair(
 ///
 /// # Returns
 /// * `CommKeyPair` - new instance of the comm key pair
+#[cfg(feature = "state_storage")]
 pub fn get_key_agreement_key(
     key_agreement_key: &str,
 ) -> Result<CommKeyPair, Box<dyn std::error::Error>> {

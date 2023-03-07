@@ -1,9 +1,10 @@
+#[cfg(feature = "state_storage")]
 use crate::{
     db::read_db,
+    db::write_db,
+    protocols::issue_credential::datatypes::UserType,
     protocols::issue_credential::datatypes::{CredentialData, State},
 };
-#[cfg(feature = "state_storage")]
-use crate::{db::write_db, protocols::issue_credential::datatypes::UserType};
 
 /// Saves a state of credential (request/offer/issue/propose) in db for two DIDs (from -> to). Entry key will be
 /// issue_credential_{from}_{to}_{state}_{thid}.
@@ -45,6 +46,7 @@ pub fn save_credential(
 /// # Returns
 /// * `Credential` - credential data stored in db.
 #[allow(dead_code)]
+#[cfg(feature = "state_storage")]
 pub fn get_credential(
     from_did: &str,
     to_did: &str,

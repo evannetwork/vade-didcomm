@@ -12,6 +12,7 @@
 
 - remove warnings when building/testing with and/or without `state_storage` feature
 - update dependency `didcomm-rs` to a fork without `resolve` feature
+- update cargo.toml dependencies for critical vulnerabilities
 
 ### Deprecations
 

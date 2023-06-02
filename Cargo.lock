@@ -373,7 +373,7 @@ dependencies = [
 [[package]]
 name = "didcomm-rs"
 version = "0.7.2"
-source = "git+https://github.com/evannetwork/didcomm-rs.git?branch=feature/align-didcomm-rs-with-spec#69f9e4f737cfd04e92a680cbb6c03819c6eaa9da"
+source = "git+https://github.com/evannetwork/didcomm-rs.git?branch=feature/update-dependencies-and-spec-changes#43c08c84cfafbf392dd5eb4221a57eaf55ccb4ea"
 dependencies = [
  "aes-gcm",
  "arrayref",

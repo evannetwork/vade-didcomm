@@ -7,13 +7,13 @@
 - allow setting a `label` in the invitation and response message
 - add `state_storage` feature to be able to disable rocksdb storage
 - remove rocksdb dependency from vade-didcomm
+- update didcomm-rs dependency
 
 ### Fixes
 
 - remove warnings when building/testing with and/or without `state_storage` feature
 - update dependency `didcomm-rs` to a fork without `resolve` feature
 - update dependencies for critical vulnerabilities
-- update didcomm-rs dependency
 
 ### Deprecations
 

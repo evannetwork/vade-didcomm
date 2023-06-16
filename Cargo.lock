@@ -1567,7 +1567,7 @@ dependencies = [
  "k256",
  "log",
  "rand 0.8.5",
- "rand_core 0.5.1",
+ "rand_core 0.6.4",
  "redis",
  "serde",
  "serde-big-array",

@@ -8,6 +8,7 @@
 - add `state_storage` feature to be able to disable rocksdb storage
 - remove rocksdb dependency from vade-didcomm
 - update didcomm-rs dependency
+- update presentation proposal data format
 
 ### Fixes
 

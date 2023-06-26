@@ -18,12 +18,9 @@ use vade_didcomm::{
     protocols::present_proof::datatypes::{
         AckData,
         AckStatus,
-        Attribute,
         MessageData,
-        Predicate,
         PresentationAttach,
         PresentationData,
-        PresentationPreview,
         ProblemReportData,
         ProposalData,
         RequestData,
@@ -258,30 +255,15 @@ async fn send_presentation_proposal(
         thid,
         "propose-presentation",
         ProposalData {
-            presentation_proposal: PresentationPreview {
-                r#type: format!("{}/presentation-preview", PRESENT_PROOF_PROTOCOL_URL),
-
-                attribute: Some(
-                    [Attribute {
-                        name: thid.to_string(),
-                        cred_def_id: String::from("cred_def_id"),
-                        mime_type: String::from("application/json"),
-                        value: String::from("YmFzZSA2NCBkYXRhIHN0cmluZw"),
-                        referent: String::from("referent"),
-                    }]
-                    .to_vec(),
-                ),
-
-                predicate: Some(
-                    [Predicate {
-                        name: String::from("some name"),
-                        cred_def_id: String::from("cred_def_id"),
-                        predicate: String::from("application/json"),
-                        threshold: 5,
-                    }]
-                    .to_vec(),
-                ),
-            },
+            proposals_attach: [PresentationAttach {
+                id: Uuid::new_v4().to_simple().to_string(),
+                mime_type: String::from("application/json"),
+                data: Data {
+                    json: None,
+                    base64: Some(String::from("YmFzZSA2NCBkYXRhIHN0cmluZw")),
+                },
+            }]
+            .to_vec(),
             comment: None,
         },
     )?;
@@ -325,12 +307,9 @@ async fn receive_presentation_proposal(
         .body
         .ok_or_else(|| "send DIDComm request does not return presentation request".to_string())?;
 
-    let attribute_data = received_proposal
-        .presentation_proposal
-        .attribute
-        .ok_or("Attributes not provided with proposal")?;
-    #[allow(unused_variables)] // may not be used afterwards but call is needed to validate output
-    let attribute = attribute_data.get(0).ok_or("Attribute is invalid")?;
+    if received_proposal.proposals_attach.len() == 0 {
+        return Err(Box::from("no proposal provided".to_string()));
+    }
 
     cfg_if::cfg_if! {
         if #[cfg(feature = "state_storage")] {

@@ -35,7 +35,8 @@ impl MessageData for PresentationData {}
 pub struct ProposalData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
-    pub presentation_proposal: PresentationPreview,
+    #[serde(rename = "proposals~attach")]
+    pub proposals_attach: Vec<PresentationAttach>,
 }
 impl MessageData for ProposalData {}
 
@@ -72,45 +73,13 @@ pub struct AckData {
 impl MessageData for AckData {}
 
 /// PresentationAttach contains all the fields required for
-/// request-presentation and presentation steps.
+/// propose-presentation, request-presentation, and presentation steps.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PresentationAttach {
     pub id: String,
     #[serde(rename = "mime-type")]
     pub mime_type: String,
     pub data: Data,
-}
-
-/// Presentation preview structure is sent by prover to propose alternate presentation.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PresentationPreview {
-    /// assumed as always PROPOSAL_PROTOCOL_URL
-    /// ("https://didcomm.org/present-proof/1.0/presentation-preview")
-    pub r#type: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub attribute: Option<Vec<Attribute>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub predicate: Option<Vec<Predicate>>,
-}
-
-/// Attributes structure for PresentationPreview request.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Attribute {
-    pub name: String,
-    pub cred_def_id: String,
-    #[serde(rename = "mime-type")]
-    pub mime_type: String,
-    pub value: String,
-    pub referent: String,
-}
-
-/// Predicate structure for PresentationPreview request.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Predicate {
-    pub name: String,
-    pub cred_def_id: String,
-    pub predicate: String,
-    pub threshold: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

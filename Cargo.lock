@@ -1513,7 +1513,7 @@ dependencies = [
  "serde-big-array",
  "serde_derive",
  "serde_json",
- "vade 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "vade",
  "vade-didcomm",
  "x25519-dalek",
 ]
@@ -1538,20 +1538,9 @@ dependencies = [
 
 [[package]]
 name = "vade"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28c510deb9534df9da15a2dce4602d1601a5ec9cf231293adffc0b39bfe877dc"
-dependencies = [
- "async-trait",
- "env_logger 0.7.1",
- "futures",
- "log",
-]
-
-[[package]]
-name = "vade"
-version = "0.1.0"
-source = "git+https://github.com/evannetwork/vade?branch=feature/add-proof-proposals#a573ec5b65b8ca03a0536da22aa906e5970579a2"
+checksum = "03e358313f2c726a5d6d7c8253a5f708f0d2dcca7c3606a7e4e2a5e94a9fd808"
 dependencies = [
  "async-trait",
  "env_logger 0.7.1",
@@ -1588,7 +1577,7 @@ dependencies = [
  "tokio",
  "utilities",
  "uuid 0.8.2",
- "vade 0.1.0 (git+https://github.com/evannetwork/vade?branch=feature/add-proof-proposals)",
+ "vade",
  "web-sys",
  "x25519-dalek",
 ]

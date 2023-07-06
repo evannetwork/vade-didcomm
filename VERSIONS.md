@@ -9,6 +9,9 @@
 - remove rocksdb dependency from vade-didcomm
 - update didcomm-rs dependency
 - update presentation proposal data format
+- update proof proposal message format to match specification
+  - attachment name changed from `proposals_attach` to `proposals~attach`
+  - content updated from `PresentationPreview` to an array of `PresentationAttach` values
 
 ### Fixes
 

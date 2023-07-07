@@ -10,7 +10,7 @@ use crate::{
     datatypes::{BaseMessage, ExtendedMessage},
     get_from_to_from_message,
     keypair::{get_com_keypair, get_key_agreement_key},
-    utils::{write_raw_message_to_db, read_raw_message_from_db},
+    utils::{read_raw_message_from_db, write_raw_message_to_db},
     vec_to_array,
 };
 use crate::{
@@ -261,16 +261,15 @@ impl VadePlugin for VadeDidComm {
         let parsed_message = serde_json::from_str::<Jwe>(message);
 
         // message string, that will be returned
-        let decrypted: String;
-
-        // if the message is encrypted, try to decrypt it
-        if parsed_message.is_ok() && !matches!(options_parsed.skip_message_packaging, Some(true)) {
+        let decrypted: String = if parsed_message.is_ok()
+            && !matches!(options_parsed.skip_message_packaging, Some(true))
+        {
+            // if the message is encrypted, try to decrypt it
             // if shared secret was passed to the options, use this one
-            let decryption_keys: EncryptionKeys;
-            if options_parsed.encryption_keys.is_some() {
-                decryption_keys = options_parsed
+            let decryption_keys: EncryptionKeys = if options_parsed.encryption_keys.is_some() {
+                options_parsed
                     .encryption_keys
-                    .ok_or("encryption_keys is missing")?;
+                    .ok_or("encryption_keys is missing")?
             } else {
                 cfg_if::cfg_if! {
                     if #[cfg(not(feature = "state_storage"))] {
@@ -297,19 +296,21 @@ impl VadePlugin for VadeDidComm {
                         let keypair = encoded_keypair?;
                         let mut target_pub_key = None;
                         if !keypair.target_pub_key.is_empty() {
-                            target_pub_key = Some(vec_to_array(hex::decode(keypair.target_pub_key)?)?);
+                            target_pub_key = Some(
+                                vec_to_array(hex::decode(keypair.target_pub_key)?)?
+                            );
                         }
-                        decryption_keys = EncryptionKeys {
+                        EncryptionKeys {
                             encryption_my_secret: vec_to_array(hex::decode(keypair.secret_key)?)?,
                             encryption_others_public: target_pub_key,
-                        };
+                        }
                     }
                 }
-            }
+            };
             let signing_others_public = options_parsed
                 .signing_keys
                 .and_then(|keys| keys.signing_others_public);
-            decrypted = decrypt_message(
+            decrypt_message(
                 message,
                 Some(&decryption_keys.encryption_my_secret),
                 decryption_keys
@@ -317,10 +318,10 @@ impl VadePlugin for VadeDidComm {
                     .as_ref()
                     .map(|v| v.to_vec()),
                 signing_others_public.as_ref().map(|v| &v[..]),
-            )?;
+            )?
         } else {
-            decrypted = String::from(message);
-        }
+            String::from(message)
+        };
 
         // run protocol specific logic
         let message_with_id = fill_message_id_and_timestamps(&decrypted)?;

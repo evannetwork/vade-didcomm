@@ -1559,7 +1559,7 @@ dependencies = [
  "data-encoding",
  "didcomm-rs",
  "ed25519-dalek",
- "env_logger 0.7.1",
+ "env_logger 0.9.3",
  "futures",
  "getrandom 0.2.9",
  "hex",

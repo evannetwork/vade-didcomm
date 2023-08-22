@@ -1,7 +1,6 @@
-use std::{
-    convert::TryInto,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::convert::TryInto;
+#[cfg(not(target_arch = "wasm32"))]
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use uuid::Uuid;
 
@@ -103,9 +102,7 @@ pub fn fill_message_id_and_timestamps(message: &str) -> Result<String, Box<dyn s
     }
 
     if parsed_message.created_time.is_none() {
-        let start = SystemTime::now();
-        let since_the_epoch = start.duration_since(UNIX_EPOCH)?;
-        parsed_message.created_time = Some(since_the_epoch.as_secs());
+        parsed_message.created_time = Some(get_now()?)
     }
 
     Ok(serde_json::to_string(&parsed_message)?)
@@ -131,4 +128,17 @@ pub(crate) mod hex_option {
             None => Ok(None),
         }
     }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn get_now() -> Result<u64, Box<dyn std::error::Error>> {
+    Ok(js_sys::Date::new_0().get_time() as u64 / 1000)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn get_now() -> Result<u64, Box<dyn std::error::Error>> {
+    let start = SystemTime::now();
+    let since_the_epoch = start.duration_since(UNIX_EPOCH)?;
+
+    Ok(since_the_epoch.as_secs())
 }

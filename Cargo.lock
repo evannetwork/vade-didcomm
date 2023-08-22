@@ -1563,6 +1563,7 @@ dependencies = [
  "futures",
  "getrandom 0.2.9",
  "hex",
+ "js-sys",
  "jsonpath_lib",
  "k256",
  "log",

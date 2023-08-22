@@ -132,7 +132,7 @@ pub(crate) mod hex_option {
 
 #[cfg(target_arch = "wasm32")]
 fn get_now() -> Result<u64, Box<dyn std::error::Error>> {
-    Ok(js_sys::Date::new_0().get_time() as u64)
+    Ok(js_sys::Date::new_0().get_time() as u64 / 1000)
 }
 
 #[cfg(not(target_arch = "wasm32"))]

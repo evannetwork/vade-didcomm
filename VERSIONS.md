@@ -18,6 +18,7 @@
 - remove warnings when building/testing with and/or without `state_storage` feature
 - update dependency `didcomm-rs` to a fork without `resolve` feature
 - update dependencies for critical vulnerabilities
+- add `comment` field to `did-exchange` body
 
 ### Deprecations
 

@@ -81,7 +81,6 @@ async fn send_request(
         .ok_or("send DIDComm request does not return targetPubKey")?
         .to_owned();
 
-    
     cfg_if::cfg_if! {
         if #[cfg(feature = "state_storage")] {
             let db_result = read_db(&format!("comm_keypair_{}_{}", sender, receiver))?;
@@ -150,10 +149,7 @@ async fn receive_request(
     );
 
     // pthid should not be optional and remain None if not supplied
-    assert_eq!(
-        received.message.pthid,
-        None
-    );
+    assert_eq!(received.message.pthid, None);
     Ok(())
 }
 

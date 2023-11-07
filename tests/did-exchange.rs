@@ -149,6 +149,8 @@ async fn receive_request(
         Some("test".to_string())
     );
 
+    // pthid should not be optional and remain None if not supplied
+    assert_eq!(received.message.pthid, None);
     assert_eq!(
         received.message.body.unwrap().comment,
         Some("test".to_string())

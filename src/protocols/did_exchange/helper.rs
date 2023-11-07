@@ -147,7 +147,7 @@ pub fn get_did_exchange_message(
                 .or(Some(&fallback_id))
                 .map(|v| v.to_owned()),
             other: HashMap::new(),
-            pthid: message.pthid.or(None),
+            pthid: message.pthid,
             r#type: format!("{DID_EXCHANGE_PROTOCOL_URL}/{step_name}"),
             thid: message.thid.or(Some(service_id)),
             to: Some([String::from(to_did)].to_vec()),

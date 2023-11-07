@@ -18,6 +18,7 @@
 - remove warnings when building/testing with and/or without `state_storage` feature
 - update dependency `didcomm-rs` to a fork without `resolve` feature
 - update dependencies for critical vulnerabilities
+- fix `pthid` of message to be None, if not supplied
 
 ### Deprecations
 

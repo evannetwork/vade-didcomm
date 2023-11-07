@@ -149,7 +149,7 @@ pub fn get_did_exchange_message(
             other: HashMap::new(),
             pthid: message
                 .pthid
-                .or_else(|| Some(format!("{fallback_id}#key-1"))),
+                .or(None),
             r#type: format!("{DID_EXCHANGE_PROTOCOL_URL}/{step_name}"),
             thid: message.thid.or(Some(service_id)),
             to: Some([String::from(to_did)].to_vec()),

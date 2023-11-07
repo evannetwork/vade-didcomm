@@ -130,6 +130,11 @@ pub fn get_did_exchange_message(
     let exchange_request: MessageWithBody<DidDocumentBodyAttachment<Base64Container>> =
         MessageWithBody {
             body: Some(DidDocumentBodyAttachment {
+                comment: message
+                    .base_message
+                    .body
+                    .get("comment")
+                    .and_then(|label| label.as_str().map(|v| v.to_string())),
                 did_doc_attach: Base64Container {
                     base64: base64_encoded_did_document,
                 },

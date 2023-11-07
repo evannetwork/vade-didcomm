@@ -49,6 +49,7 @@ async fn send_request(
             "to": ["{}"],
             "thid": "{}",
             "body": {{
+                "comment": "test",
                 "label": "test"
             }}
         }}"#,
@@ -144,10 +145,14 @@ async fn receive_request(
         } else {}
     }
     assert_eq!(
-        received.message.body.unwrap().label,
+        received.message.body.as_ref().unwrap().label,
         Some("test".to_string())
     );
 
+    assert_eq!(
+        received.message.body.unwrap().comment,
+        Some("test".to_string())
+    );
     Ok(())
 }
 

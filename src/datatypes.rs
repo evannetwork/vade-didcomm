@@ -136,6 +136,8 @@ pub struct DidDocumentBodyAttachment<T> {
     pub did_doc_attach: T,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
 }
 
 /// Decrypted messaged with dynamic body struct

@@ -125,41 +125,6 @@ pub struct ExtendedMessage {
     pub other: HashMap<String, String>,
 }
 
-// #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Default)]
-// pub struct AttachmentHeader {
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub id: Option<String>,
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub description: Option<String>,
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub filename: Option<String>,
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub media_type: Option<String>,
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub format: Option<String>,
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub lastmod_time: Option<String>,
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub byte_count: Option<usize>,
-//     pub data: AttachmentHeaderData,
-// }
-
-// /// Attachment Data holding structure
-// #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Default)]
-// pub struct AttachmentHeaderData {
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub jws: Option<String>,
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub hash: Option<String>,
-//     #[serde(default)]
-//     #[serde(skip_serializing_if = "Vec::is_empty")]
-//     pub links: Vec<String>,
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub base64: Option<String>,
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub json: Option<String>,
-// }
-
 /// Object with base64 encoded value
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Base64Container {

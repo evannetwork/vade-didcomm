@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use common::get_vade;
 #[cfg(feature = "state_storage")]
 use common::read_db;
-use didcomm_rs::Jwe;
+use didcomm_rs::{Attachment, AttachmentData, Jwe};
 use serde::{Deserialize, Serialize};
 use serial_test::serial;
 use utilities::keypair::get_keypair_set;
@@ -104,6 +104,89 @@ async fn can_decrypt_received_messages() -> Result<(), Box<dyn std::error::Error
                     .ok_or("no body filled")?
                     .response_requested
             );
+        }
+        _ => {
+            return Err(Box::from("invalid result from DIDcomm_send"));
+        }
+    };
+
+    Ok(())
+}
+
+#[tokio::test]
+#[serial]
+async fn can_send_attachments_and_decrypt_received_messages(
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+
+    let sign_keypair = get_keypair_set();
+    let attachment = vec![Attachment {
+        id: None,
+        description: Some("Test".to_owned()),
+        filename: None,
+        media_type: None,
+        format: None,
+        lastmod_time: None,
+        byte_count: None,
+        data: AttachmentData {
+            jws: None,
+            hash: None,
+            links: vec!["link".to_string()],
+            base64: None,
+            json: None,
+        },
+    }];
+
+    let payload = ExtendedMessage {
+        created_time: None,
+        expires_time: None,
+        from: Some("did:key:z6MkiTBz1ymuepAQ4HEHYSF1H8quG5GLVVQR3djdX3mDooWp".to_owned()),
+        to: Some(vec![
+            "did:key:z6MkjchhfUsD6mmvni8mCdXHw216Xrm9bQe2mBH1P5RDjVJG".to_owned(),
+        ]),
+        id: None,
+        pthid: None,
+        r#type: "https://didcomm.org/trust_ping/1.0/ping".to_owned(),
+        thid: None,
+        body: None,
+        attachments: attachment.clone(),
+        other: HashMap::new(),
+    };
+    let payload = serde_json::to_string(&payload)?;
+    let results = vade
+        .didcomm_send(&sign_keypair.sender_options_stringified, &payload)
+        .await?;
+
+    match results.get(0) {
+        Some(Some(value)) => {
+            let encrypted: VadeDidCommPluginSendOutput<Jwe> = serde_json::from_str(value)?;
+            let encrypted_message = serde_json::to_string(&encrypted.message)?;
+            let results = vade
+                .didcomm_receive(
+                    &sign_keypair.receiver_options_stringified,
+                    &encrypted_message,
+                )
+                .await?;
+            let result = results
+                .get(0)
+                .ok_or("no result")?
+                .as_ref()
+                .ok_or("no value in result")?;
+            let parsed: VadeDidCommPluginReceiveOutput<MessageWithBody<PingBody>> =
+                serde_json::from_str(result)?;
+            assert_eq!(
+                "https://didcomm.org/trust_ping/1.0/ping",
+                parsed.message.r#type,
+            );
+            // ensure that send processor was executed
+            assert!(
+                parsed
+                    .message
+                    .body
+                    .ok_or("no body filled")?
+                    .response_requested
+            );
+            assert_eq!(parsed.message.attachments, attachment);
         }
         _ => {
             return Err(Box::from("invalid result from DIDcomm_send"));

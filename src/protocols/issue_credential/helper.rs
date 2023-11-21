@@ -56,7 +56,7 @@ pub fn get_issue_credential_message(
         r#type: format!("{ISSUE_CREDENTIAL_PROTOCOL_URL}/{step_name}"),
         thid: Some(thid.to_string()),
         to: Some([String::from(to_did)].to_vec()),
-        attachments: None,
+        attachments: vec![],
     };
 
     Ok(exchange_request)

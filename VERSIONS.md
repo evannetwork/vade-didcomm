@@ -13,6 +13,7 @@
   - attachment name changed from `proposals_attach` to `proposals~attach`
   - content updated from `PresentationPreview` to an array of `PresentationAttach` values
 - adjust message header to allow attachments
+
 ### Fixes
 
 - remove warnings when building/testing with and/or without `state_storage` feature

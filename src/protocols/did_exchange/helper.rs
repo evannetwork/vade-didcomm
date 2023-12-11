@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use didcomm_rs::Attachment;
 use data_encoding::BASE64;
+use didcomm_rs::Attachment;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

@@ -373,7 +373,7 @@ dependencies = [
 [[package]]
 name = "didcomm-rs"
 version = "0.7.2"
-source = "git+https://github.com/evannetwork/didcomm-rs.git?branch=feature/allow-attachments-in-didcomm-messages#00c39f7a3535e2c86fc0aa914f1af8bb08b14dfa"
+source = "git+https://github.com/evannetwork/didcomm-rs.git#99725a66d251d1656752b67b2a195e1d8b14d4ef"
 dependencies = [
  "aes-gcm",
  "arrayref",

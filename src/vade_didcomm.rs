@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use didcomm_rs::Jwe;
 use ed25519_dalek::{Keypair, PublicKey, SecretKey};
 use rand_core::OsRng;
+use serde::{Deserialize, Serialize};
 use vade::{VadePlugin, VadePluginResultValue};
 use x25519_dalek::StaticSecret;
 
@@ -20,15 +21,26 @@ use crate::{
         EncryptionKeys,
         MessageDirection,
         ProtocolHandleOutput,
+        DEFAULT_DIDCOMM_SERVICE_ENDPOINT,
     },
     fill_message_id_and_timestamps,
     message::{decrypt_message, encrypt_message},
     protocol_handler::ProtocolHandler,
+    protocols::did_exchange::helper::get_communication_did_doc,
 };
 
 big_array! { BigArray; }
 
+/// Payload for create_pairwise_did custom function.
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreatePairWiseDidPayload {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub service_endpoint: Option<String>,
+}
+
 pub struct VadeDidComm {}
+
 impl VadeDidComm {
     /// Creates new instance of `VadeDidComm`.
     pub fn new() -> Result<VadeDidComm, Box<dyn std::error::Error>> {
@@ -38,6 +50,17 @@ impl VadeDidComm {
         let vade_didcomm = VadeDidComm {};
 
         Ok(vade_didcomm)
+    }
+
+    /// Creates new key pair for DIDCOMM.
+    async fn create_key_pair(&mut self) -> EncryptionKeyPair {
+        let secret_key = StaticSecret::new(OsRng);
+        let pub_key = x25519_dalek::PublicKey::from(&secret_key);
+
+        EncryptionKeyPair {
+            secret: secret_key.to_bytes(),
+            public: pub_key.to_bytes(),
+        }
     }
 }
 
@@ -53,7 +76,7 @@ impl VadePlugin for VadeDidComm {
     /// * `_method` - not required, can be left empty
     /// * `function` - currently supports `create_new_keys`
     /// * `_options` - not required, can be left empty
-    /// * `_payload` - required only for query_didcomm_messages
+    /// * `payload` - required for query_didcomm_messages and create_pairwise_did
     ///
     /// # Returns
     /// * `Option<String>>` - created key pair
@@ -62,17 +85,11 @@ impl VadePlugin for VadeDidComm {
         _method: &str,
         function: &str,
         _options: &str,
-        _payload: &str,
+        payload: &str,
     ) -> Result<VadePluginResultValue<Option<String>>, Box<dyn std::error::Error>> {
         match function {
             "create_keys" => {
-                let secret_key = StaticSecret::new(OsRng);
-                let pub_key = x25519_dalek::PublicKey::from(&secret_key);
-
-                let enc_key_pair = EncryptionKeyPair {
-                    secret: secret_key.to_bytes(),
-                    public: pub_key.to_bytes(),
-                };
+                let enc_key_pair = self.create_key_pair().await;
                 Ok(VadePluginResultValue::Success(Some(serde_json::to_string(
                     &enc_key_pair,
                 )?)))
@@ -82,7 +99,7 @@ impl VadePlugin for VadeDidComm {
                     if #[cfg(not(feature = "state_storage"))] {
                         return Err(Box::from("query_didcomm_messages cannot be used if 'state_storage' is disabled".to_string()));
                     } else {
-                        let mut message_values = _payload.split('_');
+                        let mut message_values = payload.split('_');
                         let prefix = message_values.next().ok_or("Invalid message prefix")?;
                         let thid = message_values.next().ok_or("Invalid message thid")?;
                         let message_id = message_values.next().ok_or("Invalid message id")?;
@@ -93,6 +110,32 @@ impl VadePlugin for VadeDidComm {
                         Ok(VadePluginResultValue::Success(Some(result)))
                     }
                 }
+            }
+
+            "create_pairwise_did" => {
+                let create_pariwise_did_payload: CreatePairWiseDidPayload =
+                    serde_json::from_str(payload)?;
+                let enc_key_pair = self.create_key_pair().await;
+
+                // get key did and base58 encoded public key
+                let codec: &[u8] = &[0xec, 0x1];
+                let data = [codec, &enc_key_pair.public].concat();
+                let key_did = format!("did:key:z{}", bs58::encode(data).into_string());
+                let pub_key_base58_string = &bs58::encode(enc_key_pair.public).into_string();
+
+                let service_endpoint =
+                    if let Some(endpoint) = create_pariwise_did_payload.service_endpoint {
+                        endpoint
+                    } else {
+                        format!("{}?did={}", DEFAULT_DIDCOMM_SERVICE_ENDPOINT, key_did)
+                    };
+
+                let result =
+                    get_communication_did_doc(&key_did, pub_key_base58_string, &service_endpoint);
+
+                Ok(VadePluginResultValue::Success(Some(serde_json::to_string(
+                    &result,
+                )?)))
             }
             _ => Ok(VadePluginResultValue::Ignored),
         }

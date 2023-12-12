@@ -11,10 +11,12 @@ use vade_didcomm::{
         Base64Container,
         BaseMessage,
         CommKeyPair,
+        CommunicationDidDocument,
         DidDocumentBodyAttachment,
         MessageWithBody,
         VadeDidCommPluginReceiveOutput,
         VadeDidCommPluginSendOutput,
+        DEFAULT_DIDCOMM_SERVICE_ENDPOINT,
     },
     protocols::did_exchange::DidExchangeOptions,
 };
@@ -659,5 +661,26 @@ async fn can_report_problem() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
+    Ok(())
+}
+
+#[tokio::test]
+#[serial]
+async fn can_create_pariwise_did_doc() -> Result<(), Box<dyn std::error::Error>> {
+    let mut vade = get_vade().await?;
+    let results = vade
+        .run_custom_function("{}", "create_pairwise_did", "{}", "{}")
+        .await?;
+    let received = results
+        .get(0)
+        .ok_or("no result")?
+        .as_ref()
+        .ok_or("no value in result")?;
+
+    let did_doc: CommunicationDidDocument = serde_json::from_str(received)?;
+    assert_eq!(
+        did_doc.service[0].service_endpoint,
+        format!("{}?did={}", DEFAULT_DIDCOMM_SERVICE_ENDPOINT, did_doc.id)
+    );
     Ok(())
 }

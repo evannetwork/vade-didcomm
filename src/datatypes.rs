@@ -5,6 +5,8 @@ use serde_json::Value;
 
 use crate::{get_from_to_from_message, utils::hex_option};
 
+pub const DEFAULT_DIDCOMM_SERVICE_ENDPOINT: &str = "http://127.0.0.1:7070/didcomm";
+
 pub trait HasFromAndTo {
     fn get_from_to(&self) -> Result<FromTo, Box<dyn std::error::Error>>;
 }

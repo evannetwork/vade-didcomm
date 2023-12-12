@@ -48,6 +48,7 @@ pub fn create_new_message<T: MessageData>(
         id: None,
         pthid: None,
         other: HashMap::new(),
+        attachments: vec![],
     })
 }
 

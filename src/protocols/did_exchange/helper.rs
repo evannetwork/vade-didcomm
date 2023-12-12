@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use data_encoding::BASE64;
+use didcomm_rs::Attachment;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -48,6 +49,8 @@ pub struct DidExchangeBaseMessage {
     pub id: Option<String>,
     pub pthid: Option<String>,
     pub thid: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub attachments: Vec<Attachment>,
 }
 
 /// Creates a new communication DID document for a specific DID, a communication pub key and the
@@ -156,6 +159,7 @@ pub fn get_did_exchange_message(
             r#type: format!("{DID_EXCHANGE_PROTOCOL_URL}/{step_name}"),
             thid: message.thid.or(Some(service_id)),
             to: Some([String::from(to_did)].to_vec()),
+            attachments: message.attachments,
         };
 
     Ok((exchange_request, did_document))

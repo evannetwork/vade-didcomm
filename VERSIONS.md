@@ -13,6 +13,7 @@
   - attachment name changed from `proposals_attach` to `proposals~attach`
   - content updated from `PresentationPreview` to an array of `PresentationAttach` values
 - add `create_pairwise_did` custom function to create `CommunicationDidDocument` for pairwise did
+- adjust message header to allow attachments
 
 ### Fixes
 

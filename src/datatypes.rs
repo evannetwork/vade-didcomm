@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-
+use didcomm_rs::Attachment;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -121,6 +121,8 @@ pub struct ExtendedMessage {
     pub r#type: String,
     pub thid: Option<String>,
     pub to: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub attachments: Vec<Attachment>,
     #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
     pub other: HashMap<String, String>,
 }
@@ -156,6 +158,8 @@ pub struct MessageWithBody<T> {
     pub to: Option<Vec<String>>,
     #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
     pub other: HashMap<String, String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub attachments: Vec<Attachment>,
 }
 impl<T> HasFromAndTo for MessageWithBody<T> {
     fn get_from_to(&self) -> Result<FromTo, Box<dyn std::error::Error>> {

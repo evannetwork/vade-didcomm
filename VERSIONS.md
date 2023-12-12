@@ -12,6 +12,7 @@
 - update proof proposal message format to match specification
   - attachment name changed from `proposals_attach` to `proposals~attach`
   - content updated from `PresentationPreview` to an array of `PresentationAttach` values
+- adjust message header to allow attachments
 
 ### Fixes
 
